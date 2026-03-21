@@ -2300,18 +2300,15 @@ function loadReportSparePartsAdvanced(container) {
         win.document.close();
         win.print();
     };
-}// ==================== Supabase Setup (آمن) ====================
+	// ==================== Supabase Setup ====================
 const SUPABASE_URL = 'https://pbzpumetrmirnsshjdoe.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBienB1bWV0cm1pcm5zc2hqZG9lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxMTY5MDAsImV4cCI6MjA4OTY5MjkwMH0.8x1YGOdmj0YZJz_KGxC5Awk4S6bc1dvI9BcVKjGkTO8';
 
-let supabase = null;
-let supabaseReady = false;
+let supabaseClient = null;
 
-// انتظر تحميل المكتبة
 function initSupabase() {
     if (typeof window.supabase !== 'undefined' && window.supabase) {
-        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        supabaseReady = true;
+        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         console.log('✅ Supabase connected');
         loadAllDataFromSupabase();
     } else {
@@ -2319,14 +2316,13 @@ function initSupabase() {
     }
 }
 
-// ==================== دوال المزامنة ====================
 async function syncToSupabase(tableName, storageKey) {
-    if (!supabase) return;
+    if (!supabaseClient) return;
     try {
         const data = JSON.parse(localStorage.getItem(storageKey) || '[]');
         if (data.length === 0) return;
         const records = data.map(item => ({ data: item }));
-        const { error } = await supabase.from(tableName).upsert(records, { onConflict: 'id' });
+        const { error } = await supabaseClient.from(tableName).upsert(records, { onConflict: 'id' });
         if (error) throw error;
         console.log(`✅ Synced ${tableName}`);
     } catch(e) {
@@ -2335,9 +2331,9 @@ async function syncToSupabase(tableName, storageKey) {
 }
 
 async function loadFromSupabase(tableName, storageKey) {
-    if (!supabase) return false;
+    if (!supabaseClient) return false;
     try {
-        const { data, error } = await supabase.from(tableName).select('*');
+        const { data, error } = await supabaseClient.from(tableName).select('*');
         if (error) throw error;
         if (data && data.length) {
             const items = data.map(item => item.data);
@@ -2356,27 +2352,24 @@ async function loadFromSupabase(tableName, storageKey) {
 }
 
 async function loadAllDataFromSupabase() {
-    if (!supabase) return;
+    if (!supabaseClient) return;
     await loadFromSupabase('stations', 'stations');
     await loadFromSupabase('employees', 'employees');
     await loadFromSupabase('faults', 'faults');
     console.log('✅ All data loaded from Supabase');
     
-    // تحديث الصفحة الرئيسية فقط
     const container = document.getElementById('pageContent');
     if (container && container.innerHTML.includes('عدد المحطات')) {
         loadPage('home');
     }
 }
 
-// بدء التحميل بعد المكتبة
 setTimeout(initSupabase, 500);
 
-// ربط الحفظ مع localStorage
 const originalSetItem = localStorage.setItem;
 localStorage.setItem = function(key, value) {
     originalSetItem.call(this, key, value);
-    if (supabase) {
+    if (supabaseClient) {
         if (key === 'stations') setTimeout(() => syncToSupabase('stations', 'stations'), 100);
         else if (key === 'employees') setTimeout(() => syncToSupabase('employees', 'employees'), 100);
         else if (key === 'faults') setTimeout(() => syncToSupabase('faults', 'faults'), 100);
