@@ -10,67 +10,23 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Tahoma', sans-serif; background: #f0f2f5; }
         .wrapper { display: flex; width: 100%; min-height: 100vh; }
-        #sidebar {
-            width: 280px;
-            background: #1e2a3e;
-            color: white;
-            transition: all 0.3s;
-            height: 100vh;
-            position: sticky;
-            top: 0;
-            overflow-y: auto;
-        }
+        #sidebar { width: 280px; background: #1e2a3e; color: white; transition: all 0.3s; height: 100vh; position: sticky; top: 0; overflow-y: auto; }
         #sidebar.active { margin-right: -280px; }
         .sidebar-header { padding: 20px; background: #0d6efd; text-align: center; }
         .sidebar-header h4 { font-size: 1.2rem; margin-bottom: 5px; }
         #sidebar ul { padding: 20px 0; list-style: none; }
-        #sidebar ul li a {
-            padding: 12px 20px;
-            display: block;
-            color: #ecf0f1;
-            text-decoration: none;
-            cursor: pointer;
-        }
+        #sidebar ul li a { padding: 12px 20px; display: block; color: #ecf0f1; text-decoration: none; cursor: pointer; }
         #sidebar ul li a:hover { background: #0d6efd; padding-right: 25px; }
         #sidebar ul li a i { margin-left: 10px; width: 25px; }
         #sidebar ul ul li a { padding-right: 50px; background: #2c3e50; }
         .sidebar-footer { padding: 20px; border-top: 1px solid #2c3e50; }
-        .sidebar-footer button {
-            width: 100%;
-            padding: 10px;
-            background: #dc3545;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-        }
+        .sidebar-footer button { width: 100%; padding: 10px; background: #dc3545; color: white; border: none; border-radius: 8px; cursor: pointer; }
         #content { flex: 1; padding: 20px; }
-        #toggleSidebar {
-            margin-bottom: 20px;
-            background: #0d6efd;
-            border: none;
-            border-radius: 8px;
-            padding: 10px 20px;
-            color: white;
-            cursor: pointer;
-        }
-        .stats-card {
-            background: white;
-            border-radius: 15px;
-            padding: 20px;
-            text-align: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
+        #toggleSidebar { margin-bottom: 20px; background: #0d6efd; border: none; border-radius: 8px; padding: 10px 20px; color: white; cursor: pointer; }
+        .stats-card { background: white; border-radius: 15px; padding: 20px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
         .stats-card i { font-size: 2.5rem; color: #0d6efd; }
         .stats-card h3 { font-size: 2rem; font-weight: bold; margin: 10px 0; }
-        .form-card {
-            background: white;
-            border-radius: 15px;
-            padding: 25px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
+        .form-card { background: white; border-radius: 15px; padding: 25px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
         .form-card h4 { color: #0d6efd; margin-bottom: 20px; border-bottom: 2px solid #0d6efd; padding-bottom: 10px; }
         .table-responsive { background: white; border-radius: 15px; padding: 15px; overflow-x: auto; }
         .table th { background: #0d6efd; color: white; text-align: center; }
@@ -78,19 +34,13 @@
         .search-bar { background: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
         .footer-credit { font-size: 12px; color: #666; text-align: center; margin-top: 30px; padding-top: 15px; border-top: 1px solid #ddd; }
         .btn-primary { background: #0d6efd; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; }
-        @media (max-width: 768px) {
-            #sidebar { position: fixed; z-index: 1000; margin-right: -280px; }
-            #sidebar.active { margin-right: 0; }
-        }
+        @media (max-width: 768px) { #sidebar { position: fixed; z-index: 1000; margin-right: -280px; } #sidebar.active { margin-right: 0; } }
     </style>
 </head>
 <body>
 <div class="wrapper">
     <nav id="sidebar">
-        <div class="sidebar-header">
-            <h4>محطات الصرف الصحي</h4>
-            <small>بني مزار</small>
-        </div>
+        <div class="sidebar-header"><h4>محطات الصرف الصحي</h4><small>بني مزار</small></div>
         <ul>
             <li><a onclick="loadPage('home')"><i class="fas fa-home"></i> الرئيسية</a></li>
             <li><a onclick="toggleSubMenu('stationMenu')"><i class="fas fa-water"></i> المحطات ▼</a>
@@ -125,20 +75,12 @@
                     <li><a onclick="loadPage('reportAsset')">⚙️ متابعة أصل</a></li>
                     <li><a onclick="loadPage('reportEmployees')">👥 تقرير العاملين</a></li>
                     <li><a onclick="loadPage('reportSpareParts')">🔧 تقرير قطع غيار</a></li>
-                    <li><hr class="dropdown-divider" style="margin: 10px 0; border-color: #444;"></li>
-                    <li><a onclick="loadPage('reportWaterPumped')"><i class="fas fa-chart-line"></i> 💧 تقرير المياه المرفوعة</a></li>
-                    <li><a onclick="loadPage('reportElectricity')"><i class="fas fa-bolt"></i> ⚡ تقرير استهلاك كهرباء</a></li>
-                    <li><a onclick="loadPage('reportWaterConsumption')"><i class="fas fa-tint"></i> 💧 تقرير استهلاك مياه</a></li>
-                    <li><a onclick="loadPage('reportDiesel')"><i class="fas fa-oil-can"></i> 🛢️ تقرير استهلاك سولار</a></li>
-                    <li><a onclick="loadPage('reportSparePartsAdvanced')"><i class="fas fa-tools"></i> 🔧 تقرير قطع غيار متقدم</a></li>
                 </ul>
             </li>
             <li><a onclick="loadPage('archive')"><i class="fas fa-archive"></i> الأرشيف</a></li>
             <li><a onclick="loadPage('users')"><i class="fas fa-cog"></i> النظام</a></li>
         </ul>
-        <div class="sidebar-footer">
-            <button onclick="logout()">تسجيل الخروج</button>
-        </div>
+        <div class="sidebar-footer"><button onclick="logout()">تسجيل الخروج</button></div>
     </nav>
     <div id="content">
         <button id="toggleSidebar" class="btn-primary">☰ القائمة</button>
@@ -147,27 +89,122 @@
     </div>
 </div>
 
-<script src="js/app.js"></script>
 <script>
-    // التحقق من تسجيل الدخول
-    const loggedUser = sessionStorage.getItem('loggedUser');
-    if (!loggedUser) {
-        window.location.href = 'index.html';
+    // البيانات الافتراضية
+    if (!localStorage.getItem('stations')) {
+        localStorage.setItem('stations', JSON.stringify([
+            { id: 1, name: 'محطة بني مزار', code: 'ST001', type: 'رئيسية', outfall: 'محطة المعالجة', capacity: '500' }
+        ]));
+    }
+    if (!localStorage.getItem('employees')) {
+        localStorage.setItem('employees', JSON.stringify([
+            { id: 1, name: 'أحمد محمد', code: 'EMP001', station: 'محطة بني مزار', role: 'مدير محطة', phone: '01234567890' }
+        ]));
+    }
+
+    // الصفحة الرئيسية
+    function loadHome(container) {
+        const stations = JSON.parse(localStorage.getItem('stations') || '[]');
+        const employees = JSON.parse(localStorage.getItem('employees') || '[]');
+        container.innerHTML = `
+            <div class="row">
+                <div class="col-md-4"><div class="stats-card"><i class="fas fa-water"></i><h3>${stations.length}</h3><p>عدد المحطات</p></div></div>
+                <div class="col-md-4"><div class="stats-card"><i class="fas fa-users"></i><h3>${employees.length}</h3><p>عدد العاملين</p></div></div>
+                <div class="col-md-4"><div class="stats-card"><i class="fas fa-chart-line"></i><h3>0</h3><p>التقارير</p></div></div>
+            </div>
+            <div class="form-card"><h4>مرحباً بك</h4><p>نظام إدارة محطات رفع الصرف الصحي - بني مزار</p></div>
+        `;
+    }
+
+    // إضافة محطة
+    function loadAddStation(container) {
+        container.innerHTML = `
+            <div class="form-card">
+                <h4>➕ إضافة محطة جديدة</h4>
+                <form id="stationForm">
+                    <div class="mb-3"><label>اسم المحطة</label><input type="text" id="stationName" class="form-control" required></div>
+                    <div class="mb-3"><label>كود المحطة</label><input type="text" id="stationCode" class="form-control" required></div>
+                    <div class="mb-3"><label>النوع</label><select id="stationType" class="form-control"><option>رئيسية</option><option>فرعية</option><option>معالجة</option></select></div>
+                    <div class="mb-3"><label>المصب</label><input type="text" id="outfall" class="form-control"></div>
+                    <div class="mb-3"><label>القدرة (m³/h)</label><input type="number" id="capacity" class="form-control"></div>
+                    <button type="submit" class="btn btn-primary">حفظ</button>
+                </form>
+            </div>
+        `;
+        document.getElementById('stationForm').onsubmit = function(e) {
+            e.preventDefault();
+            let stations = JSON.parse(localStorage.getItem('stations') || '[]');
+            stations.push({
+                id: Date.now(),
+                name: document.getElementById('stationName').value,
+                code: document.getElementById('stationCode').value,
+                type: document.getElementById('stationType').value,
+                outfall: document.getElementById('outfall').value,
+                capacity: document.getElementById('capacity').value
+            });
+            localStorage.setItem('stations', JSON.stringify(stations));
+            alert('تم حفظ المحطة');
+            loadPage('listStations');
+        };
+    }
+
+    // قائمة المحطات
+    function loadListStations(container) {
+        let stations = JSON.parse(localStorage.getItem('stations') || '[]');
+        if (stations.length === 0) {
+            container.innerHTML = '<div class="alert alert-info">لا توجد محطات</div>';
+            return;
+        }
+        let html = '<div class="table-responsive"><table class="table"><thead><tr><th>الكود</th><th>الاسم</th><th>النوع</th><th>المصب</th></tr></thead><tbody>';
+        stations.forEach(s => {
+            html += `<tr><td>${s.code}</td><td>${s.name}</td><td>${s.type}</td><td>${s.outfall || '-'}</td></tr>`;
+        });
+        html += '</tbody></table></div>';
+        container.innerHTML = html;
+    }
+
+    // باقي الدوال (مبسطة)
+    function loadAddEmployee(container) { container.innerHTML = '<div class="form-card"><h4>➕ إضافة عامل</h4><p>جاري التطوير</p></div>'; }
+    function loadListEmployees(container) { container.innerHTML = '<div class="form-card"><h4>📋 قائمة العاملين</h4><p>جاري التطوير</p></div>'; }
+    function loadAddFault(container) { container.innerHTML = '<div class="form-card"><h4>⚠️ بلاغ عطل</h4><p>جاري التطوير</p></div>'; }
+    function loadListFaults(container) { container.innerHTML = '<div class="form-card"><h4>📋 قائمة البلاغات</h4><p>جاري التطوير</p></div>'; }
+    function loadTariffs(container) { container.innerHTML = '<div class="form-card"><h4>💰 تعريفات</h4><p>جاري التطوير</p></div>'; }
+    function loadMonthlyCosts(container) { container.innerHTML = '<div class="form-card"><h4>📊 تقارير شهرية</h4><p>جاري التطوير</p></div>'; }
+    function loadReportDaily(container) { container.innerHTML = '<div class="form-card"><h4>📝 متابعة دورية</h4><p>جاري التطوير</p></div>'; }
+    function loadReportFaults(container) { container.innerHTML = '<div class="form-card"><h4>🐛 تقرير الأعطال</h4><p>جاري التطوير</p></div>'; }
+    function loadReportStation(container) { container.innerHTML = '<div class="form-card"><h4>🏭 متابعة محطة</h4><p>جاري التطوير</p></div>'; }
+    function loadReportAsset(container) { container.innerHTML = '<div class="form-card"><h4>⚙️ متابعة أصل</h4><p>جاري التطوير</p></div>'; }
+    function loadReportEmployees(container) { container.innerHTML = '<div class="form-card"><h4>👥 تقرير العاملين</h4><p>جاري التطوير</p></div>'; }
+    function loadReportSpareParts(container) { container.innerHTML = '<div class="form-card"><h4>🔧 تقرير قطع غيار</h4><p>جاري التطوير</p></div>'; }
+    function loadArchive(container) { container.innerHTML = '<div class="form-card"><h4>📁 الأرشيف</h4><p>جاري التطوير</p></div>'; }
+    function loadUsers(container) { container.innerHTML = '<div class="form-card"><h4>⚙️ إدارة المستخدمين</h4><p>جاري التطوير</p></div>'; }
+
+    // الدالة الرئيسية
+    function loadPage(page) {
+        const container = document.getElementById('pageContent');
+        if (page === 'home') loadHome(container);
+        else if (page === 'addStation') loadAddStation(container);
+        else if (page === 'listStations') loadListStations(container);
+        else if (page === 'addEmployee') loadAddEmployee(container);
+        else if (page === 'listEmployees') loadListEmployees(container);
+        else if (page === 'addFault') loadAddFault(container);
+        else if (page === 'listFaults') loadListFaults(container);
+        else if (page === 'tariffs') loadTariffs(container);
+        else if (page === 'monthlyCosts') loadMonthlyCosts(container);
+        else if (page === 'reportDaily') loadReportDaily(container);
+        else if (page === 'reportFaults') loadReportFaults(container);
+        else if (page === 'reportStation') loadReportStation(container);
+        else if (page === 'reportAsset') loadReportAsset(container);
+        else if (page === 'reportEmployees') loadReportEmployees(container);
+        else if (page === 'reportSpareParts') loadReportSpareParts(container);
+        else if (page === 'archive') loadArchive(container);
+        else if (page === 'users') loadUsers(container);
+        else container.innerHTML = '<div class="alert alert-danger">صفحة غير موجودة</div>';
     }
 
     function toggleSubMenu(menuId) {
         const menu = document.getElementById(menuId);
-        if (menu) {
-            menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
-        }
-    }
-    
-    const toggleBtn = document.getElementById('toggleSidebar');
-    const sidebar = document.getElementById('sidebar');
-    if (toggleBtn) {
-        toggleBtn.onclick = function() {
-            sidebar.classList.toggle('active');
-        };
+        if (menu) menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
     }
 
     function logout() {
@@ -175,18 +212,12 @@
         window.location.href = 'index.html';
     }
 
-    // تحميل الصفحة الرئيسية
-    if (typeof loadPage === 'function') {
-        loadPage('home');
-    } else {
-        setTimeout(function() {
-            if (typeof loadPage === 'function') {
-                loadPage('home');
-            } else {
-                document.getElementById('pageContent').innerHTML = '<div class="alert alert-danger">خطأ: لم يتم تحميل النظام بشكل صحيح</div>';
-            }
-        }, 500);
-    }
+    const toggleBtn = document.getElementById('toggleSidebar');
+    const sidebar = document.getElementById('sidebar');
+    if (toggleBtn) toggleBtn.onclick = () => sidebar.classList.toggle('active');
+
+    if (!sessionStorage.getItem('loggedUser')) window.location.href = 'index.html';
+    loadPage('home');
 </script>
 </body>
 </html>
