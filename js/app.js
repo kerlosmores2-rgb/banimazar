@@ -2300,6 +2300,25 @@ function loadReportSparePartsAdvanced(container) {
         win.document.close();
         win.print();
     };
+// ==================== Supabase Setup ====================
+const SUPABASE_URL = 'https://pbzpumetrmirnsshjdoe.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBienB1bWV0cm1pcm5zc2hqZG9lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxMTY5MDAsImV4cCI6MjA4OTY5MjkwMH0.8x1YGOdmj0YZJz_KGxC5Awk4S6bc1dvI9BcVKjGkTO8';
 
+let supabaseClient = null;
+
+// ننتظر تحميل الصفحة والمكتبة
+window.addEventListener('load', function() {
+    if (typeof window.supabase !== 'undefined') {
+        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        console.log('✅ Supabase connected');
+        
+        // نحاول نجيب البيانات
+        supabaseClient.from('stations').select('*').then(result => {
+            console.log('Stations:', result);
+        }).catch(err => {
+            console.log('Supabase error:', err);
+        });
+    }
+});
 window.loadPage = loadPage;
 window.logout = logout;
