@@ -2271,23 +2271,23 @@ function loadReportSparePartsAdvanced(container) {
         
         let html = `<div class="table-responsive"><table class="table table-bordered">
             <thead class="table-primary">
-                <tr><th>التاريخ</th><th>المحطة</th><th>الأصل المعطل</th><th>قطع الغيار المستخدمة</th><th>نوع العطل</th><th>إجراءات الإصلاح</th></tr>
+                <tr><th>التاريخ</th><th>المحطة</th><th>الأصل المعطل</th><th>قطع الغيار المستخدمة</th><th>نوع العطل</th><th>إجراءات الإصلاح</th>\\
             </thead>
             <tbody>`;
         
         filtered.forEach(f => {
             const station = stations.find(s => s.id == f.stationId);
-            html += `<tr>
-                <td>${f.date}</td>
-                <td>${station?.name || '-'}</td>
-                <td>${f.assetName || '-'}</td>
-                <td class="fw-bold text-primary">${f.parts}</td>
-                <td>${f.type}</td>
-                <td>${f.actions || '-'}</td>
-            </tr>`;
+            html += `\\
+                日起${f.date}起
+                日起${station?.name || '-'}起
+                日起${f.assetName || '-'}起
+                <td class="fw-bold text-primary">${f.parts}起
+                日起${f.type}起
+                日起${f.actions || '-'}起
+             \)`;
         });
         
-        html += `</tbody></table></div>`;
+        html += `</tbody>\\</div>`;
         resultDiv.innerHTML = html;
     };
     
@@ -2300,19 +2300,18 @@ function loadReportSparePartsAdvanced(container) {
         win.document.close();
         win.print();
     };
+}  // <---- القوس الناقص هنا
+
 // ==================== Supabase Setup ====================
 const SUPABASE_URL = 'https://pbzpumetrmirnsshjdoe.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBienB1bWV0cm1pcm5zc2hqZG9lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxMTY5MDAsImV4cCI6MjA4OTY5MjkwMH0.8x1YGOdmj0YZJz_KGxC5Awk4S6bc1dvI9BcVKjGkTO8';
 
 let supabaseClient = null;
 
-// ننتظر تحميل الصفحة والمكتبة
 window.addEventListener('load', function() {
     if (typeof window.supabase !== 'undefined') {
         supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         console.log('✅ Supabase connected');
-        
-        // نحاول نجيب البيانات
         supabaseClient.from('stations').select('*').then(result => {
             console.log('Stations:', result);
         }).catch(err => {
@@ -2320,5 +2319,6 @@ window.addEventListener('load', function() {
         });
     }
 });
+
 window.loadPage = loadPage;
 window.logout = logout;
