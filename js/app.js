@@ -2319,6 +2319,88 @@ window.addEventListener('load', function() {
         });
     }
 });
+// ==================== دوال الحفظ في Supabase ====================
 
+async function saveToSupabase(tableName, data) {
+    if (!supabaseClient) {
+        console.log('Supabase not ready yet');
+        return false;
+    }
+    try {
+        // تحويل البيانات للصيغة المطلوبة
+        const records = data.map(item => ({ data: item }));
+        // حذف القديم
+        await supabaseClient.from(tableName).delete().neq('id', 0);
+        // إضافة الجديد
+        if (records.length > 0) {
+            const { error } = await supabaseClient.from(tableName).insert(records);
+            if (error) throw error;
+        }
+        console.log(`✅ تم حفظ ${records.length} سجل في ${tableName}`);
+        return true;
+    } catch(e) {
+        console.error(`❌ فشل حفظ ${tableName}:`, e);
+        return false;
+    }
+}
+
+async function loadFromSupabase(tableName, storageKey) {
+    if (!supabaseClient) return false;
+    try {
+        const { data, error } = await supabaseClient.from(tableName).select('*');
+        if (error) throw error;
+        if (data && data.length) {
+            const items = data.map(item => item.data);
+            localStorage.setItem(storageKey, JSON.stringify(items));
+            console.log(`✅ تم تحميل ${items.length} سجل من ${tableName}`);
+            return true;
+        }
+        return false;
+    } catch(e) {
+        console.error(`❌ فشل تحميل ${tableName}:`, e);
+        return false;
+    }
+}
+
+// تحميل البيانات عند بدء التشغيل
+async function loadAllData() {
+    await loadFromSupabase('stations', 'stations');
+    await loadFromSupabase('employees', 'employees');
+    await loadFromSupabase('faults', 'faults');
+    console.log('✅ تم تحميل جميع البيانات');
+    // تحديث الصفحة إذا كانت مفتوحة
+    if (document.getElementById('pageContent')?.innerHTML.includes('عدد المحطات')) {
+        loadPage('home');
+    }
+}
+
+// حفظ البيانات عند التعديل
+function setupAutoSave() {
+    const originalSetItem = localStorage.setItem;
+    localStorage.setItem = function(key, value) {
+        originalSetItem.call(this, key, value);
+        if (supabaseClient) {
+            if (key === 'stations') saveToSupabase('stations', JSON.parse(value));
+            else if (key === 'employees') saveToSupabase('employees', JSON.parse(value));
+            else if (key === 'faults') saveToSupabase('faults', JSON.parse(value));
+        }
+    };
+}
+
+// تشغيل التحميل بعد ثانية
+setTimeout(() => {
+    if (supabaseClient) {
+        loadAllData();
+        setupAutoSave();
+    } else {
+        console.log('⏳ انتظار Supabase...');
+        setTimeout(() => {
+            if (supabaseClient) {
+                loadAllData();
+                setupAutoSave();
+            }
+        }, 2000);
+    }
+}, 1000);
 window.loadPage = loadPage;
 window.logout = logout;
