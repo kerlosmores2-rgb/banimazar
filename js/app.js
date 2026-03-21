@@ -2300,7 +2300,7 @@ function loadReportSparePartsAdvanced(container) {
         win.document.close();
         win.print();
     };
-}  // <---- القوس الناقص هنا
+} 
 
 // ==================== Supabase Setup ====================
 const SUPABASE_URL = 'https://pbzpumetrmirnsshjdoe.supabase.co';
