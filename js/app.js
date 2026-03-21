@@ -2348,7 +2348,6 @@ function loadReportSparePartsAdvanced(container) {
     };
 }
 // ==================== دوال Firebase ====================
-
 async function loadCollectionFromFirebase(collectionName, storageKey) {
     if (!window.db) return;
     try {
@@ -2410,9 +2409,8 @@ async function syncAllFromFirebase() {
     await loadCollectionFromFirebase('employees', 'employees');
     await loadCollectionFromFirebase('faults', 'faults');
     console.log('✅ تمت مزامنة كل البيانات مع Firebase');
-    // تحديث الصفحة الرئيسية لو كانت مفتوحة
     if (document.getElementById('pageContent')?.innerHTML.includes('عدد المحطات')) {
-        loadPage('home');
+        if (typeof loadPage === 'function') loadPage('home');
     }
 }
 
@@ -2422,10 +2420,6 @@ setTimeout(() => {
         syncAllFromFirebase();
     }
 }, 1000);
-if (document.getElementById('pageContent')?.innerHTML.includes('عدد المحطات')) {
-    if (typeof loadPage === 'function') {
-        loadPage('home');
-    }
-}
+
 window.loadPage = loadPage;
 window.logout = logout;
