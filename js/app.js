@@ -2347,5 +2347,80 @@ function loadReportSparePartsAdvanced(container) {
         win.print();
     };
 }
+// ==================== دوال Firebase ====================
+
+async function loadCollectionFromFirebase(collectionName, storageKey) {
+    if (!window.db) return;
+    try {
+        const querySnapshot = await getDocs(collection(window.db, collectionName));
+        const items = [];
+        querySnapshot.forEach((doc) => {
+            items.push({ id: doc.id, ...doc.data() });
+        });
+        if (items.length > 0) {
+            localStorage.setItem(storageKey, JSON.stringify(items));
+            console.log(`✅ تم تحديث ${storageKey} من Firebase`);
+        }
+    } catch(e) {
+        console.error(`❌ فشل تحميل ${collectionName}:`, e);
+    }
+}
+
+async function addToFirebase(collectionName, data, storageKey) {
+    if (!window.db) return null;
+    try {
+        const docRef = await addDoc(collection(window.db, collectionName), {
+            ...data,
+            createdAt: new Date().toISOString()
+        });
+        console.log(`✅ تمت الإضافة في Firebase (${collectionName})`);
+        await loadCollectionFromFirebase(collectionName, storageKey);
+        return docRef.id;
+    } catch(e) {
+        console.error(`❌ فشل الإضافة في Firebase:`, e);
+        return null;
+    }
+}
+
+async function deleteFromFirebase(collectionName, docId, storageKey) {
+    if (!window.db) return;
+    try {
+        await deleteDoc(doc(window.db, collectionName, docId));
+        console.log(`✅ تم الحذف من Firebase (${collectionName})`);
+        await loadCollectionFromFirebase(collectionName, storageKey);
+    } catch(e) {
+        console.error(`❌ فشل الحذف من Firebase:`, e);
+    }
+}
+
+async function updateInFirebase(collectionName, docId, data, storageKey) {
+    if (!window.db) return;
+    try {
+        await updateDoc(doc(window.db, collectionName, docId), data);
+        console.log(`✅ تم التحديث في Firebase (${collectionName})`);
+        await loadCollectionFromFirebase(collectionName, storageKey);
+    } catch(e) {
+        console.error(`❌ فشل التحديث في Firebase:`, e);
+    }
+}
+
+// تحميل كل البيانات من Firebase عند بدء التشغيل
+async function syncAllFromFirebase() {
+    await loadCollectionFromFirebase('stations', 'stations');
+    await loadCollectionFromFirebase('employees', 'employees');
+    await loadCollectionFromFirebase('faults', 'faults');
+    console.log('✅ تمت مزامنة كل البيانات مع Firebase');
+    // تحديث الصفحة الرئيسية لو كانت مفتوحة
+    if (document.getElementById('pageContent')?.innerHTML.includes('عدد المحطات')) {
+        loadPage('home');
+    }
+}
+
+// تشغيل المزامنة بعد ثانية
+setTimeout(() => {
+    if (window.db) {
+        syncAllFromFirebase();
+    }
+}, 1000);
 window.loadPage = loadPage;
 window.logout = logout;
