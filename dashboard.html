@@ -227,31 +227,7 @@
         }, 500);
     }
 </script>
-    <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
-  import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyDx5Tv9qsafiDBCy2wRc4R7P2v8uXJRVqc",
-    authDomain: "banimazar-dfa15.firebaseapp.com",
-    projectId: "banimazar-dfa15",
-    storageBucket: "banimazar-dfa15.firebasestorage.app",
-    messagingSenderId: "611959579874",
-    appId: "1:611959579874:web:df7ae7a8f3d8e68784aabb"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-  
-  window.db = db;
-  window.collection = collection;
-  window.getDocs = getDocs;
-  window.addDoc = addDoc;
-  window.deleteDoc = deleteDoc;
-  window.doc = doc;
-  window.updateDoc = updateDoc;
-  
-  console.log("✅ Firebase ready");
+    
 </script>
 </body>
 </html>
