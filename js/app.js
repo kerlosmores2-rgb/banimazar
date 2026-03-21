@@ -2367,16 +2367,22 @@ const SUPABASE_URL = 'https://pbzpumetrmirnsshjdoe.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBienB1bWV0cm1pcm5zc2hqZG9lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxMTY5MDAsImV4cCI6MjA4OTY5MjkwMH0.8x1YGOdmj0YZJz_KGxC5Awk4S6bc1dvI9BcVKjGkTO8';
 
 const supabase = window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// ==================== الاتصال بـ Supabase ====================
+const SUPABASE_URL = 'https://pbzpumetrmirnsshjdoe.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBienB1bWV0cm1pcm5zc2hqZG9lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxMTY5MDAsImV4cCI6MjA4OTY5MjkwMH0.8x1YGOdmj0YZJz_KGxC5Awk4S6bc1dvI9BcVKjGkTO8';
 
-// ==================== دوال المزامنة ====================
+const supabase = window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ==================== دوال المزامنة (بدون مسح شامل) ====================
 async function syncToSupabase(tableName, storageKey) {
     try {
         const data = JSON.parse(localStorage.getItem(storageKey) || '[]');
-        await supabase.from(tableName).delete().neq('id', 0);
-        if (data.length) {
-            const records = data.map(item => ({ data: item }));
-            await supabase.from(tableName).insert(records);
-        }
+        if (data.length === 0) return;
+        
+        // إضافة البيانات الجديدة فقط (لا نمسح الكل)
+        const records = data.map(item => ({ data: item }));
+        const { error } = await supabase.from(tableName).upsert(records, { onConflict: 'id' });
+        if (error) throw error;
         console.log(`✅ تم حفظ ${tableName} في Supabase`);
     } catch(e) {
         console.log(`❌ فشل حفظ ${tableName}:`, e);
@@ -2389,30 +2395,45 @@ async function loadFromSupabase(tableName, storageKey) {
         if (error) throw error;
         if (data && data.length) {
             const items = data.map(item => item.data);
-            localStorage.setItem(storageKey, JSON.stringify(items));
+            // نحفظ فقط لو فيه بيانات جديدة مختلفة
+            const current = JSON.parse(localStorage.getItem(storageKey) || '[]');
+            if (JSON.stringify(current) !== JSON.stringify(items)) {
+                localStorage.setItem(storageKey, JSON.stringify(items));
+                console.log(`✅ تم تحديث ${storageKey} من Supabase`);
+                return true;
+            }
         }
-        console.log(`✅ تم تحميل ${tableName} من Supabase`);
+        return false;
     } catch(e) {
         console.log(`❌ فشل تحميل ${tableName}:`, e);
+        return false;
     }
 }
 
 async function loadAllDataFromSupabase() {
+    // نحمّل البيانات لكن بدون إعادة تحميل الصفحة تلقائيًا
     await loadFromSupabase('stations', 'stations');
     await loadFromSupabase('employees', 'employees');
     await loadFromSupabase('faults', 'faults');
-    console.log('✅ تم تحميل كل البيانات من Supabase');
-    location.reload();
+    console.log('✅ تم تحميل البيانات من Supabase');
+    
+    // فقط لو كان فيه تغيير حقيقي نعيد التحميل
+    const currentPage = document.getElementById('pageContent')?.innerHTML;
+    if (currentPage && currentPage.includes('عدد المحطات')) {
+        loadPage('home');
+    }
 }
 
-setTimeout(loadAllDataFromSupabase, 500);
+// نحمّل البيانات بعد ثانية من تحميل الصفحة (مرة واحدة فقط)
+setTimeout(loadAllDataFromSupabase, 1500);
 
+// نحافظ على localStorage setItem الأصلي
 const originalSetItem = localStorage.setItem;
 localStorage.setItem = function(key, value) {
     originalSetItem.call(this, key, value);
-    if (key === 'stations') syncToSupabase('stations', 'stations');
-    else if (key === 'employees') syncToSupabase('employees', 'employees');
-    else if (key === 'faults') syncToSupabase('faults', 'faults');
+    if (key === 'stations') setTimeout(() => syncToSupabase('stations', 'stations'), 100);
+    else if (key === 'employees') setTimeout(() => syncToSupabase('employees', 'employees'), 100);
+    else if (key === 'faults') setTimeout(() => syncToSupabase('faults', 'faults'), 100);
 };
 window.loadPage = loadPage;
 window.logout = logout;
