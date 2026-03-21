@@ -2301,6 +2301,71 @@ function loadReportSparePartsAdvanced(container) {
         win.print();
     };
 }
+// ==================== Supabase Setup (نسخة واحدة) ====================
+const SUPABASE_URL = 'https://pbzpumetrmirnsshjdoe.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBienB1bWV0cm1pcm5zc2hqZG9lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxMTY5MDAsImV4cCI6MjA4OTY5MjkwMH0.8x1YGOdmj0YZJz_KGxC5Awk4S6bc1dvI9BcVKjGkTO8';
 
+let supabase = null;
+if (typeof window.supabase !== 'undefined') {
+    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+}
+
+// ==================== دوال المزامنة (آمنة) ====================
+async function syncToSupabase(tableName, storageKey) {
+    if (!supabase) return;
+    try {
+        const data = JSON.parse(localStorage.getItem(storageKey) || '[]');
+        if (data.length === 0) return;
+        const records = data.map(item => ({ data: item }));
+        await supabase.from(tableName).upsert(records, { onConflict: 'id' });
+        console.log(`✅ تم حفظ ${tableName}`);
+    } catch(e) {
+        console.log(`❌ فشل حفظ ${tableName}:`, e);
+    }
+}
+
+async function loadFromSupabase(tableName, storageKey) {
+    if (!supabase) return false;
+    try {
+        const { data, error } = await supabase.from(tableName).select('*');
+        if (error) throw error;
+        if (data && data.length) {
+            const items = data.map(item => item.data);
+            const current = JSON.parse(localStorage.getItem(storageKey) || '[]');
+            if (JSON.stringify(current) !== JSON.stringify(items)) {
+                localStorage.setItem(storageKey, JSON.stringify(items));
+                console.log(`✅ تم تحديث ${storageKey}`);
+                return true;
+            }
+        }
+        return false;
+    } catch(e) {
+        console.log(`❌ فشل تحميل ${tableName}:`, e);
+        return false;
+    }
+}
+
+// تحميل البيانات (مرة واحدة)
+setTimeout(async () => {
+    if (!supabase) return;
+    await loadFromSupabase('stations', 'stations');
+    await loadFromSupabase('employees', 'employees');
+    await loadFromSupabase('faults', 'faults');
+    console.log('✅ تم تحميل البيانات');
+    // تحديث الصفحة الرئيسية فقط لو كانت مفتوحة
+    if (document.getElementById('pageContent')?.innerHTML.includes('عدد المحطات')) {
+        loadPage('home');
+    }
+}, 1000);
+
+// ربط الحفظ
+const originalSetItem = localStorage.setItem;
+localStorage.setItem = function(key, value) {
+    originalSetItem.call(this, key, value);
+    if (!supabase) return;
+    if (key === 'stations') setTimeout(() => syncToSupabase('stations', 'stations'), 100);
+    else if (key === 'employees') setTimeout(() => syncToSupabase('employees', 'employees'), 100);
+    else if (key === 'faults') setTimeout(() => syncToSupabase('faults', 'faults'), 100);
+};
 window.loadPage = loadPage;
 window.logout = logout;
