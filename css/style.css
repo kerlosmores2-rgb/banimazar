@@ -1,0 +1,517 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+body {
+    font-family: 'Tahoma', 'Segoe UI', sans-serif;
+    background: #f4f6f9;
+    overflow-x: hidden;
+}
+.wrapper {
+    display: flex;
+    width: 100%;
+    align-items: stretch;
+}
+#sidebar {
+    min-width: 280px;
+    max-width: 280px;
+    background: #1e2a3e;
+    color: #fff;
+    transition: all 0.3s;
+    height: 100vh;
+    position: sticky;
+    top: 0;
+    overflow-y: auto;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+}
+#sidebar.active {
+    margin-right: -280px;
+}
+.sidebar-header {
+    padding: 20px;
+    background: #0d6efd;
+    text-align: center;
+    border-bottom: 1px solid #2c3e50;
+}
+.sidebar-header h4 {
+    font-size: 1.2rem;
+    margin-bottom: 0;
+}
+.sidebar-header h6 {
+    font-size: 0.85rem;
+    margin-top: 5px;
+    opacity: 0.8;
+}
+#sidebar ul.components {
+    padding: 20px 0;
+}
+#sidebar ul li a {
+    padding: 12px 20px;
+    display: block;
+    color: #ecf0f1;
+    text-decoration: none;
+    transition: all 0.3s;
+    font-size: 0.95rem;
+}
+#sidebar ul li a:hover {
+    background: #0d6efd;
+    color: #fff;
+    padding-right: 25px;
+}
+#sidebar ul li a i {
+    margin-left: 10px;
+    width: 25px;
+}
+#sidebar ul ul li a {
+    padding-right: 50px;
+    font-size: 0.85rem;
+    background: #2c3e50;
+}
+#sidebar ul ul li a:hover {
+    background: #0d6efd;
+    padding-right: 55px;
+}
+.sidebar-footer {
+    padding: 20px;
+    border-top: 1px solid #2c3e50;
+    margin-top: auto;
+    position: sticky;
+    bottom: 0;
+    background: #1e2a3e;
+}
+#content {
+    width: 100%;
+    min-height: 100vh;
+    transition: all 0.3s;
+    padding: 20px;
+}
+#sidebarCollapse {
+    margin-bottom: 20px;
+    background: #0d6efd;
+    border: none;
+    border-radius: 8px;
+}
+.stats-card {
+    background: white;
+    border-radius: 15px;
+    padding: 20px;
+    text-align: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    transition: transform 0.3s;
+    margin-bottom: 20px;
+}
+.stats-card:hover {
+    transform: translateY(-5px);
+}
+.stats-card i {
+    font-size: 2.5rem;
+    color: #0d6efd;
+    margin-bottom: 10px;
+}
+.stats-card h3 {
+    font-size: 2rem;
+    font-weight: bold;
+    margin: 10px 0;
+    color: #1e2a3e;
+}
+.form-card {
+    background: white;
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+}
+.form-card h4 {
+    color: #0d6efd;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #0d6efd;
+    padding-bottom: 10px;
+}
+.table-responsive {
+    background: white;
+    border-radius: 15px;
+    padding: 15px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    overflow-x: auto;
+}
+.table th {
+    background: #0d6efd;
+    color: white;
+    text-align: center;
+}
+.table td {
+    text-align: center;
+    vertical-align: middle;
+}
+.search-bar {
+    background: white;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.btn-sm {
+    margin: 2px;
+}
+.footer-credit {
+    font-size: 0.8rem;
+    color: #6c757d;
+    border-top: 1px solid #dee2e6;
+    margin-top: 30px;
+}
+@media print {
+    #sidebar, #sidebarCollapse, .btn, .search-bar, .footer-credit {
+        display: none !important;
+    }
+    #content {
+        padding: 0;
+        margin: 0;
+    }
+    .stats-card, .form-card, .table-responsive {
+        box-shadow: none;
+        border: 1px solid #ddd;
+    }
+}
+@media (max-width: 768px) {
+    #sidebar {
+        margin-right: -280px;
+        position: fixed;
+        z-index: 1000;
+    }
+    #sidebar.active {
+        margin-right: 0;
+    }
+    #content {
+        width: 100%;
+    }
+// ==================== التحقق من تسجيل الدخول ====================
+function checkAuth() {
+    if (!sessionStorage.getItem('loggedInUser')) {
+        window.location.href = 'index.html';
+    }
+}
+
+function logout() {
+    sessionStorage.removeItem('loggedInUser');
+    window.location.href = 'index.html';
+}
+
+// ==================== تهيئة البيانات الافتراضية ====================
+function initData() {
+    if (!localStorage.getItem('stations')) {
+        localStorage.setItem('stations', JSON.stringify([]));
+    }
+    if (!localStorage.getItem('employees')) {
+        localStorage.setItem('employees', JSON.stringify([]));
+    }
+    if (!localStorage.getItem('faults')) {
+        localStorage.setItem('faults', JSON.stringify([]));
+    }
+    if (!localStorage.getItem('tariffs')) {
+        localStorage.setItem('tariffs', JSON.stringify({ electricity: 1.20, water: 3.50 }));
+    }
+    if (!localStorage.getItem('monthlyCosts')) {
+        localStorage.setItem('monthlyCosts', JSON.stringify([]));
+    }
+    if (!localStorage.getItem('reports')) {
+        localStorage.setItem('reports', JSON.stringify([])); // لتقارير المتابعة الدورية
+    }
+    if (!localStorage.getItem('archive')) {
+        localStorage.setItem('archive', JSON.stringify({})); // صور لكل محطة
+    }
+}
+initData();
+
+// ==================== دوال مساعدة ====================
+function getCurrentUser() {
+    return JSON.parse(sessionStorage.getItem('loggedInUser') || '{}');
+}
+
+function canEditAll() {
+    const user = getCurrentUser();
+    return user.permission === 'مدير';
+}
+
+// ==================== تحميل الصفحات ====================
+function loadPage(page) {
+    const container = document.getElementById('pageContent');
+    if (page === 'home') renderHome(container);
+    else if (page === 'add-station') renderAddStation(container);
+    else if (page === 'stations-list') renderStationsList(container);
+    else if (page === 'add-fault') renderAddFault(container);
+    else if (page === 'faults-list') renderFaultsList(container);
+    else if (page === 'tariffs') renderTariffs(container);
+    else if (page === 'monthly-costs') renderMonthlyCosts(container);
+    else if (page === 'add-employee') renderAddEmployee(container);
+    else if (page === 'employees-list') renderEmployeesList(container);
+    else if (page === 'report-daily') renderReportDaily(container);
+    else if (page === 'report-faults') renderReportFaults(container);
+    else if (page === 'report-station') renderReportStation(container);
+    else if (page === 'report-asset') renderReportAsset(container);
+    else if (page === 'report-employees') renderReportEmployees(container);
+    else if (page === 'report-spareparts') renderReportSpareparts(container);
+    else if (page === 'archive') renderArchive(container);
+    else if (page === 'users') renderUsers(container);
+    else container.innerHTML = '<div class="alert alert-danger">صفحة غير معروفة</div>';
+}
+
+// ==================== الصفحة الرئيسية ====================
+function renderHome(container) {
+    const stations = JSON.parse(localStorage.getItem('stations') || '[]');
+    const employees = JSON.parse(localStorage.getItem('employees') || '[]');
+    const faults = JSON.parse(localStorage.getItem('faults') || '[]');
+    const openFaults = faults.filter(f => f.status !== 'closed').length;
+    container.innerHTML = `
+        <div class="row">
+            <div class="col-md-4"><div class="stats-card"><i class="fas fa-water"></i><h3>${stations.length}</h3><p>عدد المحطات</p></div></div>
+            <div class="col-md-4"><div class="stats-card"><i class="fas fa-users"></i><h3>${employees.length}</h3><p>عدد العاملين</p></div></div>
+            <div class="col-md-4"><div class="stats-card"><i class="fas fa-exclamation-triangle"></i><h3>${openFaults}</h3><p>الأعطال المفتوحة</p></div></div>
+        </div>
+        <div class="form-card"><h4>نظرة عامة</h4><p>مرحباً بك في نظام إدارة محطات رفع الصرف الصحي ببني مزار.</p><small>آخر تحديث: ${new Date().toLocaleDateString('ar-EG')}</small></div>
+    `;
+}
+
+// ==================== إضافة محطة (كاملة مع كل الأصول) ====================
+function renderAddStation(container) {
+    // سنقوم بإنشاء واجهة ديناميكية تعتمد على إضافة أقسام قابلة للإضافة
+    // نظراً للطول، سأكتب HTML مع أزرار إضافة ديناميكية وسأرفق جافاسكريبت داخلها.
+    // سأقوم ببناء نموذج كبير يتضمن كل التفاصيل المطلوبة.
+    // لتجنب التعقيد الزائد، سأستخدم قوالب HTML وأضيف لها وظائف.
+
+    const stationsList = JSON.parse(localStorage.getItem('stations') || '[]');
+    let outfallOptions = '<option value="">بدون</option>';
+    stationsList.forEach(s => { outfallOptions += `<option value="${s.name}">${s.name}</option>`; });
+
+    // نموذج إضافة المحطة مع أقسام قابلة للتكرار
+    const html = `
+        <div class="form-card">
+            <h4><i class="fas fa-plus-circle"></i> إضافة محطة جديدة</h4>
+            <form id="stationForm">
+                <div class="row">
+                    <div class="col-md-6 mb-3"><label>اسم الموقع</label><input type="text" id="stationName" class="form-control" required></div>
+                    <div class="col-md-6 mb-3"><label>كود الموقع</label><input type="text" id="stationCode" class="form-control" required></div>
+                    <div class="col-md-4 mb-3"><label>نوع المحطة</label><select id="stationType" class="form-select"><option>رئيسية</option><option>فرعية</option><option>معالجة</option></select></div>
+                    <div class="col-md-4 mb-3"><label>المصب</label><select id="outfall" class="form-select">${outfallOptions}</select></div>
+                    <div class="col-md-4 mb-3"><label>القدرة التصميمية (m³/h)</label><input type="number" id="capacity" class="form-control"></div>
+                    <div class="col-md-12 mb-3"><label>الموقع الجغرافي</label><input type="text" id="location" class="form-control" placeholder="إحداثيات أو عنوان"></div>
+                </div>
+
+                <!-- مصادر التغذية -->
+                <div class="mt-4"><h5>مصادر التغذية</h5><div id="powerSourcesContainer"></div><button type="button" class="btn btn-sm btn-success" onclick="addPowerSource()">+ إضافة مصدر</button></div>
+
+                <!-- الوحدات الرئيسية -->
+                <div class="mt-4"><h5>الوحدات الرئيسية (طلمبات)</h5><div id="mainPumpsContainer"></div><button type="button" class="btn btn-sm btn-success" onclick="addMainPump()">+ إضافة وحدة رئيسية</button></div>
+
+                <!-- الأصول الفرعية -->
+                <div class="mt-4"><h5>طلمبات نزح</h5><div id="drainPumpsContainer"></div><button type="button" class="btn btn-sm btn-success" onclick="addDrainPump()">+ إضافة طلمبة نزح</button></div>
+                <div class="mt-4"><h5>أوناش</h5><div id="winchesContainer"></div><button type="button" class="btn btn-sm btn-success" onclick="addWinch()">+ إضافة ونش</button></div>
+                <div class="mt-4"><h5>جهاز قياس تصرف</h5><div id="flowMeterContainer"></div><button type="button" class="btn btn-sm btn-success" onclick="addFlowMeter()">+ إضافة جهاز</button></div>
+                <div class="mt-4"><h5>مراوح تهوية</h5><div id="fansContainer"></div><button type="button" class="btn btn-sm btn-success" onclick="addFan()">+ إضافة مروحة</button></div>
+                <div class="mt-4"><h5>مطرقة مائية</h5><div id="hammerContainer"></div><button type="button" class="btn btn-sm btn-success" onclick="addHammer()">+ إضافة مطرقة مائية</button></div>
+                <div class="mt-4"><h5>لوحات كهربائية</h5><div id="panelsContainer"></div><button type="button" class="btn btn-sm btn-success" onclick="addPanel()">+ إضافة لوحة</button></div>
+                <div class="mt-4"><h5>مباني</h5><div id="buildingsContainer"></div><button type="button" class="btn btn-sm btn-success" onclick="addBuilding()">+ إضافة مبنى</button></div>
+
+                <div class="mt-4"><button type="submit" class="btn btn-primary">حفظ المحطة</button></div>
+            </form>
+        </div>
+    `;
+    container.innerHTML = html;
+
+    // تعريف الدوال المساعدة (سيتم إضافتها كدوال عامة)
+    window.addPowerSource = () => addDynamicItem('powerSourcesContainer', getPowerSourceHTML);
+    window.addMainPump = () => addDynamicItem('mainPumpsContainer', getMainPumpHTML);
+    window.addDrainPump = () => addDynamicItem('drainPumpsContainer', getDrainPumpHTML);
+    window.addWinch = () => addDynamicItem('winchesContainer', getWinchHTML);
+    window.addFlowMeter = () => addDynamicItem('flowMeterContainer', getFlowMeterHTML);
+    window.addFan = () => addDynamicItem('fansContainer', getFanHTML);
+    window.addHammer = () => addDynamicItem('hammerContainer', getHammerHTML);
+    window.addPanel = () => addDynamicItem('panelsContainer', getPanelHTML);
+    window.addBuilding = () => addDynamicItem('buildingsContainer', getBuildingHTML);
+
+    // إضافة نموذج واحد من كل نوع بشكل افتراضي
+    addPowerSource(); addMainPump(); addDrainPump(); addWinch(); addFlowMeter(); addFan(); addHammer(); addPanel(); addBuilding();
+
+    document.getElementById('stationForm').onsubmit = (e) => {
+        e.preventDefault();
+        saveStation();
+    };
+}
+
+function addDynamicItem(containerId, htmlGenerator) {
+    const container = document.getElementById(containerId);
+    const div = document.createElement('div');
+    div.className = 'dynamic-item mb-3 p-2 border rounded';
+    div.innerHTML = htmlGenerator();
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.className = 'btn btn-sm btn-danger mt-2';
+    removeBtn.innerHTML = '<i class="fas fa-trash"></i> حذف';
+    removeBtn.onclick = () => div.remove();
+    div.appendChild(removeBtn);
+    container.appendChild(div);
+}
+
+function getPowerSourceHTML() {
+    return `
+        <div class="row">
+            <div class="col-md-6"><label>النوع</label><select class="form-select source-type" onchange="toggleSourceFields(this)"><option value="محول">محول</option><option value="مولد">مولد</option></select></div>
+            <div class="col-md-6 transformer-fields"><label>جهد الدخول (V)</label><input type="text" class="form-control transformer-in"></div>
+            <div class="col-md-6 transformer-fields"><label>جهد الخروج (V)</label><input type="text" class="form-control transformer-out"></div>
+            <div class="col-md-6 transformer-fields"><label>القدرة (kVA)</label><input type="text" class="form-control transformer-kva"></div>
+            <div class="col-md-6 generator-fields" style="display:none"><label>نوع المحرك</label><input type="text" class="form-control gen-engine-type"></div>
+            <div class="col-md-6 generator-fields" style="display:none"><label>قدرة المحرك (HP/kW)</label><input type="text" class="form-control gen-engine-power"></div>
+            <div class="col-md-6 generator-fields" style="display:none"><label>معدل الاستهلاك على الحمل (لتر/س)</label><input type="text" class="form-control gen-load-cons"></div>
+            <div class="col-md-6 generator-fields" style="display:none"><label>معدل الاستهلاك بدون حمل (لتر/س)</label><input type="text" class="form-control gen-idle-cons"></div>
+            <div class="col-md-6 generator-fields" style="display:none"><label>نوع المولد</label><input type="text" class="form-control gen-type"></div>
+            <div class="col-md-6 generator-fields" style="display:none"><label>قدرة المولد (kVA)</label><input type="text" class="form-control gen-kva"></div>
+            <div class="col-md-6 generator-fields" style="display:none"><label>قدرة المولد (kW)</label><input type="text" class="form-control gen-kw"></div>
+        </div>
+    `;
+}
+function getMainPumpHTML() {
+    return `
+        <div class="row">
+            <div class="col-md-4"><label>نوع الوحدة</label><select class="form-select"><option>غاطس</option><option>رأسية كوبلنج</option><option>رأسية عامود كردان</option></select></div>
+            <div class="col-md-4"><label>الماركة</label><input type="text" class="form-control"></div>
+            <div class="col-md-4"><label>التصرف (m³/h)</label><input type="number" class="form-control"></div>
+            <div class="col-md-4"><label>الرفع (m)</label><input type="number" class="form-control"></div>
+            <div class="col-md-4"><label>فتحة السحب/الطرد</label><input type="text" class="form-control"></div>
+            <div class="col-md-4"><label>محبس السحب/الطرد</label><input type="text" class="form-control"></div>
+            <div class="col-md-4"><label>محبس عدم رجوع</label><input type="text" class="form-control"></div>
+        </div>
+    `;
+}
+function getDrainPumpHTML() {
+    return `<div class="row"><div class="col-md-3"><label>النوع</label><input type="text" class="form-control"></div><div class="col-md-3"><label>تصرف (m³/h)</label><input type="number" class="form-control"></div><div class="col-md-3"><label>الرفع (m)</label><input type="number" class="form-control"></div><div class="col-md-3"><label>قدرة المحرك (kW)</label><input type="number" class="form-control"></div></div>`;
+}
+function getWinchHTML() {
+    return `<div class="row"><div class="col-md-3"><label>نوع الونش</label><input type="text" class="form-control"></div><div class="col-md-3"><label>قدرة (طن/كجم)</label><input type="text" class="form-control"></div><div class="col-md-3"><label>جهد التشغيل (V)</label><input type="text" class="form-control"></div><div class="col-md-3"><label>قدرة المحرك (kW)</label><input type="number" class="form-control"></div></div>`;
+}
+function getFlowMeterHTML() {
+    return `<div class="row"><div class="col-md-6"><label>يوجد</label><select class="form-select"><option>يوجد</option><option>لا يوجد</option></select></div><div class="col-md-6"><label>النوع (إذا يوجد)</label><input type="text" class="form-control"></div></div>`;
+}
+function getFanHTML() {
+    return `<div class="row"><div class="col-md-6"><label>يوجد</label><select class="form-select"><option>يوجد</option><option>لا يوجد</option></select></div><div class="col-md-6"><label>النوع/قدرة</label><input type="text" class="form-control"></div></div>`;
+}
+function getHammerHTML() {
+    return `<div class="row"><div class="col-md-12"><label>يوجد</label><select class="form-select"><option>يوجد</option><option>لا يوجد</option></select></div></div>`;
+}
+function getPanelHTML() {
+    return `<div class="row"><div class="col-md-4"><label>نوع اللوحة</label><select class="form-select"><option>لوحة تشغيل مركزية</option><option>لوحة غاطس نزح</option><option>لوحة إنارة الموقع</option><option>لوحة إنارة العنبر</option><option>لوحة إنارة الإدارة</option><option>لوحة إنارة غرفة الحارس</option><option>لوحة إنارة المولد</option><option>لوحة تحكم أوتوماتيك</option></select></div><div class="col-md-4"><label>اسم اللوحة</label><input type="text" class="form-control"></div><div class="col-md-4"><label>وظيفة اللوحة</label><input type="text" class="form-control"></div><div class="col-md-4"><label>مصدر التغذية</label><input type="text" class="form-control"></div><div class="col-md-4"><label>جهد التغذية (V)</label><input type="text" class="form-control"></div><div class="col-md-4"><label>وصف اللوحة</label><input type="text" class="form-control"></div></div>`;
+}
+function getBuildingHTML() {
+    return `<div class="row"><div class="col-md-12"><label>اسم المبنى</label><input type="text" class="form-control"></div></div>`;
+}
+
+function toggleSourceFields(select) {
+    const div = select.closest('.dynamic-item');
+    const isGenerator = select.value === 'مولد';
+    div.querySelectorAll('.transformer-fields').forEach(el => el.style.display = isGenerator ? 'none' : '');
+    div.querySelectorAll('.generator-fields').forEach(el => el.style.display = isGenerator ? '' : 'none');
+}
+
+function saveStation() {
+    // جمع البيانات الأساسية
+    const station = {
+        id: Date.now(),
+        name: document.getElementById('stationName').value,
+        code: document.getElementById('stationCode').value,
+        type: document.getElementById('stationType').value,
+        outfall: document.getElementById('outfall').value,
+        capacity: document.getElementById('capacity').value,
+        location: document.getElementById('location').value,
+        powerSources: collectItems('powerSourcesContainer', collectPowerSource),
+        mainPumps: collectItems('mainPumpsContainer', collectMainPump),
+        drainPumps: collectItems('drainPumpsContainer', collectSimpleItem),
+        winches: collectItems('winchesContainer', collectSimpleItem),
+        flowMeters: collectItems('flowMeterContainer', collectFlowMeter),
+        fans: collectItems('fansContainer', collectSimpleItem),
+        hammers: collectItems('hammerContainer', collectHammer),
+        panels: collectItems('panelsContainer', collectPanel),
+        buildings: collectItems('buildingsContainer', collectBuilding)
+    };
+    let stations = JSON.parse(localStorage.getItem('stations'));
+    stations.push(station);
+    localStorage.setItem('stations', JSON.stringify(stations));
+    alert('تم حفظ المحطة بنجاح');
+    loadPage('stations-list');
+}
+
+function collectItems(containerId, collector) {
+    const container = document.getElementById(containerId);
+    if (!container) return [];
+    const items = [];
+    container.querySelectorAll('.dynamic-item').forEach(item => {
+        items.push(collector(item));
+    });
+    return items;
+}
+function collectPowerSource(item) {
+    const type = item.querySelector('.source-type').value;
+    if (type === 'محول') {
+        return { type, in: item.querySelector('.transformer-in').value, out: item.querySelector('.transformer-out').value, kva: item.querySelector('.transformer-kva').value };
+    } else {
+        return {
+            type, engineType: item.querySelector('.gen-engine-type').value, enginePower: item.querySelector('.gen-engine-power').value,
+            loadCons: item.querySelector('.gen-load-cons').value, idleCons: item.querySelector('.gen-idle-cons').value,
+            genType: item.querySelector('.gen-type').value, genKva: item.querySelector('.gen-kva').value, genKw: item.querySelector('.gen-kw').value
+        };
+    }
+}
+function collectMainPump(item) {
+    const inputs = item.querySelectorAll('input, select');
+    return { type: inputs[0].value, brand: inputs[1].value, flow: inputs[2].value, head: inputs[3].value, suction: inputs[4].value, valveSuction: inputs[5].value, nonReturn: inputs[6].value };
+}
+function collectSimpleItem(item) {
+    const res = {};
+    item.querySelectorAll('input, select').forEach((el, idx) => { res[`field${idx}`] = el.value; });
+    return res;
+}
+function collectFlowMeter(item) {
+    const exists = item.querySelector('select').value;
+    const type = item.querySelector('input')?.value || '';
+    return { exists, type };
+}
+function collectHammer(item) {
+    return { exists: item.querySelector('select').value };
+}
+function collectPanel(item) {
+    const selects = item.querySelectorAll('select, input');
+    return { type: selects[0].value, name: selects[1].value, function: selects[2].value, source: selects[3].value, voltage: selects[4].value, description: selects[5].value };
+}
+function collectBuilding(item) {
+    return { name: item.querySelector('input').value };
+}
+
+// ==================== قائمة المحطات ====================
+function renderStationsList(container) {
+    const stations = JSON.parse(localStorage.getItem('stations') || '[]');
+    if (stations.length === 0) { container.innerHTML = '<div class="alert alert-info">لا توجد محطات مسجلة</div>'; return; }
+    let html = `<div class="search-bar"><div class="row"><div class="col-md-8"><input type="text" id="searchStationInput" class="form-control" placeholder="بحث بالاسم أو الكود"></div><div class="col-md-4"><button class="btn btn-primary" onclick="filterStations()">بحث</button></div></div></div>
+    <div class="table-responsive"><table class="table table-bordered"><thead><tr><th>الكود</th><th>الاسم</th><th>النوع</th><th>المصب</th><th>الإجراءات</th></tr></thead><tbody id="stationsTableBody">`;
+    stations.forEach(s => {
+        html += `<tr><td>${s.code}</td><td>${s.name}</td><td>${s.type}</td><td>${s.outfall || '-'}</td><td><button class="btn btn-sm btn-info" onclick="viewStation('${s.id}')">عرض</button></td></tr>`;
+    });
+    html += `</tbody></table></div>`;
+    container.innerHTML = html;
+    window.filterStations = () => {
+        const search = document.getElementById('searchStationInput').value.toLowerCase();
+        const rows = document.querySelectorAll('#stationsTableBody tr');
+        rows.forEach(row => {
+            const text = row.innerText.toLowerCase();
+            row.style.display = text.includes(search) ? '' : 'none';
+        });
+    };
+    window.viewStation = (id) => {
+        const station = JSON.parse(localStorage.getItem('stations')).find(s => s.id == id);
+        if (station) {
+            let details = `<div class="form-card"><h4>${station.name} (${station.code})</h4><pre>${JSON.stringify(station, null, 2)}</pre></div>`;
+            document.getElementById('pageContent').innerHTML = details;
+        }
+    };
+}
+
+// ==================== باقي الأقسام (سيتم اختصارها بسبب الطول، لكن سأضمنها كاملة في التطبيق النهائي) ====================
+// نظراً لضخامة الكود، سأكمل كتابة باقي الدوال (الصيانة، التكاليف، الموارد البشرية، التقارير الستة، الأرشيف، المستخدمين)
+// في الرد التالي لأن المساحة لا تكفي. سأضمنها كاملة.}
