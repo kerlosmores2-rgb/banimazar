@@ -2300,27 +2300,37 @@ function loadReportSparePartsAdvanced(container) {
         win.document.close();
         win.print();
     };
-}
-// ==================== Supabase Setup (نسخة واحدة) ====================
+}// ==================== Supabase Setup (آمن) ====================
 const SUPABASE_URL = 'https://pbzpumetrmirnsshjdoe.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBienB1bWV0cm1pcm5zc2hqZG9lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxMTY5MDAsImV4cCI6MjA4OTY5MjkwMH0.8x1YGOdmj0YZJz_KGxC5Awk4S6bc1dvI9BcVKjGkTO8';
 
 let supabase = null;
-if (typeof window.supabase !== 'undefined') {
-    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let supabaseReady = false;
+
+// انتظر تحميل المكتبة
+function initSupabase() {
+    if (typeof window.supabase !== 'undefined' && window.supabase) {
+        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        supabaseReady = true;
+        console.log('✅ Supabase connected');
+        loadAllDataFromSupabase();
+    } else {
+        setTimeout(initSupabase, 300);
+    }
 }
 
-// ==================== دوال المزامنة (آمنة) ====================
+// ==================== دوال المزامنة ====================
 async function syncToSupabase(tableName, storageKey) {
     if (!supabase) return;
     try {
         const data = JSON.parse(localStorage.getItem(storageKey) || '[]');
         if (data.length === 0) return;
         const records = data.map(item => ({ data: item }));
-        await supabase.from(tableName).upsert(records, { onConflict: 'id' });
-        console.log(`✅ تم حفظ ${tableName}`);
+        const { error } = await supabase.from(tableName).upsert(records, { onConflict: 'id' });
+        if (error) throw error;
+        console.log(`✅ Synced ${tableName}`);
     } catch(e) {
-        console.log(`❌ فشل حفظ ${tableName}:`, e);
+        console.log(`❌ Failed sync ${tableName}:`, e);
     }
 }
 
@@ -2334,38 +2344,43 @@ async function loadFromSupabase(tableName, storageKey) {
             const current = JSON.parse(localStorage.getItem(storageKey) || '[]');
             if (JSON.stringify(current) !== JSON.stringify(items)) {
                 localStorage.setItem(storageKey, JSON.stringify(items));
-                console.log(`✅ تم تحديث ${storageKey}`);
+                console.log(`✅ Updated ${storageKey} from Supabase`);
                 return true;
             }
         }
         return false;
     } catch(e) {
-        console.log(`❌ فشل تحميل ${tableName}:`, e);
+        console.log(`❌ Failed load ${tableName}:`, e);
         return false;
     }
 }
 
-// تحميل البيانات (مرة واحدة)
-setTimeout(async () => {
+async function loadAllDataFromSupabase() {
     if (!supabase) return;
     await loadFromSupabase('stations', 'stations');
     await loadFromSupabase('employees', 'employees');
     await loadFromSupabase('faults', 'faults');
-    console.log('✅ تم تحميل البيانات');
-    // تحديث الصفحة الرئيسية فقط لو كانت مفتوحة
-    if (document.getElementById('pageContent')?.innerHTML.includes('عدد المحطات')) {
+    console.log('✅ All data loaded from Supabase');
+    
+    // تحديث الصفحة الرئيسية فقط
+    const container = document.getElementById('pageContent');
+    if (container && container.innerHTML.includes('عدد المحطات')) {
         loadPage('home');
     }
-}, 1000);
+}
 
-// ربط الحفظ
+// بدء التحميل بعد المكتبة
+setTimeout(initSupabase, 500);
+
+// ربط الحفظ مع localStorage
 const originalSetItem = localStorage.setItem;
 localStorage.setItem = function(key, value) {
     originalSetItem.call(this, key, value);
-    if (!supabase) return;
-    if (key === 'stations') setTimeout(() => syncToSupabase('stations', 'stations'), 100);
-    else if (key === 'employees') setTimeout(() => syncToSupabase('employees', 'employees'), 100);
-    else if (key === 'faults') setTimeout(() => syncToSupabase('faults', 'faults'), 100);
+    if (supabase) {
+        if (key === 'stations') setTimeout(() => syncToSupabase('stations', 'stations'), 100);
+        else if (key === 'employees') setTimeout(() => syncToSupabase('employees', 'employees'), 100);
+        else if (key === 'faults') setTimeout(() => syncToSupabase('faults', 'faults'), 100);
+    }
 };
 window.loadPage = loadPage;
 window.logout = logout;
