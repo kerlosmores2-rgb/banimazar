@@ -2422,5 +2422,10 @@ setTimeout(() => {
         syncAllFromFirebase();
     }
 }, 1000);
+if (document.getElementById('pageContent')?.innerHTML.includes('عدد المحطات')) {
+    if (typeof loadPage === 'function') {
+        loadPage('home');
+    }
+}
 window.loadPage = loadPage;
 window.logout = logout;
