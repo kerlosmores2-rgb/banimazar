@@ -2301,5 +2301,940 @@ function loadReportSparePartsAdvanced(container) {
         win.print();
     };
 }
+// ==================== تقرير متابعة أصل ====================
+function loadReportAsset(container) {
+    const stations = JSON.parse(localStorage.getItem('stations') || '[]');
+    const dailyReports = JSON.parse(localStorage.getItem('dailyReports') || '[]');
+    const faults = JSON.parse(localStorage.getItem('faults') || '[]');
+    const openFaults = faults.filter(f => f.status === 'open');
+    
+    let stationOptions = '<option value="">اختر محطة</option>';
+    stations.forEach(s => { stationOptions += `<option value="${s.id}">${s.name}</option>`; });
+    
+    container.innerHTML = `
+        <div class="form-card">
+            <h4>⚙️ تقرير متابعة أصل</h4>
+            <div class="row">
+                <div class="col-md-4 mb-2"><label>المحطة</label><select id="assetReportStation" class="form-control">${stationOptions}</select></div>
+                <div class="col-md-4 mb-2"><label>اختر الأصل</label><select id="assetReportSelect" class="form-control"><option value="">اختر المحطة أولاً</option></select></div>
+                <div class="col-md-4 mb-2"><button class="btn btn-primary mt-4" onclick="showAssetFullReport()">عرض التقرير</button></div>
+            </div>
+            <div id="assetFullReport" class="mt-4"></div>
+            <button id="printAssetBtn" class="btn btn-secondary mt-3" style="display:none" onclick="printAssetReport()">🖨️ طباعة</button>
+        </div>
+    `;
+    
+    document.getElementById('assetReportStation').addEventListener('change', function() {
+        const stationId = this.value;
+        const station = stations.find(s => s.id == stationId);
+        const assetSelect = document.getElementById('assetReportSelect');
+        if (!station) { 
+            assetSelect.innerHTML = '<option value="">اختر المحطة أولاً</option>'; 
+            return; 
+        }
+        
+        const assets = [];
+        if (station.mainPumps && station.mainPumps.length) {
+            station.mainPumps.forEach((p,i) => {
+                assets.push({ id: `main_${i}`, name: p['رقم/اسم الطلمبة'] || `طلمبة رئيسية ${i+1}` });
+            });
+        }
+        if (station.drainPumps && station.drainPumps.length) {
+            station.drainPumps.forEach((p,i) => {
+                assets.push({ id: `drain_${i}`, name: p['رقم/اسم الطلمبة'] || `طلمبة نزح ${i+1}` });
+            });
+        }
+        if (station.winches && station.winches.length) {
+            station.winches.forEach((w,i) => {
+                assets.push({ id: `winch_${i}`, name: w['رقم/اسم الونش'] || `ونش ${i+1}` });
+            });
+        }
+        if (station.panels && station.panels.length) {
+            station.panels.forEach((p,i) => {
+                assets.push({ id: `panel_${i}`, name: p['رقم/اسم اللوحة'] || `لوحة ${i+1}` });
+            });
+        }
+        if (station.fans && station.fans.length) {
+            station.fans.forEach((f,i) => {
+                assets.push({ id: `fan_${i}`, name: f['رقم/اسم المروحة'] || `مروحة ${i+1}` });
+            });
+        }
+        if (station.sealPumps && station.sealPumps.length) {
+            station.sealPumps.forEach((s,i) => {
+                assets.push({ id: `seal_${i}`, name: s['رقم/اسم الطلمبة'] || `طلمبة حبس جلندات ${i+1}` });
+            });
+        }
+        
+        if (assets.length === 0) {
+            assetSelect.innerHTML = '<option value="">لا توجد أصول مسجلة</option>';
+        } else {
+            assetSelect.innerHTML = '<option value="">اختر الأصل</option>' + assets.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
+        }
+    });
+    
+    window.showAssetFullReport = () => {
+        const stationId = document.getElementById('assetReportStation').value;
+        const assetId = document.getElementById('assetReportSelect').value;
+        const assetName = document.getElementById('assetReportSelect').selectedOptions[0]?.text;
+        
+        if (!stationId) { alert('اختر محطة أولاً'); return; }
+        if (!assetId) { alert('اختر الأصل أولاً'); return; }
+        
+        const station = stations.find(s => s.id == stationId);
+        
+        const lastDaily = dailyReports.filter(r => r.stationId == stationId).sort((a,b)=>b.date.localeCompare(a.date))[0];
+        let assetStatus = '-', assetReason = '-', assetNotes = '', lastDate = '-';
+        
+        if (lastDaily && lastDaily.assets) {
+            const assetDaily = lastDaily.assets.find(a => a.name === assetName);
+            if (assetDaily) {
+                assetStatus = assetDaily.status || '-';
+                assetReason = assetDaily.reason || '-';
+                assetNotes = assetDaily.notes || '';
+                lastDate = lastDaily.date;
+            }
+        }
+        
+        const assetFaults = openFaults.filter(f => f.stationId == stationId && f.assetName === assetName);
+        
+        let html = `<h5 class="mb-3">تقرير متابعة الأصل: ${assetName}</h5>
+                    <p><strong>المحطة:</strong> ${station?.name} (${station?.code})</p>
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead class="table-primary">
+                                运转<th>المصدر</th><th>الحالة</th><th>سبب التوقف</th><th>ملاحظات / تفاصيل</th>\\
+                            </thead>
+                            <tbody>
+                                运转
+                                    <td>آخر تقرير متابعة دورية<br><small class="text-muted">${lastDate}</small></td>
+                                    <td><span class="badge ${assetStatus === 'يعمل' ? 'bg-success' : (assetStatus === 'لا يعمل' ? 'bg-danger' : 'bg-secondary')}">${assetStatus || '-'}</span></td>
+                                    <td>${assetReason || '-'}</td>
+                                    <td>${assetNotes || '-'}</td>
+                                </tr>`;
+        
+        if (assetFaults.length) {
+            assetFaults.forEach(f => {
+                html += `<tr style="background-color:#fff3cd">
+                             <td>بلاغ عطل مفتوح<br><small class="text-muted">${f.date}</small></td>
+                             <td><span class="badge bg-danger">لا يعمل</span></td>
+                             <td>${f.description || '-'}</td>
+                             <td><strong>الإجراء:</strong> ${f.actions || '-'}<br><strong>قطع الغيار:</strong> ${f.parts || '-'}</td>
+                          </tr>`;
+            });
+        } else {
+            html += `<tr><td>بلاغات الأعطال</td><td colspan="3">لا توجد بلاغات مفتوحة لهذا الأصل</td></tr>`;
+        }
+        
+        html += `</tbody> 格</div>`;
+        
+        document.getElementById('assetFullReport').innerHTML = html;
+        document.getElementById('printAssetBtn').style.display = 'block';
+    };
+    
+    window.printAssetReport = () => {
+        const content = document.getElementById('assetFullReport').innerHTML;
+        const assetName = document.getElementById('assetReportSelect').selectedOptions[0]?.text || 'الأصل';
+        const win = window.open('', '_blank');
+        win.document.write(`<html dir="rtl"><head><title>تقرير متابعة أصل ${assetName}</title>
+        <style>
+            body{font-family:Tahoma;padding:20px;margin:0}
+            table{border-collapse:collapse;width:100%;margin-bottom:20px}
+            th,td{border:1px solid #ddd;padding:10px;text-align:right}
+            th{background:#0d6efd;color:white}
+            .badge{display:inline-block;padding:3px 8px;border-radius:12px;color:white}
+            .bg-success{background:#28a745}
+            .bg-danger{background:#dc3545}
+            .bg-secondary{background:#6c757d}
+            .text-muted{color:#6c757d}
+        </style></head>
+        <body><h2>تقرير متابعة أصل: ${assetName}</h2>${content}</body></html>`);
+        win.document.close();
+        win.print();
+    };
+}
+
+// ==================== تقرير العاملين ====================
+function loadReportEmployees(container) {
+    const stations = JSON.parse(localStorage.getItem('stations') || '[]');
+    const employees = JSON.parse(localStorage.getItem('employees') || '[]');
+    const stationMap = {};
+    stations.forEach(s => stationMap[s.id] = s.name);
+    
+    let stationOptions = '<option value="">كل المحطات</option>';
+    stations.forEach(s => { stationOptions += `<option value="${s.id}">${s.name}</option>`; });
+    
+    container.innerHTML = `
+        <div class="form-card">
+            <h4>👥 تقرير العاملين</h4>
+            <div class="row">
+                <div class="col-md-4 mb-2"><label>المحطة</label><select id="empReportStationFilter" class="form-control">${stationOptions}</select></div>
+                <div class="col-md-4 mb-2"><label>الوظيفة</label><select id="empReportRoleFilter" class="form-control"><option value="">الكل</option><option>مدير محطة</option><option>مهندس</option><option>فني</option><option>عامل</option></select></div>
+                <div class="col-md-4 mb-2"><label>الحالة</label><select id="empReportStatusFilter" class="form-control"><option value="">الكل</option><option>يعمل</option><option>إجازة</option></select></div>
+            </div>
+            <button class="btn btn-primary mt-2" onclick="showEmployeesReport()">عرض</button>
+            <button class="btn btn-secondary mt-2" onclick="printEmployeesReport()">🖨️ طباعة</button>
+            <div id="employeesReportResult" class="mt-4"></div>
+        </div>
+    `;
+    
+    window.showEmployeesReport = () => {
+        const stationId = document.getElementById('empReportStationFilter').value;
+        const role = document.getElementById('empReportRoleFilter').value;
+        const status = document.getElementById('empReportStatusFilter').value;
+        
+        let filtered = employees;
+        if (stationId) filtered = filtered.filter(e => e.stationId == stationId);
+        if (role) filtered = filtered.filter(e => e.role == role);
+        if (status) filtered = filtered.filter(e => e.status == status);
+        
+        const resultDiv = document.getElementById('employeesReportResult');
+        if (filtered.length === 0) {
+            resultDiv.innerHTML = '<div class="alert alert-info">لا توجد بيانات مطابقة</div>';
+            return;
+        }
+        
+        let html = `<div class="table-responsive"><table class="table table-bordered">
+            <thead>运转<th>الكود</th><th>الاسم</th><th>المحطة</th><th>الوظيفة</th><th>الوردية</th><th>التليفون</th><th>الحالة</th> </thead>
+            <tbody>`;
+        filtered.forEach(e => {
+            html += `运转
+                <td>${e.code}</td>
+                <td>${e.name}</td>
+                <td>${stationMap[e.stationId] || '-'}</td>
+                <td>${e.role}</td>
+                <td>${e.shift || '-'}</td>
+                <td>${e.phone || '-'}</td>
+                <td>${e.status}</td>
+             </tr>`;
+        });
+        html += `</tbody> 格</div>`;
+        resultDiv.innerHTML = html;
+    };
+    
+    window.printEmployeesReport = () => {
+        const content = document.getElementById('employeesReportResult').innerHTML;
+        const win = window.open('', '_blank');
+        win.document.write(`<html dir="rtl"><head><title>تقرير العاملين</title>
+        <style>body{font-family:Tahoma;padding:20px} table{border-collapse:collapse;width:100%} th,td{border:1px solid #ddd;padding:8px;text-align:right}</style></head>
+        <body><h2>تقرير العاملين</h2>${content}</body></html>`);
+        win.document.close();
+        win.print();
+    };
+}
+
+// ==================== تقرير قطع الغيار ====================
+function loadReportSpareParts(container) {
+    const stations = JSON.parse(localStorage.getItem('stations') || '[]');
+    const faults = JSON.parse(localStorage.getItem('faults') || '[]');
+    const faultsWithParts = faults.filter(f => f.parts && f.parts.trim() !== '');
+    
+    let stationOptions = '<option value="">كل المحطات</option>';
+    stations.forEach(s => { stationOptions += `<option value="${s.id}">${s.name}</option>`; });
+    
+    container.innerHTML = `
+        <div class="form-card">
+            <h4>🔧 تقرير قطع الغيار المستخدمة</h4>
+            <div class="row">
+                <div class="col-md-4 mb-2"><label>المحطة</label><select id="spareReportStation" class="form-control">${stationOptions}</select></div>
+                <div class="col-md-4 mb-2"><label>من تاريخ</label><input type="date" id="spareFromDate" class="form-control"></div>
+                <div class="col-md-4 mb-2"><label>إلى تاريخ</label><input type="date" id="spareToDate" class="form-control"></div>
+            </div>
+            <button class="btn btn-primary mt-2" onclick="showSparePartsReport()">عرض</button>
+            <button class="btn btn-secondary mt-2" onclick="printSparePartsReport()">🖨️ طباعة</button>
+            <div id="sparePartsReportResult" class="mt-4"></div>
+        </div>
+    `;
+    
+    window.showSparePartsReport = () => {
+        const stationId = document.getElementById('spareReportStation').value;
+        const fromDate = document.getElementById('spareFromDate').value;
+        const toDate = document.getElementById('spareToDate').value;
+        
+        let filtered = faultsWithParts;
+        if (stationId) filtered = filtered.filter(f => f.stationId == stationId);
+        if (fromDate) filtered = filtered.filter(f => f.date >= fromDate);
+        if (toDate) filtered = filtered.filter(f => f.date <= toDate);
+        
+        const resultDiv = document.getElementById('sparePartsReportResult');
+        if (filtered.length === 0) {
+            resultDiv.innerHTML = '<div class="alert alert-info">لا توجد قطع غيار مسجلة</div>';
+            return;
+        }
+        
+        let html = `<div class="table-responsive"><table class="table table-bordered">
+            <thead>运转<th>التاريخ</th><th>المحطة</th><th>الأصل المعطل</th><th>قطع الغيار المستخدمة</th><th>نوع العطل</th> </thead>
+            <tbody>`;
+        filtered.forEach(f => {
+            const station = stations.find(s => s.id == f.stationId);
+            html += `运转
+                <td>${f.date}</td>
+                <td>${station?.name || '-'}</td>
+                <td>${f.assetName || '-'}</td>
+                <td>${f.parts}</td>
+                <td>${f.type}</td>
+             </tr>`;
+        });
+        html += `</tbody> 格</div>`;
+        resultDiv.innerHTML = html;
+    };
+    
+    window.printSparePartsReport = () => {
+        const content = document.getElementById('sparePartsReportResult').innerHTML;
+        const win = window.open('', '_blank');
+        win.document.write(`<html dir="rtl"><head><title>تقرير قطع الغيار</title>
+        <style>body{font-family:Tahoma;padding:20px} table{border-collapse:collapse;width:100%} th,td{border:1px solid #ddd;padding:8px;text-align:right}</style></head>
+        <body><h2>تقرير قطع الغيار المستخدمة</h2>${content}</body></html>`);
+        win.document.close();
+        win.print();
+    };
+}
+
+// ==================== الأرشيف ====================
+function loadArchive(container) {
+    const stations = JSON.parse(localStorage.getItem('stations') || '[]');
+    let stationOptions = '<option value="">اختر محطة</option>';
+    stations.forEach(s => { stationOptions += `<option value="${s.id}">${s.name}</option>`; });
+    
+    container.innerHTML = `
+        <div class="form-card">
+            <h4>📁 أرشيف المستندات</h4>
+            <div class="row">
+                <div class="col-md-4 mb-2"><label>المحطة</label><select id="archiveStationSelect" class="form-control">${stationOptions}</select></div>
+                <div class="col-md-4 mb-2"><input type="file" id="archiveFileInput" class="form-control" accept="image/*,application/pdf"></div>
+                <div class="col-md-4 mb-2"><button class="btn btn-primary" onclick="uploadArchiveFile()">📤 رفع ملف</button></div>
+            </div>
+            <div id="archiveFilesContainer" class="mt-4 row"></div>
+        </div>
+    `;
+    
+    function displayArchiveFiles() {
+        const stationId = document.getElementById('archiveStationSelect').value;
+        if (!stationId) {
+            document.getElementById('archiveFilesContainer').innerHTML = '<div class="alert alert-info">اختر محطة لعرض ملفاتها</div>';
+            return;
+        }
+        const archive = JSON.parse(localStorage.getItem('archive') || '{}');
+        const files = archive[stationId] || [];
+        const containerDiv = document.getElementById('archiveFilesContainer');
+        containerDiv.innerHTML = '';
+        if (files.length === 0) {
+            containerDiv.innerHTML = '<div class="alert alert-info">لا توجد ملفات مرفوعة لهذه المحطة</div>';
+            return;
+        }
+        files.forEach((file, idx) => {
+            const col = document.createElement('div');
+            col.className = 'col-md-3 mb-3';
+            const isImage = file.type === 'image';
+            col.innerHTML = `
+                <div class="card">
+                    ${isImage ? `<img src="${file.data}" class="card-img-top" alt="${file.name}" style="height:150px;object-fit:cover">` : `<div class="card-header bg-secondary text-white">📄 ${file.name}</div>`}
+                    <div class="card-body">
+                        <p class="card-text"><small>${new Date(file.date).toLocaleString('ar-EG')}</small></p>
+                        <button class="btn btn-sm btn-info" onclick="viewArchiveFile('${stationId}', ${idx})">عرض</button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteArchiveFile('${stationId}', ${idx})">حذف</button>
+                    </div>
+                </div>
+            `;
+            containerDiv.appendChild(col);
+        });
+    }
+    
+    window.uploadArchiveFile = () => {
+        const stationId = document.getElementById('archiveStationSelect').value;
+        const fileInput = document.getElementById('archiveFileInput');
+        if (!stationId) { alert('اختر محطة أولاً'); return; }
+        if (!fileInput.files.length) { alert('اختر ملف أولاً'); return; }
+        const file = fileInput.files[0];
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            let archive = JSON.parse(localStorage.getItem('archive') || '{}');
+            if (!archive[stationId]) archive[stationId] = [];
+            archive[stationId].push({
+                name: file.name,
+                data: e.target.result,
+                type: file.type.startsWith('image/') ? 'image' : 'file',
+                date: new Date().toISOString()
+            });
+            localStorage.setItem('archive', JSON.stringify(archive));
+            alert('تم رفع الملف بنجاح');
+            fileInput.value = '';
+            displayArchiveFiles();
+        };
+        reader.readAsDataURL(file);
+    };
+    
+    window.viewArchiveFile = (stationId, index) => {
+        const archive = JSON.parse(localStorage.getItem('archive') || '{}');
+        const file = archive[stationId]?.[index];
+        if (file) {
+            const win = window.open('', '_blank');
+            win.document.write(`<html dir="rtl"><head><title>${file.name}</title></head><body style="text-align:center">`);
+            if (file.type === 'image') {
+                win.document.write(`<img src="${file.data}" style="max-width:100%;max-height:90vh">`);
+            } else {
+                win.document.write(`<iframe src="${file.data}" style="width:100%;height:90vh" frameborder="0"></iframe>`);
+            }
+            win.document.write(`</body></html>`);
+            win.document.close();
+        }
+    };
+    
+    window.deleteArchiveFile = (stationId, index) => {
+        if (confirm('هل تريد حذف هذا الملف؟')) {
+            let archive = JSON.parse(localStorage.getItem('archive') || '{}');
+            if (archive[stationId]) {
+                archive[stationId].splice(index, 1);
+                if (archive[stationId].length === 0) delete archive[stationId];
+                localStorage.setItem('archive', JSON.stringify(archive));
+                displayArchiveFiles();
+                alert('تم حذف الملف');
+            }
+        }
+    };
+    
+    document.getElementById('archiveStationSelect').addEventListener('change', displayArchiveFiles);
+    displayArchiveFiles();
+}
+
+// ==================== إدارة المستخدمين ====================
+function loadUsers(container) {
+    let users = JSON.parse(localStorage.getItem('users') || '[]');
+    
+    container.innerHTML = `
+        <div class="form-card">
+            <h4>⚙️ إدارة المستخدمين والصلاحيات</h4>
+            <form id="userForm">
+                <div class="row">
+                    <div class="col-md-3 mb-2"><input type="text" id="userCode" class="form-control" placeholder="كود المستخدم" required></div>
+                    <div class="col-md-3 mb-2"><input type="text" id="userName" class="form-control" placeholder="الاسم" required></div>
+                    <div class="col-md-3 mb-2"><input type="password" id="userPass" class="form-control" placeholder="كلمة المرور" required></div>
+                    <div class="col-md-3 mb-2"><select id="userRole" class="form-control">
+                        <option>مدير (كل الصلاحيات)</option>
+                        <option>مدير محدود (صلاحيات محددة لكل المواقع)</option>
+                        <option>مدير موقع (صلاحيات محددة لموقع واحد)</option>
+                    </select></div>
+                </div>
+                <button type="submit" class="btn btn-primary mt-2">➕ إضافة مستخدم</button>
+            </form>
+        </div>
+        <div class="table-responsive mt-4"><table class="table table-bordered">
+            <thead>运转<th>الكود</th><th>الاسم</th><th>الصلاحية</th><th>تاريخ الإضافة</th><th></th> </thead>
+            <tbody id="usersTableBody"></tbody>
+         </div>
+    `;
+    
+    function renderUsersTable() {
+        const usersList = JSON.parse(localStorage.getItem('users') || '[]');
+        const tbody = document.getElementById('usersTableBody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+        usersList.forEach(u => {
+            const row = tbody.insertRow();
+            row.insertCell(0).innerText = u.username;
+            row.insertCell(1).innerText = u.name;
+            row.insertCell(2).innerText = u.role;
+            row.insertCell(3).innerText = u.createdAt ? new Date(u.createdAt).toLocaleDateString('ar-EG') : '-';
+            const delCell = row.insertCell(4);
+            const delBtn = document.createElement('button');
+            delBtn.className = 'btn btn-sm btn-danger';
+            delBtn.innerHTML = '<i class="fas fa-trash"></i> حذف';
+            delBtn.onclick = () => {
+                if (u.username === 'admin') {
+                    alert('لا يمكن حذف المستخدم admin');
+                    return;
+                }
+                if (confirm(`حذف المستخدم ${u.name}؟`)) {
+                    const updated = usersList.filter(us => us.username !== u.username);
+                    localStorage.setItem('users', JSON.stringify(updated));
+                    renderUsersTable();
+                }
+            };
+            delCell.appendChild(delBtn);
+        });
+    }
+    
+    document.getElementById('userForm').onsubmit = function(e) {
+        e.preventDefault();
+        let usersList = JSON.parse(localStorage.getItem('users') || '[]');
+        const newUser = {
+            id: Date.now(),
+            username: document.getElementById('userCode').value,
+            name: document.getElementById('userName').value,
+            password: document.getElementById('userPass').value,
+            role: document.getElementById('userRole').value,
+            createdAt: new Date().toISOString()
+        };
+        if (usersList.find(u => u.username === newUser.username)) {
+            alert('كود المستخدم موجود مسبقاً');
+            return;
+        }
+        usersList.push(newUser);
+        localStorage.setItem('users', JSON.stringify(usersList));
+        alert('تم إضافة المستخدم بنجاح');
+        document.getElementById('userForm').reset();
+        renderUsersTable();
+    };
+    
+    renderUsersTable();
+}
+
+// ==================== تقرير المياه المرفوعة ====================
+function loadReportWaterPumped(container) {
+    const stations = JSON.parse(localStorage.getItem('stations') || '[]');
+    const monthlyCosts = JSON.parse(localStorage.getItem('monthlyCosts') || '[]');
+    
+    let stationOptions = '<option value="">كل المحطات</option>';
+    stations.forEach(s => { stationOptions += `<option value="${s.id}">${s.name}</option>`; });
+    
+    container.innerHTML = `
+        <div class="form-card">
+            <h4>💧 تقرير المياه المرفوعة</h4>
+            <div class="row">
+                <div class="col-md-4 mb-2"><label>المحطة</label><select id="waterReportStation" class="form-control">${stationOptions}</select></div>
+                <div class="col-md-4 mb-2"><label>من شهر</label><input type="month" id="waterFromMonth" class="form-control"></div>
+                <div class="col-md-4 mb-2"><label>إلى شهر</label><input type="month" id="waterToMonth" class="form-control"></div>
+            </div>
+            <button class="btn btn-primary mt-2" onclick="showWaterPumpedReport()">عرض</button>
+            <button class="btn btn-secondary mt-2" onclick="printWaterPumpedReport()">🖨️ طباعة</button>
+            <div id="waterPumpedReportResult" class="mt-4"></div>
+        </div>
+    `;
+    
+    window.showWaterPumpedReport = () => {
+        const stationId = document.getElementById('waterReportStation').value;
+        const fromMonth = document.getElementById('waterFromMonth').value;
+        const toMonth = document.getElementById('waterToMonth').value;
+        
+        let filtered = monthlyCosts;
+        if (stationId) filtered = filtered.filter(c => c.stationId == stationId);
+        if (fromMonth) filtered = filtered.filter(c => c.month >= fromMonth);
+        if (toMonth) filtered = filtered.filter(c => c.month <= toMonth);
+        
+        filtered.sort((a,b) => a.month.localeCompare(b.month));
+        
+        const resultDiv = document.getElementById('waterPumpedReportResult');
+        if (filtered.length === 0) {
+            resultDiv.innerHTML = '<div class="alert alert-info">لا توجد بيانات في المدة المحددة</div>';
+            return;
+        }
+        
+        let html = `<div class="table-responsive"><table class="table table-bordered">
+            <thead class="table-primary">
+                运转<th>الشهر</th><th>المحطة</th><th>ساعات التشغيل</th><th>التصرف (m³/h)</th><th>المياه المرفوعة (m³)</th>\\
+            </thead>
+            <tbody>`;
+        
+        let totalWater = 0;
+        filtered.forEach(c => {
+            const station = stations.find(s => s.id == c.stationId);
+            totalWater += (c.waterPumped || 0);
+            html += `运转
+                <td>${c.month}</td>
+                <td>${station?.name || '-'}</td>
+                <td>${c.operatingHours || 0}</td>
+                <td>${c.pumpFlow || 0}</td>
+                <td><strong>${(c.waterPumped || 0).toLocaleString()} m³</strong></td>
+             </tr>`;
+        });
+        
+        html += `<tr class="table-secondary fw-bold">
+            <td colspan="4" class="text-center">الإجمالي</td>
+            <td>${totalWater.toLocaleString()} m³</td>
+         </tr>`;
+        html += `</tbody> 格</div>`;
+        resultDiv.innerHTML = html;
+    };
+    
+    window.printWaterPumpedReport = () => {
+        const content = document.getElementById('waterPumpedReportResult').innerHTML;
+        const win = window.open('', '_blank');
+        win.document.write(`<html dir="rtl"><head><title>تقرير المياه المرفوعة</title>
+        <style>body{font-family:Tahoma;padding:20px} table{border-collapse:collapse;width:100%} th,td{border:1px solid #ddd;padding:8px;text-align:right} th{background:#0d6efd;color:white}</style></head>
+        <body><h2>تقرير المياه المرفوعة</h2>${content}</body></html>`);
+        win.document.close();
+        win.print();
+    };
+}
+
+// ==================== تقرير استهلاك الكهرباء ====================
+function loadReportElectricity(container) {
+    const stations = JSON.parse(localStorage.getItem('stations') || '[]');
+    const monthlyCosts = JSON.parse(localStorage.getItem('monthlyCosts') || '[]');
+    
+    let stationOptions = '<option value="">كل المحطات</option>';
+    stations.forEach(s => { stationOptions += `<option value="${s.id}">${s.name}</option>`; });
+    
+    container.innerHTML = `
+        <div class="form-card">
+            <h4>⚡ تقرير استهلاك الكهرباء</h4>
+            <div class="row">
+                <div class="col-md-4 mb-2"><label>المحطة</label><select id="elecReportStation" class="form-control">${stationOptions}</select></div>
+                <div class="col-md-4 mb-2"><label>المحول</label><select id="elecReportTransformer" class="form-control"><option value="">كل المحولات</option></select></div>
+                <div class="col-md-4 mb-2"><label>من شهر</label><input type="month" id="elecFromMonth" class="form-control"></div>
+                <div class="col-md-4 mb-2"><label>إلى شهر</label><input type="month" id="elecToMonth" class="form-control"></div>
+            </div>
+            <button class="btn btn-primary mt-2" onclick="showElectricityReport()">عرض</button>
+            <button class="btn btn-secondary mt-2" onclick="printElectricityReport()">🖨️ طباعة</button>
+            <div id="electricityReportResult" class="mt-4"></div>
+        </div>
+    `;
+    
+    document.getElementById('elecReportStation').addEventListener('change', function() {
+        const stationId = this.value;
+        const transformerSelect = document.getElementById('elecReportTransformer');
+        if (!stationId) {
+            transformerSelect.innerHTML = '<option value="">كل المحولات</option>';
+            return;
+        }
+        const station = stations.find(s => s.id == stationId);
+        if (station && station.powerSources) {
+            const transformers = station.powerSources.filter(ps => ps['النوع'] === 'محول');
+            if (transformers.length) {
+                transformerSelect.innerHTML = '<option value="">كل المحولات</option>' + 
+                    transformers.map((t, idx) => `<option value="${idx}">${t['رقم/اسم المصدر'] || `محول ${idx+1}`}</option>`).join('');
+            } else {
+                transformerSelect.innerHTML = '<option value="">لا توجد محولات</option>';
+            }
+        } else {
+            transformerSelect.innerHTML = '<option value="">لا توجد محولات</option>';
+        }
+    });
+    
+    window.showElectricityReport = () => {
+        const stationId = document.getElementById('elecReportStation').value;
+        const transformerIdx = document.getElementById('elecReportTransformer').value;
+        const fromMonth = document.getElementById('elecFromMonth').value;
+        const toMonth = document.getElementById('elecToMonth').value;
+        
+        let filtered = monthlyCosts;
+        if (stationId) filtered = filtered.filter(c => c.stationId == stationId);
+        if (fromMonth) filtered = filtered.filter(c => c.month >= fromMonth);
+        if (toMonth) filtered = filtered.filter(c => c.month <= toMonth);
+        filtered.sort((a,b) => a.month.localeCompare(b.month));
+        
+        const resultDiv = document.getElementById('electricityReportResult');
+        if (filtered.length === 0) {
+            resultDiv.innerHTML = '<div class="alert alert-info">لا توجد بيانات في المدة المحددة</div>';
+            return;
+        }
+        
+        let html = `<div class="table-responsive"><table class="table table-bordered">
+            <thead class="table-primary">
+                运转<th>الشهر</th><th>المحطة</th><th>المحول</th><th>الاستهلاك (kWh)</th><th>التكلفة (جنيه)</th>\\
+            </thead>
+            <tbody>`;
+        
+        let totalKwh = 0, totalCost = 0;
+        
+        filtered.forEach(c => {
+            const station = stations.find(s => s.id == c.stationId);
+            if (c.transformers && c.transformers.length) {
+                c.transformers.forEach((t, idx) => {
+                    if (transformerIdx !== '' && transformerIdx != idx) return;
+                    const transformerName = (station?.powerSources?.[idx]?.['رقم/اسم المصدر']) || `محول ${idx+1}`;
+                    totalKwh += (t.diff || 0);
+                    totalCost += (t.cost || 0);
+                    html += `运转
+                        日起${c.month}起
+                        日起${station?.name || '-'}起
+                        日起${transformerName}起
+                        日起${(t.diff || 0).toLocaleString()}起
+                        日起${(t.cost || 0).toLocaleString()}起
+                     \)`;
+                });
+            }
+        });
+        
+        if (html === `运转<td colspan="5" class="text-center">لا توجد بيانات\)`) {
+            html = `运转<td colspan="5" class="text-center">لا توجد بيانات للمحول المحدد\)`;
+        }
+        
+        html += `<tr class="table-secondary fw-bold">
+            <td colspan="3" class="text-center">الإجمالي</td>
+            <td>${totalKwh.toLocaleString()} kWh</td>
+            <td>${totalCost.toLocaleString()} جنيه</td>
+         </tr>`;
+        html += `</tbody> </table></div>`;
+        resultDiv.innerHTML = html;
+    };
+    
+    window.printElectricityReport = () => {
+        const content = document.getElementById('electricityReportResult').innerHTML;
+        const win = window.open('', '_blank');
+        win.document.write(`<html dir="rtl"><head><title>تقرير استهلاك الكهرباء</title>
+        <style>body{font-family:Tahoma;padding:20px} table{border-collapse:collapse;width:100%} th,td{border:1px solid #ddd;padding:8px;text-align:right} th{background:#0d6efd;color:white}</style></head>
+        <body><h2>تقرير استهلاك الكهرباء</h2>${content}</body></html>`);
+        win.document.close();
+        win.print();
+    };
+}
+
+// ==================== تقرير استهلاك المياه ====================
+function loadReportWaterConsumption(container) {
+    const stations = JSON.parse(localStorage.getItem('stations') || '[]');
+    const monthlyCosts = JSON.parse(localStorage.getItem('monthlyCosts') || '[]');
+    const tariffs = JSON.parse(localStorage.getItem('tariffs') || '{"water":3.5}');
+    
+    let stationOptions = '<option value="">كل المحطات</option>';
+    stations.forEach(s => { stationOptions += `<option value="${s.id}">${s.name}</option>`; });
+    
+    container.innerHTML = `
+        <div class="form-card">
+            <h4>💧 تقرير استهلاك المياه (عدادات)</h4>
+            <div class="row">
+                <div class="col-md-4 mb-2"><label>المحطة</label><select id="waterConsumptionStation" class="form-control">${stationOptions}</select></div>
+                <div class="col-md-4 mb-2"><label>من شهر</label><input type="month" id="waterConsumptionFrom" class="form-control"></div>
+                <div class="col-md-4 mb-2"><label>إلى شهر</label><input type="month" id="waterConsumptionTo" class="form-control"></div>
+            </div>
+            <button class="btn btn-primary mt-2" onclick="showWaterConsumptionReport()">عرض</button>
+            <button class="btn btn-secondary mt-2" onclick="printWaterConsumptionReport()">🖨️ طباعة</button>
+            <div id="waterConsumptionResult" class="mt-4"></div>
+        </div>
+    `;
+    
+    window.showWaterConsumptionReport = () => {
+        const stationId = document.getElementById('waterConsumptionStation').value;
+        const fromMonth = document.getElementById('waterConsumptionFrom').value;
+        const toMonth = document.getElementById('waterConsumptionTo').value;
+        
+        let filtered = monthlyCosts;
+        if (stationId) filtered = filtered.filter(c => c.stationId == stationId);
+        if (fromMonth) filtered = filtered.filter(c => c.month >= fromMonth);
+        if (toMonth) filtered = filtered.filter(c => c.month <= toMonth);
+        filtered.sort((a,b) => a.month.localeCompare(b.month));
+        
+        const resultDiv = document.getElementById('waterConsumptionResult');
+        if (filtered.length === 0) {
+            resultDiv.innerHTML = '<div class="alert alert-info">لا توجد بيانات في المدة المحددة</div>';
+            return;
+        }
+        
+        let html = `<div class="table-responsive"><table class="table table-bordered">
+            <thead class="table-primary">
+                运转<th>الشهر</th><th>المحطة</th><th>الاستهلاك (m³)</th><th>التكلفة (جنيه)</th>\\
+            </thead>
+            <tbody>`;
+        
+        let totalConsumed = 0, totalCost = 0;
+        filtered.forEach(c => {
+            const station = stations.find(s => s.id == c.stationId);
+            const consumed = c.water?.consumed || 0;
+            const cost = c.water?.cost || 0;
+            totalConsumed += consumed;
+            totalCost += cost;
+            html += `运转
+                日起${c.month}起
+                日起${station?.name || '-'}起
+                日起${consumed.toLocaleString()} m³起
+                日起${cost.toLocaleString()} جنيه起
+             \)`;
+        });
+        
+        html += `<tr class="table-secondary fw-bold">
+            <td colspan="2" class="text-center">الإجمالي</td>
+            <td>${totalConsumed.toLocaleString()} m³</td>
+            <td>${totalCost.toLocaleString()} جنيه</td>
+         </tr>`;
+        html += `</tbody> </table></div>`;
+        resultDiv.innerHTML = html;
+    };
+    
+    window.printWaterConsumptionReport = () => {
+        const content = document.getElementById('waterConsumptionResult').innerHTML;
+        const win = window.open('', '_blank');
+        win.document.write(`<html dir="rtl"><head><title>تقرير استهلاك المياه</title>
+        <style>body{font-family:Tahoma;padding:20px} table{border-collapse:collapse;width:100%} th,td{border:1px solid #ddd;padding:8px;text-align:right} th{background:#0d6efd;color:white}</style></head>
+        <body><h2>تقرير استهلاك المياه</h2>${content}</body></html>`);
+        win.document.close();
+        win.print();
+    };
+}
+
+// ==================== تقرير استهلاك سولار ====================
+function loadReportDiesel(container) {
+    const stations = JSON.parse(localStorage.getItem('stations') || '[]');
+    const monthlyCosts = JSON.parse(localStorage.getItem('monthlyCosts') || '[]');
+    
+    let stationOptions = '<option value="">كل المحطات</option>';
+    stations.forEach(s => { stationOptions += `<option value="${s.id}">${s.name}</option>`; });
+    
+    container.innerHTML = `
+        <div class="form-card">
+            <h4>🛢️ تقرير استهلاك السولار</h4>
+            <div class="row">
+                <div class="col-md-4 mb-2"><label>المحطة</label><select id="dieselReportStation" class="form-control">${stationOptions}</select></div>
+                <div class="col-md-4 mb-2"><label>المولد</label><select id="dieselReportGenerator" class="form-control"><option value="">كل المولدات</option></select></div>
+                <div class="col-md-4 mb-2"><label>من شهر</label><input type="month" id="dieselFromMonth" class="form-control"></div>
+                <div class="col-md-4 mb-2"><label>إلى شهر</label><input type="month" id="dieselToMonth" class="form-control"></div>
+            </div>
+            <button class="btn btn-primary mt-2" onclick="showDieselReport()">عرض</button>
+            <button class="btn btn-secondary mt-2" onclick="printDieselReport()">🖨️ طباعة</button>
+            <div id="dieselReportResult" class="mt-4"></div>
+        </div>
+    `;
+    
+    document.getElementById('dieselReportStation').addEventListener('change', function() {
+        const stationId = this.value;
+        const generatorSelect = document.getElementById('dieselReportGenerator');
+        if (!stationId) {
+            generatorSelect.innerHTML = '<option value="">كل المولدات</option>';
+            return;
+        }
+        const station = stations.find(s => s.id == stationId);
+        if (station && station.powerSources) {
+            const generators = station.powerSources.filter(ps => ps['النوع'] === 'مولد');
+            if (generators.length) {
+                generatorSelect.innerHTML = '<option value="">كل المولدات</option>' + 
+                    generators.map((g, idx) => `<option value="${idx}">${g['رقم/اسم المصدر'] || `مولد ${idx+1}`}</option>`).join('');
+            } else {
+                generatorSelect.innerHTML = '<option value="">لا توجد مولدات</option>';
+            }
+        } else {
+            generatorSelect.innerHTML = '<option value="">لا توجد مولدات</option>';
+        }
+    });
+    
+    window.showDieselReport = () => {
+        const stationId = document.getElementById('dieselReportStation').value;
+        const generatorIdx = document.getElementById('dieselReportGenerator').value;
+        const fromMonth = document.getElementById('dieselFromMonth').value;
+        const toMonth = document.getElementById('dieselToMonth').value;
+        
+        let filtered = monthlyCosts;
+        if (stationId) filtered = filtered.filter(c => c.stationId == stationId);
+        if (fromMonth) filtered = filtered.filter(c => c.month >= fromMonth);
+        if (toMonth) filtered = filtered.filter(c => c.month <= toMonth);
+        filtered.sort((a,b) => a.month.localeCompare(b.month));
+        
+        const resultDiv = document.getElementById('dieselReportResult');
+        if (filtered.length === 0) {
+            resultDiv.innerHTML = '<div class="alert alert-info">لا توجد بيانات في المدة المحددة</div>';
+            return;
+        }
+        
+        let html = `<div class="table-responsive"><table class="table table-bordered">
+            <thead class="table-primary">
+                运转<th>الشهر</th><th>المحطة</th><th>المولد</th><th>الاستهلاك (لتر)</th><th>الرصيد المتبقي (لتر)</th>\\
+            </thead>
+            <tbody>`;
+        
+        let totalConsumed = 0;
+        
+        filtered.forEach(c => {
+            const station = stations.find(s => s.id == c.stationId);
+            if (c.generators && c.generators.length) {
+                c.generators.forEach((g, idx) => {
+                    if (generatorIdx !== '' && generatorIdx != idx) return;
+                    const generatorName = (station?.powerSources?.[idx]?.['رقم/اسم المصدر']) || `مولد ${idx+1}`;
+                    totalConsumed += (g.consumed || 0);
+                    html += `运转
+                        日起${c.month}起
+                        日起${station?.name || '-'}起
+                        日起${generatorName}起
+                        日起${(g.consumed || 0).toLocaleString()} لتر起
+                        日起${(g.balance || 0).toLocaleString()} لتر起
+                     \)`;
+                });
+            }
+        });
+        
+        html += `<tr class="table-secondary fw-bold">
+            <td colspan="3" class="text-center">إجمالي الاستهلاك</td>
+            <td>${totalConsumed.toLocaleString()} لتر</td>
+            <td>-</td>
+         </tr>`;
+        html += `</tbody> </table></div>`;
+        resultDiv.innerHTML = html;
+    };
+    
+    window.printDieselReport = () => {
+        const content = document.getElementById('dieselReportResult').innerHTML;
+        const win = window.open('', '_blank');
+        win.document.write(`<html dir="rtl"><head><title>تقرير استهلاك السولار</title>
+        <style>body{font-family:Tahoma;padding:20px} table{border-collapse:collapse;width:100%} th,td{border:1px solid #ddd;padding:8px;text-align:right} th{background:#0d6efd;color:white}</style></head>
+        <body><h2>تقرير استهلاك السولار</h2>${content}</body></html>`);
+        win.document.close();
+        win.print();
+    };
+}
+
+// ==================== تقرير قطع الغيار المتقدم ====================
+function loadReportSparePartsAdvanced(container) {
+    const stations = JSON.parse(localStorage.getItem('stations') || '[]');
+    const faults = JSON.parse(localStorage.getItem('faults') || '[]');
+    const faultsWithParts = faults.filter(f => f.parts && f.parts.trim() !== '');
+    
+    let stationOptions = '<option value="">كل المحطات</option>';
+    stations.forEach(s => { stationOptions += `<option value="${s.id}">${s.name}</option>`; });
+    
+    container.innerHTML = `
+        <div class="form-card">
+            <h4>🔧 تقرير قطع الغيار المستخدمة</h4>
+            <div class="row">
+                <div class="col-md-4 mb-2"><label>المحطة</label><select id="spareAdvancedStation" class="form-control">${stationOptions}</select></div>
+                <div class="col-md-4 mb-2"><label>من تاريخ</label><input type="date" id="spareAdvancedFrom" class="form-control"></div>
+                <div class="col-md-4 mb-2"><label>إلى تاريخ</label><input type="date" id="spareAdvancedTo" class="form-control"></div>
+                <div class="col-md-12 mb-2"><label>بحث في قطع الغيار</label><input type="text" id="spareAdvancedSearch" class="form-control" placeholder="اكتب اسم قطعة الغيار..."></div>
+            </div>
+            <button class="btn btn-primary mt-2" onclick="showSparePartsAdvancedReport()">عرض</button>
+            <button class="btn btn-secondary mt-2" onclick="printSparePartsAdvancedReport()">🖨️ طباعة</button>
+            <div id="sparePartsAdvancedResult" class="mt-4"></div>
+        </div>
+    `;
+    
+    window.showSparePartsAdvancedReport = () => {
+        const stationId = document.getElementById('spareAdvancedStation').value;
+        const fromDate = document.getElementById('spareAdvancedFrom').value;
+        const toDate = document.getElementById('spareAdvancedTo').value;
+        const searchTerm = document.getElementById('spareAdvancedSearch').value.toLowerCase();
+        
+        let filtered = faultsWithParts;
+        if (stationId) filtered = filtered.filter(f => f.stationId == stationId);
+        if (fromDate) filtered = filtered.filter(f => f.date >= fromDate);
+        if (toDate) filtered = filtered.filter(f => f.date <= toDate);
+        if (searchTerm) filtered = filtered.filter(f => f.parts.toLowerCase().includes(searchTerm));
+        
+        filtered.sort((a,b) => b.date.localeCompare(a.date));
+        
+        const resultDiv = document.getElementById('sparePartsAdvancedResult');
+        if (filtered.length === 0) {
+            resultDiv.innerHTML = '<div class="alert alert-info">لا توجد قطع غيار مطابقة</div>';
+            return;
+        }
+        
+        let html = `<div class="table-responsive"><table class="table table-bordered">
+            <thead class="table-primary">
+                运转<th>التاريخ</th><th>المحطة</th><th>الأصل المعطل</th><th>قطع الغيار المستخدمة</th><th>نوع العطل</th><th>إجراءات الإصلاح</th>\\
+            </thead>
+            <tbody>`;
+        
+        filtered.forEach(f => {
+            const station = stations.find(s => s.id == f.stationId);
+            html += `运转
+                日起${f.date}起
+                日起${station?.name || '-'}起
+                日起${f.assetName || '-'}起
+                <td class="fw-bold text-primary">${f.parts}</td>
+                日起${f.type}起
+                日起${f.actions || '-'}起
+             \)`;
+        });
+        
+        html += `</tbody> </table></div>`;
+        resultDiv.innerHTML = html;
+    };
+    
+    window.printSparePartsAdvancedReport = () => {
+        const content = document.getElementById('sparePartsAdvancedResult').innerHTML;
+        const win = window.open('', '_blank');
+        win.document.write(`<html dir="rtl"><head><title>تقرير قطع الغيار</title>
+        <style>body{font-family:Tahoma;padding:20px} table{border-collapse:collapse;width:100%} th,td{border:1px solid #ddd;padding:8px;text-align:right} th{background:#0d6efd;color:white}</style></head>
+        <body><h2>تقرير قطع الغيار المستخدمة</h2>${content}</body></html>`);
+        win.document.close();
+        win.print();
+    };
+}
+
+// ==================== إنهاء الملف ====================
 window.loadPage = loadPage;
 window.logout = logout;
