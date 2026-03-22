@@ -148,15 +148,13 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="app.js"></script>
+<script src="js/app.js"></script>
 <script>
-    // تهيئة Supabase (نفس الإعدادات المستخدمة في index.html)
     const SUPABASE_URL = 'https://pbzpumetrmirnsshjdoe.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_O9BKPIjk5xXvbGNjvsBXVw_9V_TIoUu';
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     window.supabaseClient = supabaseClient;
 
-    // التحقق من تسجيل الدخول
     const loggedUser = localStorage.getItem('loggedUser');
     if (!loggedUser) {
         window.location.href = 'index.html';
@@ -164,7 +162,6 @@
         console.log('مستخدم مسجل:', JSON.parse(loggedUser).name);
     }
 
-    // دوال مساعدة
     function toggleSubMenu(menuId) {
         const menu = document.getElementById(menuId);
         if (menu) menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
@@ -178,7 +175,6 @@
         window.location.href = 'index.html';
     }
 
-    // تحميل الصفحة الرئيسية بعد التأكد من وجود loadPage
     if (typeof loadPage === 'function') {
         loadPage('home');
     } else {
