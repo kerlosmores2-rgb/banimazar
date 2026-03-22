@@ -2038,7 +2038,7 @@ async function loadReportSparePartsAdvanced(container) {
 async function loadPage(page) {
     if (!checkAuth()) return;
     
-    // إغلاق القائمة الجانبية في الموبايل (إذا كانت مفتوحة)
+    // إغلاق القائمة الجانبية في الموبايل
     const sidebar = document.getElementById('sidebar');
     if (sidebar && window.innerWidth <= 768) {
         sidebar.classList.remove('active');
