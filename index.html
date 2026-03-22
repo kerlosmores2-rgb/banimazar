@@ -81,57 +81,58 @@
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-    // حذف أي بيانات قديمة وتهيئة بيانات جديدة
-    localStorage.clear();
+    // ==================== إعدادات Supabase ====================
+    const SUPABASE_URL = 'https://pbzpumetrmirnsshjdoe.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_O9BKPIjk5xXvbGNjvsBXVw_9V_TIoUu';
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     
-    // إنشاء المستخدمين
-    const users = [
-        { username: 'admin', password: 'admin123', name: 'مدير النظام', role: 'مدير' },
-        { username: 'eng_mansour', password: '123456', name: 'منصور رجب', role: 'نائب مدير' },
-        { username: 'keroles', password: '123', name: 'كيرلس موريس', role: 'فني' }
-    ];
-    localStorage.setItem('users', JSON.stringify(users));
+    // ==================== التحقق من تسجيل الدخول ====================
+    async function checkLogin() {
+        const token = localStorage.getItem('supabaseToken');
+        if (token) {
+            const { data: { user } } = await supabase.auth.getUser(token);
+            if (user) {
+                window.location.href = 'dashboard.html';
+            }
+        }
+    }
+    checkLogin();
     
-    // تهيئة البيانات الفارغة
-    localStorage.setItem('stations', JSON.stringify([]));
-    localStorage.setItem('employees', JSON.stringify([]));
-    localStorage.setItem('faults', JSON.stringify([]));
-    localStorage.setItem('tariffs', JSON.stringify({ electricity: 1.2, water: 3.5 }));
-    localStorage.setItem('monthlyCosts', JSON.stringify([]));
-    
-    // إضافة بيانات تجريبية للمحطات
-    const sampleStations = [
-        { id: 1, name: 'محطة بني مزار الرئيسية', code: 'ST001', type: 'رئيسية', outfall: 'محطة المعالجة', capacity: '500' },
-        { id: 2, name: 'محطة المعالجة المركزية', code: 'ST002', type: 'معالجة', outfall: '', capacity: '2000' }
-    ];
-    localStorage.setItem('stations', JSON.stringify(sampleStations));
-    
-    // إضافة بيانات تجريبية للعاملين
-    const sampleEmployees = [
-        { id: 1, name: 'أحمد محمد', code: 'EMP001', stationId: '1', role: 'مدير محطة', phone: '01234567890', status: 'يعمل' },
-        { id: 2, name: 'محمود علي', code: 'EMP002', stationId: '1', role: 'فني', phone: '01123456789', status: 'يعمل' }
-    ];
-    localStorage.setItem('employees', JSON.stringify(sampleEmployees));
-    
-    console.log('تم تهيئة البيانات بنجاح');
-    console.log('المستخدمين:', JSON.parse(localStorage.getItem('users')));
-    
-    document.getElementById('loginForm').onsubmit = function(e) {
+    // ==================== تسجيل الدخول ====================
+    document.getElementById('loginForm').onsubmit = async function(e) {
         e.preventDefault();
         const username = document.getElementById('username').value;
         const password = document.getElementById('password').value;
-        const usersList = JSON.parse(localStorage.getItem('users'));
         
-        console.log('محاولة دخول:', username, password);
-        console.log('المستخدمين المتاحين:', usersList);
+        // البحث عن المستخدم في جدول users (لأننا مش بنستخدم Auth حالياً)
+        const { data: users, error } = await supabase
+            .from('users')
+            .select('*')
+            .eq('username', username)
+            .eq('password', password);
         
-        const user = usersList.find(u => u.username === username && u.password === password);
+        if (error) {
+            console.error('خطأ:', error);
+            const errorDiv = document.getElementById('errorMsg');
+            errorDiv.textContent = 'خطأ في الاتصال بقاعدة البيانات';
+            errorDiv.classList.remove('d-none');
+            return;
+        }
         
-        if (user) {
+        if (users && users.length > 0) {
+            const user = users[0];
             console.log('تم تسجيل الدخول بنجاح:', user.name);
-            sessionStorage.setItem('loggedUser', JSON.stringify(user));
-            sessionStorage.setItem('loginTime', Date.now());
+            
+            // تخزين بيانات المستخدم
+            localStorage.setItem('loggedUser', JSON.stringify({
+                id: user.id,
+                username: user.username,
+                name: user.name,
+                role: user.role
+            }));
+            localStorage.setItem('loginTime', Date.now());
             
             if (document.getElementById('remember').checked) {
                 localStorage.setItem('rememberedUser', username);
@@ -146,6 +147,7 @@
         }
     };
     
+    // تذكر المستخدم
     const remembered = localStorage.getItem('rememberedUser');
     if (remembered) {
         document.getElementById('username').value = remembered;
