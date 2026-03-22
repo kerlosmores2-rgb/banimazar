@@ -2071,7 +2071,6 @@ async function loadPage(page) {
     else if (page === 'reportSparePartsAdvanced') await loadReportSparePartsAdvanced(container);
     else container.innerHTML = '<div class="alert alert-danger">صفحة غير موجودة</div>';
 }
-
 // ==================== تصدير الدوال للاستخدام ====================
 window.loadPage = loadPage;
 window.logout = logout;
