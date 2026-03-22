@@ -1,0 +1,15 @@
+{
+  "name": "نظام محطات الصرف الصحي",
+  "short_name": "محطات الصرف",
+  "start_url": "/banimazar/",
+  "display": "standalone",
+  "theme_color": "#0d6efd",
+  "background_color": "#0d6efd",
+  "icons": [
+    {
+      "src": "/banimazar/icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
