@@ -163,6 +163,7 @@ window.toggleSourceFields = function(select) {
 };
 
 // ==================== إضافة محطة ====================
+// ==================== إضافة محطة ====================
 function loadAddStation(container) {
     const stations = JSON.parse(localStorage.getItem('stations') || '[]');
     let outfallOptions = '<option value="">بدون</option>';
@@ -231,7 +232,7 @@ function loadAddStation(container) {
         alert('تم حفظ المحطة بنجاح');
         loadPage('listStations');
     };
-}
+}س
 
 // ==================== قائمة المحطات مع تعديل وحذف ====================
 function loadListStations(container) {
