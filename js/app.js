@@ -2034,14 +2034,11 @@ async function loadReportSparePartsAdvanced(container) {
         win.print();
     };
 }
-
 // ==================== الدالة الرئيسية ====================
 async function loadPage(page) {
     if (!checkAuth()) return;
-    async function loadPage(page) {
-    if (!checkAuth()) return;
     
-    // إغلاق القائمة الجانبية في الموبايل
+    // إغلاق القائمة الجانبية في الموبايل (إذا كانت مفتوحة)
     const sidebar = document.getElementById('sidebar');
     if (sidebar && window.innerWidth <= 768) {
         sidebar.classList.remove('active');
@@ -2050,15 +2047,9 @@ async function loadPage(page) {
     const container = document.getElementById('pageContent');
     if (!container) return;
     
-    // ... باقي الكود (if statements للصفحات)
-}
-    const container = document.getElementById('pageContent');
-    if (!container) return;
-
     if (page === 'home') await loadHome(container);
     else if (page === 'addStation') await loadAddStation(container);
     else if (page === 'listStations') await loadListStations(container);
-    else if (page === 'editStation') await loadEditStation(container);
     else if (page === 'addEmployee') await loadAddEmployee(container);
     else if (page === 'listEmployees') await loadListEmployees(container);
     else if (page === 'addFault') await loadAddFault(container);
