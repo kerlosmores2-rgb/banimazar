@@ -2038,6 +2038,20 @@ async function loadReportSparePartsAdvanced(container) {
 // ==================== الدالة الرئيسية ====================
 async function loadPage(page) {
     if (!checkAuth()) return;
+    async function loadPage(page) {
+    if (!checkAuth()) return;
+    
+    // إغلاق القائمة الجانبية في الموبايل
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar && window.innerWidth <= 768) {
+        sidebar.classList.remove('active');
+    }
+    
+    const container = document.getElementById('pageContent');
+    if (!container) return;
+    
+    // ... باقي الكود (if statements للصفحات)
+}
     const container = document.getElementById('pageContent');
     if (!container) return;
 
