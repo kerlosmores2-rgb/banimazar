@@ -1667,6 +1667,7 @@ async function loadArchive(container) {
     document.getElementById('archiveStationSelect').addEventListener('change', displayArchiveFiles);
     displayArchiveFiles();
 }
+
 async function loadUsers(container) {
     const users = await apiCall('users', 'select');
     
@@ -1680,9 +1681,9 @@ async function loadUsers(container) {
                     <div class="col-md-3 mb-2"><input type="text" id="userName" class="form-control" placeholder="الاسم" required></div>
                     <div class="col-md-3 mb-2"><input type="password" id="userPass" class="form-control" placeholder="كلمة المرور" required></div>
                     <div class="col-md-3 mb-2"><select id="userRole" class="form-control">
-                        <option>مدير (كل الصلاحيات)</option>
-                        <option>مدير محدود (صلاحيات محددة لكل المواقع)</option>
-                        <option>مدير موقع (صلاحيات محددة لموقع واحد)</option>
+                        <option value="مدير">مدير (كل الصلاحيات)</option>
+                        <option value="مدير محدود">مدير محدود (صلاحيات محددة لكل المواقع)</option>
+                        <option value="مدير موقع">مدير موقع (صلاحيات محددة لموقع واحد)</option>
                     </select></div>
                 </div>
                 <button type="submit" class="btn btn-primary mt-2">➕ إضافة مستخدم</button>
