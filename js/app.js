@@ -1667,12 +1667,13 @@ async function loadArchive(container) {
     document.getElementById('archiveStationSelect').addEventListener('change', displayArchiveFiles);
     displayArchiveFiles();
 }
-
 async function loadUsers(container) {
     const users = await apiCall('users', 'select');
+    
     container.innerHTML = `
         <div class="form-card">
             <h4>⚙️ إدارة المستخدمين والصلاحيات</h4>
+            <div id="userMessage" class="alert alert-info d-none"></div>
             <form id="userForm">
                 <div class="row">
                     <div class="col-md-3 mb-2"><input type="text" id="userCode" class="form-control" placeholder="كود المستخدم" required></div>
@@ -1687,11 +1688,24 @@ async function loadUsers(container) {
                 <button type="submit" class="btn btn-primary mt-2">➕ إضافة مستخدم</button>
             </form>
         </div>
-        <div class="table-responsive mt-4"><table class="table table-bordered">
-            <thead><tr><th>الكود</th><th>الاسم</th><th>الصلاحية</th><th>تاريخ الإضافة</th><th></th></tr></thead>
-            <tbody id="usersTableBody"></tbody>
-        </table></div>
+        <div class="table-responsive mt-4">
+            <table class="table table-bordered">
+                <thead>
+                    <tr><th>الكود</th><th>الاسم</th><th>الصلاحية</th><th>تاريخ الإضافة</th><th></th></tr>
+                </thead>
+                <tbody id="usersTableBody"></tbody>
+            </table>
+        </div>
     `;
+
+    function showMessage(msg, isError = false) {
+        const msgDiv = document.getElementById('userMessage');
+        msgDiv.textContent = msg;
+        msgDiv.className = `alert ${isError ? 'alert-danger' : 'alert-success'}`;
+        msgDiv.classList.remove('d-none');
+        setTimeout(() => msgDiv.classList.add('d-none'), 3000);
+    }
+
     function renderUsersTable() {
         const tbody = document.getElementById('usersTableBody');
         if (!tbody) return;
@@ -1707,44 +1721,66 @@ async function loadUsers(container) {
             delBtn.className = 'btn btn-sm btn-danger';
             delBtn.innerHTML = '<i class="fas fa-trash"></i> حذف';
             delBtn.onclick = async () => {
-                if (u.username === 'admin') { alert('لا يمكن حذف المستخدم admin'); return; }
+                if (u.username === 'admin') {
+                    showMessage('لا يمكن حذف المستخدم admin', true);
+                    return;
+                }
                 if (confirm(`حذف المستخدم ${u.name}؟`)) {
                     try {
                         await apiCall('users', 'delete', null, u.id);
-                        users.splice(users.indexOf(u), 1);
+                        const index = users.findIndex(us => us.id === u.id);
+                        if (index !== -1) users.splice(index, 1);
                         renderUsersTable();
-                        alert('تم حذف المستخدم');
-                    } catch (err) { alert('خطأ: ' + err.message); }
+                        showMessage('تم حذف المستخدم بنجاح');
+                    } catch (err) {
+                        showMessage('خطأ: ' + err.message, true);
+                    }
                 }
             };
             delCell.appendChild(delBtn);
         });
     }
+
     document.getElementById('userForm').onsubmit = async function(e) {
         e.preventDefault();
-        const newUser = {
-            id: Date.now(),
-            username: document.getElementById('userCode').value,
-            name: document.getElementById('userName').value,
-            password: document.getElementById('userPass').value,
-            role: document.getElementById('userRole').value,
-            createdAt: new Date().toISOString()
-        };
-        if (users.find(u => u.username === newUser.username)) {
-            alert('كود المستخدم موجود مسبقاً');
+        const username = document.getElementById('userCode').value.trim();
+        const name = document.getElementById('userName').value.trim();
+        const password = document.getElementById('userPass').value;
+        const role = document.getElementById('userRole').value;
+
+        if (!username || !name || !password) {
+            showMessage('جميع الحقول مطلوبة', true);
             return;
         }
+
+        if (users.find(u => u.username === username)) {
+            showMessage('اسم المستخدم موجود مسبقاً', true);
+            return;
+        }
+
+        const newUser = {
+            id: Date.now(),
+            username: username,
+            name: name,
+            password: password,
+            role: role,
+            createdAt: new Date().toISOString()
+        };
+
         try {
-            await apiCall('users', 'insert', newUser);
-            users.push(newUser);
+            const result = await apiCall('users', 'insert', newUser);
+            users.push(result);
             renderUsersTable();
-            alert('تم إضافة المستخدم بنجاح');
+            showMessage('تم إضافة المستخدم بنجاح');
             document.getElementById('userForm').reset();
-        } catch (err) { alert('خطأ: ' + err.message); }
+        } catch (err) {
+            console.error(err);
+            showMessage('فشل في إضافة المستخدم: ' + err.message, true);
+        }
     };
+
     renderUsersTable();
 }
-
 async function loadReportWaterPumped(container) {
     const stations = await apiCall('stations', 'select');
     const monthlyCosts = await apiCall('monthly_costs', 'select');
