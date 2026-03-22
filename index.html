@@ -83,7 +83,9 @@
     const SUPABASE_URL = 'https://pbzpumetrmirnsshjdoe.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_O9BKPIjk5xXvbGNjvsBXVw_9V_TIoUu';
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    window.supabaseClient = supabaseClient; // تعريفه عالمياً
+    window.supabaseClient = supabaseClient;
+    
+    console.log('✅ Supabase جاهز');
 
     // التحقق من تسجيل الدخول السابق
     (function checkExistingSession() {
@@ -96,11 +98,14 @@
     // تسجيل الدخول
     document.getElementById('loginForm').onsubmit = async function(e) {
         e.preventDefault();
-        const username = document.getElementById('username').value;
+        const username = document.getElementById('username').value.trim();
         const password = document.getElementById('password').value;
         const errorDiv = document.getElementById('errorMsg');
 
         errorDiv.classList.add('d-none');
+        
+        console.log('🔐 محاولة دخول:', username);
+        
         try {
             const { data, error } = await supabaseClient
                 .from('users')
@@ -108,10 +113,13 @@
                 .eq('username', username)
                 .eq('password', password);
 
+            console.log('📊 نتيجة البحث:', data);
+            
             if (error) throw error;
 
             if (data && data.length > 0) {
                 const user = data[0];
+                console.log('✅ تم تسجيل الدخول:', user.name);
                 localStorage.setItem('loggedUser', JSON.stringify({
                     id: user.id,
                     username: user.username,
@@ -124,11 +132,16 @@
                 }
                 window.location.href = 'dashboard.html';
             } else {
+                console.log('❌ المستخدم غير موجود');
                 errorDiv.textContent = 'اسم المستخدم أو كلمة المرور غير صحيحة';
                 errorDiv.classList.remove('d-none');
+                
+                // عرض جميع المستخدمين للمساعدة
+                const { data: allUsers } = await supabaseClient.from('users').select('*');
+                console.log('📋 جميع المستخدمين:', allUsers);
             }
         } catch (err) {
-            console.error(err);
+            console.error('❌ خطأ:', err);
             errorDiv.textContent = 'خطأ في الاتصال بقاعدة البيانات: ' + err.message;
             errorDiv.classList.remove('d-none');
         }
@@ -140,15 +153,6 @@
         document.getElementById('username').value = remembered;
         document.getElementById('remember').checked = true;
     }
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-    const SUPABASE_URL = 'https://pbzpumetrmirnsshjdoe.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_O9BKPIjk5xXvbGNjvsBXVw_9V_TIoUu';
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    window.supabaseClient = supabaseClient;
-    
-    console.log('✅ Supabase جاهز', supabaseClient);
-</script>
 </script>
 </body>
 </html>
