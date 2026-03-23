@@ -285,6 +285,55 @@
             setTimeout(hideEditDelete, 2000);
         }
     })();
+<script>
+    // ==================== تطبيق صلاحية "عرض فقط" بشكل كامل ====================
+    (function applyViewOnlyRestrictions() {
+        const user = JSON.parse(localStorage.getItem('loggedUser') || '{}');
+        console.log('🔍 صلاحية المستخدم:', user.role);
+        
+        if (user.role === 'عرض فقط') {
+            console.log('⚠️ تطبيق قيود عرض فقط...');
+            
+            // 1. إخفاء أزرار الإضافة في القائمة الجانبية
+            const addButtons = document.querySelectorAll('a[onclick*="add"]');
+            addButtons.forEach(btn => {
+                const parentLi = btn.closest('li');
+                if (parentLi) parentLi.style.display = 'none';
+            });
+            console.log('✅ تم إخفاء أزرار الإضافة');
+            
+            // 2. إخفاء أزرار التعديل والحذف (هذه هي الأهم)
+            function hideEditDeleteButtons() {
+                const editButtons = document.querySelectorAll('.btn-warning');
+                const deleteButtons = document.querySelectorAll('.btn-danger');
+                editButtons.forEach(btn => btn.style.display = 'none');
+                deleteButtons.forEach(btn => btn.style.display = 'none');
+                if (editButtons.length + deleteButtons.length > 0) {
+                    console.log(`✅ تم إخفاء ${editButtons.length} زر تعديل و ${deleteButtons.length} زر حذف`);
+                }
+            }
+            
+            // تنفيذ فوري
+            hideEditDeleteButtons();
+            
+            // مراقبة التغييرات في المحتوى (لأن الصفحات تتحمّل ديناميكياً)
+            const observer = new MutationObserver(function(mutations) {
+                hideEditDeleteButtons();
+            });
+            const targetNode = document.getElementById('pageContent');
+            if (targetNode) {
+                observer.observe(targetNode, { childList: true, subtree: true });
+            }
+            
+            // تأكيد إضافي بعد تأخير (لأن بعض الأزرار تظهر متأخرة)
+            setTimeout(hideEditDeleteButtons, 500);
+            setTimeout(hideEditDeleteButtons, 1000);
+            setTimeout(hideEditDeleteButtons, 2000);
+            
+            console.log('✅ تم تطبيق صلاحية عرض فقط بنجاح');
+        }
+    })();
+</script>    
 </script>
 </body>
 </html>
