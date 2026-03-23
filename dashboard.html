@@ -252,7 +252,39 @@
             console.log('✅ تم تقييد صلاحيات المستخدم (عرض فقط)');
         }
     }, 500);
+    <script>
+    // تطبيق صلاحية "عرض فقط" بشكل قوي
+    (function applyViewOnly() {
+        const user = JSON.parse(localStorage.getItem('loggedUser') || '{}');
+        console.log('🔍 صلاحية المستخدم:', user.role);
+        
+        if (user.role === 'عرض فقط') {
+            // إخفاء أزرار الإضافة
+            const addButtons = document.querySelectorAll('a[onclick*="add"]');
+            addButtons.forEach(btn => {
+                const li = btn.closest('li');
+                if (li) li.style.display = 'none';
+            });
+            console.log('✅ تم إخفاء أزرار الإضافة');
+            
+            // إخفاء أزرار التعديل والحذف
+            function hideEditDelete() {
+                const btns = document.querySelectorAll('.btn-warning, .btn-danger');
+                btns.forEach(btn => btn.style.display = 'none');
+                if (btns.length > 0) console.log('✅ تم إخفاء', btns.length, 'زر تعديل/حذف');
+            }
+            
+            // تنفيذ فوري
+            hideEditDelete();
+            
+            // مراقبة التغييرات
+            const observer = new MutationObserver(hideEditDelete);
+            const pageContent = document.getElementById('pageContent');
+            if (pageContent) {
+                observer.observe(pageContent, { childList: true, subtree: true });
+            }
+        }
+    })();
 </script>
-
 </body>
 </html>
