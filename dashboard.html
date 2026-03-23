@@ -146,7 +146,6 @@
         <div class="footer-credit">تم إعداد النظام بواسطة فني / كيرلس موريس يعقوب</div>
     </div>
 </div>
-
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/app.js"></script>
 <script>
@@ -189,43 +188,7 @@
         }, 1000);
     }
 
-    // ==================== صلاحية "عرض فقط" ====================
-    setTimeout(function() {
-        const user = JSON.parse(localStorage.getItem('loggedUser') || '{}');
-        const userRole = user.role;
-        console.log('🔍 الصلاحية:', userRole);
-        
-        if (userRole === 'عرض فقط') {
-            // إخفاء أزرار الإضافة في القائمة الجانبية
-            const addButtons = document.querySelectorAll('a[onclick*="add"]');
-            addButtons.forEach(btn => {
-                const parentLi = btn.closest('li');
-                if (parentLi) parentLi.style.display = 'none';
-            });
-            console.log('✅ تم إخفاء أزرار الإضافة');
-            
-            // دالة إخفاء أزرار التعديل والحذف
-            function hideEditDelete() {
-                document.querySelectorAll('.btn-warning, .btn-danger').forEach(btn => {
-                    btn.style.display = 'none';
-                });
-            }
-            
-            // مراقبة التغييرات في المحتوى (عند تحميل الصفحات)
-            const observer = new MutationObserver(function() {
-                hideEditDelete();
-            });
-            const pageContent = document.getElementById('pageContent');
-            if (pageContent) {
-                observer.observe(pageContent, { childList: true, subtree: true });
-            }
-            
-            // تنفيذ فوري
-            hideEditDelete();
-        }
-    }, 500);
-    <script>
-    // إعادة ربط جميع أزرار القائمة الجانبية
+    // ==================== إعادة ربط الأزرار ====================
     function fixSidebarLinks() {
         const allLinks = document.querySelectorAll('#sidebar a');
         console.log('عدد الأزرار:', allLinks.length);
@@ -247,13 +210,44 @@
             }
         });
     }
-    
-    // تنفيذ بعد تحميل الصفحة
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', fixSidebarLinks);
-    } else {
-        fixSidebarLinks();
-    }
+    fixSidebarLinks();
+
+    // ==================== صلاحية "عرض فقط" ====================
+    setTimeout(function() {
+        const user = JSON.parse(localStorage.getItem('loggedUser') || '{}');
+        const userRole = user.role;
+        console.log('🔍 الصلاحية:', userRole);
+        
+        if (userRole === 'عرض فقط') {
+            // إخفاء أزرار الإضافة في القائمة الجانبية
+            const addButtons = document.querySelectorAll('a[onclick*="add"]');
+            addButtons.forEach(btn => {
+                const parentLi = btn.closest('li');
+                if (parentLi) parentLi.style.display = 'none';
+            });
+            console.log('✅ تم إخفاء أزرار الإضافة');
+            
+            // دالة إخفاء أزرار التعديل والحذف
+            function hideEditDelete() {
+                document.querySelectorAll('.btn-warning, .btn-danger').forEach(btn => {
+                    btn.style.display = 'none';
+                });
+                console.log('✅ تم إخفاء أزرار التعديل والحذف');
+            }
+            
+            // مراقبة التغييرات في المحتوى
+            const observer = new MutationObserver(function() {
+                hideEditDelete();
+            });
+            const pageContent = document.getElementById('pageContent');
+            if (pageContent) {
+                observer.observe(pageContent, { childList: true, subtree: true });
+            }
+            
+            // تنفيذ فوري
+            hideEditDelete();
+        }
+    }, 500);
 </script>
 </body>
 </html>
