@@ -7,27 +7,70 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        /* نفس الستايلات السابقة */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Tahoma', sans-serif; background: #f0f2f5; }
         .wrapper { display: flex; width: 100%; min-height: 100vh; }
-        #sidebar { width: 280px; background: #1e2a3e; color: white; transition: all 0.3s; height: 100vh; position: sticky; top: 0; overflow-y: auto; }
+        #sidebar {
+            width: 280px;
+            background: #1e2a3e;
+            color: white;
+            transition: all 0.3s;
+            height: 100vh;
+            position: sticky;
+            top: 0;
+            overflow-y: auto;
+        }
         #sidebar.active { margin-right: -280px; }
         .sidebar-header { padding: 20px; background: #0d6efd; text-align: center; }
         .sidebar-header h4 { font-size: 1.2rem; margin-bottom: 5px; }
         #sidebar ul { padding: 20px 0; list-style: none; }
-        #sidebar ul li a { padding: 12px 20px; display: block; color: #ecf0f1; text-decoration: none; cursor: pointer; }
+        #sidebar ul li a {
+            padding: 12px 20px;
+            display: block;
+            color: #ecf0f1;
+            text-decoration: none;
+            cursor: pointer;
+        }
         #sidebar ul li a:hover { background: #0d6efd; padding-right: 25px; }
         #sidebar ul li a i { margin-left: 10px; width: 25px; }
         #sidebar ul ul li a { padding-right: 50px; background: #2c3e50; }
         .sidebar-footer { padding: 20px; border-top: 1px solid #2c3e50; }
-        .sidebar-footer button { width: 100%; padding: 10px; background: #dc3545; color: white; border: none; border-radius: 8px; cursor: pointer; }
+        .sidebar-footer button {
+            width: 100%;
+            padding: 10px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
         #content { flex: 1; padding: 20px; }
-        #toggleSidebar { margin-bottom: 20px; background: #0d6efd; border: none; border-radius: 8px; padding: 10px 20px; color: white; cursor: pointer; }
-        .stats-card { background: white; border-radius: 15px; padding: 20px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        #toggleSidebar {
+            margin-bottom: 20px;
+            background: #0d6efd;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            color: white;
+            cursor: pointer;
+        }
+        .stats-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
         .stats-card i { font-size: 2.5rem; color: #0d6efd; }
         .stats-card h3 { font-size: 2rem; font-weight: bold; margin: 10px 0; }
-        .form-card { background: white; border-radius: 15px; padding: 25px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .form-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
         .form-card h4 { color: #0d6efd; margin-bottom: 20px; border-bottom: 2px solid #0d6efd; padding-bottom: 10px; }
         .table-responsive { background: white; border-radius: 15px; padding: 15px; overflow-x: auto; }
         .table th { background: #0d6efd; color: white; text-align: center; }
@@ -35,7 +78,10 @@
         .search-bar { background: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
         .footer-credit { font-size: 12px; color: #666; text-align: center; margin-top: 30px; padding-top: 15px; border-top: 1px solid #ddd; }
         .btn-primary { background: #0d6efd; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; }
-        @media (max-width: 768px) { #sidebar { position: fixed; z-index: 1000; margin-right: -280px; } #sidebar.active { margin-right: 0; } }
+        @media (max-width: 768px) {
+            #sidebar { position: fixed; z-index: 1000; margin-right: -280px; }
+            #sidebar.active { margin-right: 0; }
+        }
     </style>
 </head>
 <body>
@@ -76,9 +122,9 @@
                     <li><a onclick="loadPage('reportDaily')">📝 متابعة دورية</a></li>
                     <li><a onclick="loadPage('reportFaults')">🐛 تقرير الأعطال</a></li>
                     <li><a onclick="loadPage('reportStation')">🏭 متابعة محطة</a></li>
-                    <li><a onclick="loadPage('reportAsset')">⚙️ متابعة أصل</a></li>
+                    <li><a onclick="loadPage('reportAsset')"> 🔧متابعة أصل</a></li>
                     <li><a onclick="loadPage('reportEmployees')">👥 تقرير العاملين</a></li>
-                    <li><a onclick="loadPage('reportSpareParts')">🔧 تقرير قطع غيار</a></li>
+                    <li><a onclick="loadPage('reportSpareParts')">⚙️ تقرير قطع غيار</a></li>
                     <li><hr class="dropdown-divider" style="margin: 10px 0; border-color: #444;"></li>
                     <li><a onclick="loadPage('reportWaterPumped')">💧 تقرير المياه المرفوعة</a></li>
                     <li><a onclick="loadPage('reportElectricity')">⚡ تقرير استهلاك كهرباء</a></li>
@@ -100,14 +146,19 @@
         <div class="footer-credit">تم إعداد النظام بواسطة فني / كيرلس موريس يعقوب</div>
     </div>
 </div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/app.js"></script>
 <script>
+    // ==================== التحقق من تسجيل الدخول ====================
     const loggedUser = localStorage.getItem('loggedUser');
     if (!loggedUser) {
         window.location.href = 'index.html';
+    } else {
+        console.log('مستخدم مسجل:', JSON.parse(loggedUser).name);
     }
 
+    // ==================== دوال القائمة الجانبية ====================
     function toggleSubMenu(menuId) {
         const menu = document.getElementById(menuId);
         if (menu) menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
@@ -120,51 +171,14 @@
         };
     }
 
+    // ==================== تسجيل الخروج ====================
     async function logout() {
         localStorage.removeItem('loggedUser');
         localStorage.removeItem('loginTime');
         window.location.href = 'index.html';
     }
 
-    if (typeof loadPage === 'function') {
-        loadPage('home');
-    }
-</script>
-    <script>
-    // إخفاء أزرار الإضافة لمستخدمي "عرض فقط"
-    const user = JSON.parse(localStorage.getItem('loggedUser') || '{}');
-    if (user.role === 'عرض فقط') {
-        // إخفاء أزرار الإضافة في القائمة الجانبية
-        const addLinks = document.querySelectorAll('a[onclick*="add"]');
-        addLinks.forEach(link => {
-            const parentLi = link.closest('li');
-            if (parentLi) parentLi.style.display = 'none';
-        });
-        
-        // إخفاء أزرار التعديل والحذف في الصفحات (يتم تنفيذه بعد تحميل كل صفحة)
-        window.addEventListener('load', function() {
-            const observer = new MutationObserver(function() {
-                document.querySelectorAll('.btn-warning, .btn-danger').forEach(btn => {
-                    btn.style.display = 'none';
-                });
-            });
-            observer.observe(document.getElementById('pageContent'), { childList: true, subtree: true });
-        });
-    }
-</script>
-    const toggleBtn = document.getElementById('toggleSidebar');
-    if (toggleBtn) {
-        toggleBtn.onclick = () => {
-            document.getElementById('sidebar').classList.toggle('active');
-        };
-    }
-
-    async function logout() {
-        localStorage.removeItem('loggedUser');
-        localStorage.removeItem('loginTime');
-        window.location.href = 'index.html';
-    }
-
+    // ==================== تحميل الصفحة الرئيسية ====================
     if (typeof loadPage === 'function') {
         loadPage('home');
     } else {
@@ -173,14 +187,16 @@
             if (typeof loadPage === 'function') loadPage('home');
             else document.getElementById('pageContent').innerHTML = '<div class="alert alert-danger">خطأ: لم يتم تحميل النظام بشكل صحيح</div>';
         }, 1000);
-    }<script>
-    // ==================== إصلاح شامل لصلاحية "عرض فقط" ====================
-    function applyViewOnlyRestrictions() {
+    }
+
+    // ==================== صلاحية "عرض فقط" ====================
+    setTimeout(function() {
         const user = JSON.parse(localStorage.getItem('loggedUser') || '{}');
-        console.log('🔍 تطبيق الصلاحيات للمستخدم:', user.name, 'الصلاحية:', user.role);
+        const userRole = user.role;
+        console.log('🔍 الصلاحية:', userRole);
         
-        if (user.role === 'عرض فقط') {
-            // 1. إخفاء أزرار الإضافة في القائمة الجانبية
+        if (userRole === 'عرض فقط') {
+            // إخفاء أزرار الإضافة في القائمة الجانبية
             const addButtons = document.querySelectorAll('a[onclick*="add"]');
             addButtons.forEach(btn => {
                 const parentLi = btn.closest('li');
@@ -188,38 +204,26 @@
             });
             console.log('✅ تم إخفاء أزرار الإضافة');
             
-            // 2. إخفاء أزرار التعديل والحذف في جميع الجداول (إذا كانت موجودة)
-            const observer = new MutationObserver(function(mutations) {
+            // دالة إخفاء أزرار التعديل والحذف
+            function hideEditDelete() {
                 document.querySelectorAll('.btn-warning, .btn-danger').forEach(btn => {
-                    if (btn.onclick && (btn.onclick.toString().includes('edit') || btn.onclick.toString().includes('delete'))) {
-                        btn.style.display = 'none';
-                    }
+                    btn.style.display = 'none';
                 });
-            });
-            observer.observe(document.getElementById('pageContent'), { childList: true, subtree: true });
+            }
             
-            // 3. منع محاولة الوصول عبر الروابط المباشرة
-            window.canEdit = function() { return false; };
-            window.canAdd = function() { return false; };
-            window.canDelete = function() { return false; };
+            // مراقبة التغييرات في المحتوى (عند تحميل الصفحات)
+            const observer = new MutationObserver(function() {
+                hideEditDelete();
+            });
+            const pageContent = document.getElementById('pageContent');
+            if (pageContent) {
+                observer.observe(pageContent, { childList: true, subtree: true });
+            }
+            
+            // تنفيذ فوري
+            hideEditDelete();
         }
-    }
-    
-    // تنفيذ بعد تحميل الصفحة وبعد كل تغيير في المحتوى
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', applyViewOnlyRestrictions);
-    } else {
-        applyViewOnlyRestrictions();
-    }
-    
-    // مراقبة التغييرات في المحتوى (عند تحميل صفحات جديدة)
-    const contentObserver = new MutationObserver(function(mutations) {
-        applyViewOnlyRestrictions();
-    });
-    const pageContent = document.getElementById('pageContent');
-    if (pageContent) {
-        contentObserver.observe(pageContent, { childList: true, subtree: true });
-    }
+    }, 500);
 </script>
 </body>
 </html>
