@@ -2104,8 +2104,6 @@ async function loadUsers(container) {
 
     renderUsersTable();
 }
-
-// ==================== الدالة الرئيسية ====================
 // ==================== الدالة الرئيسية ====================
 async function loadPage(page) {
     if (!checkAuth()) return;
@@ -2144,19 +2142,18 @@ async function loadPage(page) {
     else container.innerHTML = '<div class="alert alert-danger">صفحة غير موجودة</div>';
 }
 
-// ==================== تصدير الدوال للاستخدام ====================
-app.js:2150 Uncaught ReferenceError: toggleSubMenu is not defined
-    at app.js:2150:24
-
-dashboard.html:152 Uncaught SyntaxError: Identifier 'SUPABASE_URL' has already been declared (at dashboard.html:152:9)
+// ==================== دوال مساعدة للقائمة الجانبية ====================
 function toggleSubMenu(menuId) {
     const menu = document.getElementById(menuId);
     if (menu) {
         menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
     }
 }
-﻿
 
+// ==================== تصدير الدوال للاستخدام ====================
 window.loadPage = loadPage;
 window.logout = logout;
 window.toggleSubMenu = toggleSubMenu;
+window.canEdit = canEdit;
+window.canAdd = canAdd;
+window.canDelete = canDelete;
