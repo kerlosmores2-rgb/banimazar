@@ -244,6 +244,17 @@
     };
     console.log('✅ تم تعريف loadPage مؤقتاً');
 </script>
-
+<script>
+    console.log('فحص تحميل app.js');
+    setTimeout(function() {
+        if (typeof loadPage === 'function') {
+            console.log('✅ loadPage موجودة');
+            loadPage('home');
+        } else {
+            console.error('❌ loadPage غير موجودة');
+            document.getElementById('pageContent').innerHTML = '<div class="alert alert-danger">لم يتم تحميل النظام. تأكد من وجود ملف app.js في المسار الصحيح.</div>';
+        }
+    }, 1000);
+</script>
 </body>
 </html>
