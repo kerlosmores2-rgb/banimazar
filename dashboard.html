@@ -383,6 +383,44 @@
             });
         }
     }, 500);
+<script>
+    // ==================== إخفاء أزرار التعديل والحذف والإضافة للمستخدم "عرض فقط" ====================
+    (function enforceViewOnly() {
+        const user = JSON.parse(localStorage.getItem('loggedUser') || '{}');
+        console.log('🔍 صلاحية المستخدم:', user.role);
+        
+        if (user.role === 'عرض فقط') {
+            console.log('⚠️ تطبيق قيود عرض فقط...');
+            
+            // إخفاء أزرار الإضافة في القائمة الجانبية
+            document.querySelectorAll('a[onclick*="add"]').forEach(btn => {
+                const li = btn.closest('li');
+                if (li) li.style.display = 'none';
+            });
+            
+            // إخفاء أزرار التعديل والحذف في أي مكان
+            function hideAll() {
+                document.querySelectorAll('.btn-warning, .btn-danger').forEach(btn => {
+                    btn.style.display = 'none';
+                });
+            }
+            
+            // تنفيذ فوري
+            hideAll();
+            
+            // مراقبة التغييرات في المحتوى (لأن الجداول تتحمّل بعدين)
+            const observer = new MutationObserver(function() {
+                hideAll();
+            });
+            const target = document.getElementById('pageContent');
+            if (target) {
+                observer.observe(target, { childList: true, subtree: true });
+            }
+            
+            // تأكيد إضافي (لأن بعض الأزرار تظهر متأخرة)
+            setInterval(hideAll, 1000);
+        }
+    })();
 </script>
 </body>
 </html>
