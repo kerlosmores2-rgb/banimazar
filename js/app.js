@@ -2145,6 +2145,12 @@ async function loadPage(page) {
 }
 
 // ==================== تصدير الدوال للاستخدام ====================
+app.js:2150 Uncaught ReferenceError: toggleSubMenu is not defined
+    at app.js:2150:24
+
+dashboard.html:152 Uncaught SyntaxError: Identifier 'SUPABASE_URL' has already been declared (at dashboard.html:152:9)
+﻿
+
 window.loadPage = loadPage;
 window.logout = logout;
 window.toggleSubMenu = toggleSubMenu;
