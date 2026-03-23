@@ -184,6 +184,58 @@
             else document.getElementById('pageContent').innerHTML = '<div class="alert alert-danger">خطأ: لم يتم تحميل النظام بشكل صحيح</div>';
         }, 1000);
     }
+    <script>
+    const SUPABASE_URL = 'https://pbzpumetrmirnsshjdoe.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_O9BKPIjk5xXvbGNjvsBXVw_9V_TIoUu';
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    window.supabaseClient = supabaseClient;
+
+    const loggedUser = localStorage.getItem('loggedUser');
+    if (!loggedUser) {
+        window.location.href = 'index.html';
+    } else {
+        console.log('مستخدم مسجل:', JSON.parse(loggedUser).name);
+    }
+
+    function toggleSubMenu(menuId) {
+        const menu = document.getElementById(menuId);
+        if (menu) menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+    }
+
+    // ==================== إخفاء أزرار الإضافة لمستخدمي "عرض فقط" ====================
+    const userRole = JSON.parse(localStorage.getItem('loggedUser') || '{}').role;
+    if (userRole === 'عرض فقط') {
+        const addButtons = document.querySelectorAll('a[onclick*="add"]');
+        addButtons.forEach(btn => {
+            const parentLi = btn.closest('li');
+            if (parentLi) parentLi.style.display = 'none';
+        });
+    }
+
+    // ==== إضافة حدث للزر ☰ ====
+    const toggleBtn = document.getElementById('toggleSidebar');
+    if (toggleBtn) {
+        toggleBtn.onclick = () => {
+            document.getElementById('sidebar').classList.toggle('active');
+        };
+    }
+
+    async function logout() {
+        localStorage.removeItem('loggedUser');
+        localStorage.removeItem('loginTime');
+        window.location.href = 'index.html';
+    }
+
+    if (typeof loadPage === 'function') {
+        loadPage('home');
+    } else {
+        console.warn('loadPage غير معرفة، انتظار تحميل app.js...');
+        setTimeout(() => {
+            if (typeof loadPage === 'function') loadPage('home');
+            else document.getElementById('pageContent').innerHTML = '<div class="alert alert-danger">خطأ: لم يتم تحميل النظام بشكل صحيح</div>';
+        }, 1000);
+    }
+</script>
 </script>
 </body>
 </html>
