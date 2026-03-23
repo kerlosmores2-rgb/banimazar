@@ -167,7 +167,7 @@
         if (menu) menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
     }
 
-    // ==================== إخفاء أزرار الإضافة لمستخدمي "عرض فقط" ====================
+    // إخفاء أزرار الإضافة لمستخدمي "عرض فقط"
     const userRole = JSON.parse(localStorage.getItem('loggedUser') || '{}').role;
     if (userRole === 'عرض فقط') {
         const addButtons = document.querySelectorAll('a[onclick*="add"]');
@@ -177,7 +177,6 @@
         });
     }
 
-    // ==== إضافة حدث للزر ☰ ====
     const toggleBtn = document.getElementById('toggleSidebar');
     if (toggleBtn) {
         toggleBtn.onclick = () => {
