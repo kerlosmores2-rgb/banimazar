@@ -2106,14 +2106,43 @@ async function loadUsers(container) {
 }
 
 // ==================== الدالة الرئيسية ====================
+// ==================== الدالة الرئيسية ====================
 async function loadPage(page) {
     if (!checkAuth()) return;
-    // للفحص فقط
-    console.log('📌 الصفحة المطلوبة:', page);
-    console.log('✅ loadAddStation موجودة؟', typeof loadAddStation);
-    console.log('✅ loadListStations موجودة؟', typeof loadListStations);
-    console.log('✅ loadAddEmployee موجودة؟', typeof loadAddEmployee);
 
+    // إغلاق القائمة الجانبية في الموبايل
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar && window.innerWidth <= 768) {
+        sidebar.classList.remove('active');
+    }
+
+    const container = document.getElementById('pageContent');
+    if (!container) return;
+
+    if (page === 'home') await loadHome(container);
+    else if (page === 'addStation') await loadAddStation(container);
+    else if (page === 'listStations') await loadListStations(container);
+    else if (page === 'addEmployee') await loadAddEmployee(container);
+    else if (page === 'listEmployees') await loadListEmployees(container);
+    else if (page === 'addFault') await loadAddFault(container);
+    else if (page === 'listFaults') await loadListFaults(container);
+    else if (page === 'tariffs') await loadTariffs(container);
+    else if (page === 'monthlyCosts') await loadMonthlyCosts(container);
+    else if (page === 'reportDaily') await loadReportDaily(container);
+    else if (page === 'reportFaults') await loadReportFaults(container);
+    else if (page === 'reportStation') await loadReportStation(container);
+    else if (page === 'reportAsset') await loadReportAsset(container);
+    else if (page === 'reportEmployees') await loadReportEmployees(container);
+    else if (page === 'reportSpareParts') await loadReportSpareParts(container);
+    else if (page === 'archive') await loadArchive(container);
+    else if (page === 'users') await loadUsers(container);
+    else if (page === 'reportWaterPumped') await loadReportWaterPumped(container);
+    else if (page === 'reportElectricity') await loadReportElectricity(container);
+    else if (page === 'reportWaterConsumption') await loadReportWaterConsumption(container);
+    else if (page === 'reportDiesel') await loadReportDiesel(container);
+    else if (page === 'reportSparePartsAdvanced') await loadReportSparePartsAdvanced(container);
+    else container.innerHTML = '<div class="alert alert-danger">صفحة غير موجودة</div>';
+}
 
 // ==================== تصدير الدوال للاستخدام ====================
 window.loadPage = loadPage;
