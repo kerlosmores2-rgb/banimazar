@@ -373,6 +373,16 @@
             setInterval(hideAll, 1000);
         }
     })();
+<script>
+    // حل قوي: تشغيل الكود كل ثانية للتأكد من إخفاء الأزرار
+    setInterval(function() {
+        const user = JSON.parse(localStorage.getItem('loggedUser') || '{}');
+        if (user.role === 'عرض فقط') {
+            document.querySelectorAll('.btn-warning, .btn-danger').forEach(btn => {
+                btn.style.display = 'none';
+            });
+        }
+    }, 500);
 </script>
 </body>
 </html>
