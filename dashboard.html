@@ -246,8 +246,45 @@
             console.log('✅ تم تفعيل وضع "عرض فقط" بنجاح');
         }
     })();
+</script><script>
+    // ==================== تطبيق صلاحية "عرض فقط" بشكل قوي ====================
+    (function enforceViewOnly() {
+        const user = JSON.parse(localStorage.getItem('loggedUser') || '{}');
+        console.log('🔍 صلاحية المستخدم:', user.role);
+        
+        if (user.role === 'عرض فقط') {
+            console.log('⚠️ تطبيق قيود عرض فقط...');
+            
+            // إخفاء أزرار الإضافة في القائمة الجانبية
+            const addLinks = document.querySelectorAll('a[onclick*="add"]');
+            addLinks.forEach(link => {
+                const parentLi = link.closest('li');
+                if (parentLi) parentLi.style.display = 'none';
+            });
+            
+            // إخفاء أزرار التعديل والحذف
+            function hideEditDelete() {
+                const btns = document.querySelectorAll('.btn-warning, .btn-danger');
+                if (btns.length > 0) {
+                    console.log(`✅ إخفاء ${btns.length} زر تعديل/حذف`);
+                    btns.forEach(btn => btn.style.display = 'none');
+                }
+            }
+            
+            // تنفيذ فوري
+            hideEditDelete();
+            
+            // مراقبة التغييرات في المحتوى (لأن الصفحات تتغير)
+            const observer = new MutationObserver(hideEditDelete);
+            const target = document.getElementById('pageContent');
+            if (target) observer.observe(target, { childList: true, subtree: true });
+            
+            // تأكيد إضافي بعد تأخير (لأن بعض الأزرار تظهر متأخرة)
+            setTimeout(hideEditDelete, 500);
+            setTimeout(hideEditDelete, 1000);
+            setTimeout(hideEditDelete, 2000);
+        }
+    })();
 </script>
-</script>
-
 </body>
 </html>
