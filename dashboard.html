@@ -148,22 +148,53 @@
             if (typeof loadPage === 'function') loadPage('home');
             else document.getElementById('pageContent').innerHTML = '<div class="alert alert-danger">خطأ: لم يتم تحميل النظام بشكل صحيح</div>';
         }, 1000);
-    }
-    <script>
-    // إخفاء أزرار الإضافة لمستخدمي "عرض فقط" بعد تحميل الصفحة
-    setTimeout(function() {
+    }<script>
+    // ==================== إصلاح شامل لصلاحية "عرض فقط" ====================
+    function applyViewOnlyRestrictions() {
         const user = JSON.parse(localStorage.getItem('loggedUser') || '{}');
-        console.log('الصلاحية:', user.role);
+        console.log('🔍 تطبيق الصلاحيات للمستخدم:', user.name, 'الصلاحية:', user.role);
         
         if (user.role === 'عرض فقط') {
+            // 1. إخفاء أزرار الإضافة في القائمة الجانبية
             const addButtons = document.querySelectorAll('a[onclick*="add"]');
             addButtons.forEach(btn => {
                 const parentLi = btn.closest('li');
                 if (parentLi) parentLi.style.display = 'none';
             });
-            console.log('✅ تم إخفاء أزرار الإضافة لمستخدم عرض فقط');
+            console.log('✅ تم إخفاء أزرار الإضافة');
+            
+            // 2. إخفاء أزرار التعديل والحذف في جميع الجداول (إذا كانت موجودة)
+            const observer = new MutationObserver(function(mutations) {
+                document.querySelectorAll('.btn-warning, .btn-danger').forEach(btn => {
+                    if (btn.onclick && (btn.onclick.toString().includes('edit') || btn.onclick.toString().includes('delete'))) {
+                        btn.style.display = 'none';
+                    }
+                });
+            });
+            observer.observe(document.getElementById('pageContent'), { childList: true, subtree: true });
+            
+            // 3. منع محاولة الوصول عبر الروابط المباشرة
+            window.canEdit = function() { return false; };
+            window.canAdd = function() { return false; };
+            window.canDelete = function() { return false; };
         }
-    }, 500);
+    }
+    
+    // تنفيذ بعد تحميل الصفحة وبعد كل تغيير في المحتوى
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', applyViewOnlyRestrictions);
+    } else {
+        applyViewOnlyRestrictions();
+    }
+    
+    // مراقبة التغييرات في المحتوى (عند تحميل صفحات جديدة)
+    const contentObserver = new MutationObserver(function(mutations) {
+        applyViewOnlyRestrictions();
+    });
+    const pageContent = document.getElementById('pageContent');
+    if (pageContent) {
+        contentObserver.observe(pageContent, { childList: true, subtree: true });
+    }
 </script>
 </body>
 </html>
