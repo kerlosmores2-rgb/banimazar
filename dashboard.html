@@ -147,114 +147,699 @@
     </div>
 </div>
 
-<script src="https://kerlosmores2-rgb.github.io/banimazar/js/app.js"></script>
-<script src="js/app.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-    // ==================== التحقق من تسجيل الدخول ====================
-    const loggedUser = localStorage.getItem('loggedUser');
-    if (!loggedUser) {
-        window.location.href = 'index.html';
-    } else {
-        console.log('مستخدم مسجل:', JSON.parse(loggedUser).name);
+    // ============================================================
+    //  app.js - نظام إدارة محطات الصرف الصحي (مضمن داخل dashboard.html)
+    // ============================================================
+
+    // ==================== إعدادات Supabase ====================
+    const SUPABASE_URL = 'https://pbzpumetrmirnsshjdoe.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_O9BKPIjk5xXvbGNjvsBXVw_9V_TIoUu';
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    window.supabaseClient = supabaseClient;
+
+    // ==================== دوال المصادقة ====================
+    function checkAuth() {
+        if (!localStorage.getItem('loggedUser')) {
+            window.location.href = 'index.html';
+            return false;
+        }
+        return true;
     }
 
-    // ==================== دوال القائمة الجانبية ====================
-    function toggleSubMenu(menuId) {
-        const menu = document.getElementById(menuId);
-        if (menu) menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
-    }
-
-    const toggleBtn = document.getElementById('toggleSidebar');
-    if (toggleBtn) {
-        toggleBtn.onclick = () => {
-            document.getElementById('sidebar').classList.toggle('active');
-        };
-    }
-
-    // ==================== تسجيل الخروج ====================
-    async function logout() {
+    function logout() {
         localStorage.removeItem('loggedUser');
         localStorage.removeItem('loginTime');
         window.location.href = 'index.html';
     }
 
-    // ==================== تحميل الصفحة الرئيسية ====================
-    if (typeof loadPage === 'function') {
-        loadPage('home');
-    } else {
-        console.warn('loadPage غير معرفة، انتظار تحميل app.js...');
-        setTimeout(() => {
-            if (typeof loadPage === 'function') loadPage('home');
-            else document.getElementById('pageContent').innerHTML = '<div class="alert alert-danger">خطأ: لم يتم تحميل النظام بشكل صحيح</div>';
-        }, 1000);
+    function getCurrentUser() {
+        return JSON.parse(localStorage.getItem('loggedUser') || '{}');
     }
-</script>
 
-<!-- ==================== إعادة ربط الأزرار ==================== -->
-<script>
-    function fixSidebarLinks() {
-        const allLinks = document.querySelectorAll('#sidebar a');
-        console.log('عدد الأزرار:', allLinks.length);
-        allLinks.forEach(link => {
-            const onclickAttr = link.getAttribute('onclick');
-            if (onclickAttr && onclickAttr.includes('loadPage')) {
-                const match = onclickAttr.match(/loadPage\('(.*?)'\)/);
-                if (match) {
-                    const pageName = match[1];
-                    link.removeAttribute('onclick');
-                    link.onclick = function(e) {
-                        e.preventDefault();
-                        loadPage(pageName);
-                        return false;
-                    };
-                    console.log('✅ تم ربط الزر:', pageName);
-                }
+    // ==================== دوال الصلاحيات ====================
+    function canAdd() {
+        const user = getCurrentUser();
+        return user && user.role !== 'عرض فقط';
+    }
+
+    function canEdit() {
+        const user = getCurrentUser();
+        return user && user.role !== 'عرض فقط';
+    }
+
+    function canDelete() {
+        const user = getCurrentUser();
+        return user && user.role !== 'عرض فقط';
+    }
+
+    // ==================== دالة مساعدة ====================
+    async function apiCall(table, action, data = null, id = null) {
+        try {
+            if (action === 'select') {
+                const { data: result, error } = await window.supabaseClient
+                    .from(table)
+                    .select('*')
+                    .order('id', { ascending: false });
+                if (error) throw error;
+                return result || [];
             }
-        });
+            if (action === 'insert') {
+                const { data: result, error } = await window.supabaseClient
+                    .from(table)
+                    .insert([data])
+                    .select();
+                if (error) throw error;
+                return result[0];
+            }
+            return null;
+        } catch (err) {
+            console.error(err);
+            throw err;
+        }
     }
-    fixSidebarLinks();
-</script>
 
-<!-- ==================== إخفاء أزرار التعديل والحذف والإضافة لمستخدم "عرض فقط" ==================== -->
-<script>
-    // حل بسيط: يتم تنفيذه كل نصف ثانية للتأكد من إخفاء الأزرار
+    // ==================== الصفحة الرئيسية ====================
+    async function loadHome(container) {
+        const stations = await apiCall('stations', 'select');
+        const employees = await apiCall('employees', 'select');
+        const faults = await apiCall('faults', 'select');
+        const openFaults = faults.filter(f => f.status === 'open').length;
+
+        container.innerHTML = `
+            <div class="row">
+                <div class="col-md-4"><div class="stats-card"><i class="fas fa-water"></i><h3>${stations.length}</h3><p>عدد المحطات</p></div></div>
+                <div class="col-md-4"><div class="stats-card"><i class="fas fa-users"></i><h3>${employees.length}</h3><p>عدد العاملين</p></div></div>
+                <div class="col-md-4"><div class="stats-card"><i class="fas fa-exclamation-triangle"></i><h3>${openFaults}</h3><p>أعطال مفتوحة</p></div></div>
+            </div>
+            <div class="form-card"><h4>مرحباً بك</h4><p>نظام إدارة محطات رفع الصرف الصحي - بني مزار</p><small>آخر تحديث: ${new Date().toLocaleDateString('ar-EG')}</small></div>
+        `;
+    }
+
+    // ==================== دوال المحطات (مبسطة) ====================
+    async function loadAddStation(container) {
+        if (!canAdd()) {
+            container.innerHTML = '<div class="alert alert-danger">ليس لديك صلاحية لإضافة محطات</div>';
+            return;
+        }
+        container.innerHTML = `
+            <div class="form-card">
+                <h4>➕ إضافة محطة جديدة</h4>
+                <form id="stationForm">
+                    <div class="row">
+                        <div class="col-md-6 mb-3"><label>اسم المحطة</label><input type="text" id="stationName" class="form-control" required></div>
+                        <div class="col-md-6 mb-3"><label>كود المحطة</label><input type="text" id="stationCode" class="form-control" required></div>
+                        <div class="col-md-4 mb-3"><label>النوع</label><select id="stationType" class="form-control"><option>رئيسية</option><option>فرعية</option><option>معالجة</option></select></div>
+                        <div class="col-md-4 mb-3"><label>المصب</label><input type="text" id="outfall" class="form-control"></div>
+                        <div class="col-md-4 mb-3"><label>القدرة (m³/h)</label><input type="number" id="capacity" class="form-control"></div>
+                        <div class="col-md-12 mb-3"><label>الموقع الجغرافي</label><input type="text" id="location" class="form-control"></div>
+                    </div>
+                    <button type="submit" class="btn btn-primary mt-4">💾 حفظ المحطة</button>
+                </form>
+            </div>
+        `;
+
+        document.getElementById('stationForm').onsubmit = async function(e) {
+            e.preventDefault();
+            const newStation = {
+                id: Date.now(),
+                name: document.getElementById('stationName').value,
+                code: document.getElementById('stationCode').value,
+                type: document.getElementById('stationType').value,
+                outfall: document.getElementById('outfall').value,
+                capacity: document.getElementById('capacity').value,
+                location: document.getElementById('location').value,
+                createdAt: new Date().toISOString()
+            };
+            try {
+                await apiCall('stations', 'insert', newStation);
+                alert('تم حفظ المحطة بنجاح');
+                loadPage('listStations');
+            } catch (err) {
+                alert('خطأ: ' + err.message);
+            }
+        };
+    }
+
+    async function loadListStations(container) {
+        const stations = await apiCall('stations', 'select');
+        if (stations.length === 0) {
+            container.innerHTML = '<div class="alert alert-info">لا توجد محطات مسجلة</div>';
+            return;
+        }
+        let html = `<div class="search-bar"><input type="text" id="searchInput" class="form-control" placeholder="بحث..."></div>
+                    <div class="table-responsive"><table class="table table-bordered"><thead>运转<th>الكود</th><th>الاسم</th><th>النوع</th><th>المصب</th><th></th> </thead><tbody>`;
+        stations.forEach(s => {
+            html += `<tr>
+                        <td>${s.code}</td>
+                        <td>${s.name}</td>
+                        <td>${s.type}</td>
+                        <td>${s.outfall || '-'}</td>
+                        <td>
+                            ${canEdit() ? '<button class="btn btn-sm btn-warning" onclick="editStation('+s.id+')">✏️ تعديل</button>' : ''}
+                            ${canDelete() ? '<button class="btn btn-sm btn-danger" onclick="deleteStationNow('+s.id+')">🗑️ حذف</button>' : ''}
+                            <button class="btn btn-sm btn-info" onclick="viewStation('+s.id+')">عرض</button>
+                        </td>
+                    </tr>`;
+        });
+        html += `</tbody> </table></div>`;
+        container.innerHTML = html;
+
+        window.editStation = (id) => loadEditStation(document.getElementById('pageContent'), id);
+        window.deleteStationNow = async (id) => {
+            if (confirm('هل تريد حذف هذه المحطة؟')) {
+                try {
+                    await apiCall('stations', 'delete', null, id);
+                    alert('تم حذف المحطة');
+                    loadPage('listStations');
+                } catch (err) { alert('خطأ: ' + err.message); }
+            }
+        };
+        window.viewStation = (id) => {
+            const station = stations.find(s => s.id === id);
+            container.innerHTML = `<div class="form-card"><h4>${station.name} (${station.code})</h4><pre>${JSON.stringify(station, null, 2)}</pre>
+                                   <button class="btn btn-secondary" onclick="loadPage('listStations')">رجوع</button></div>`;
+        };
+    }
+
+    async function loadEditStation(container, stationId) {
+        const stations = await apiCall('stations', 'select');
+        const station = stations.find(s => s.id == stationId);
+        if (!station) return;
+        container.innerHTML = `
+            <div class="form-card">
+                <h4>✏️ تعديل المحطة: ${station.name}</h4>
+                <form id="editStationForm">
+                    <div class="row">
+                        <div class="col-md-6 mb-3"><label>اسم المحطة</label><input type="text" id="stationName" class="form-control" value="${station.name}" required></div>
+                        <div class="col-md-6 mb-3"><label>كود المحطة</label><input type="text" id="stationCode" class="form-control" value="${station.code}" required></div>
+                        <div class="col-md-4 mb-3"><label>النوع</label><select id="stationType" class="form-control"><option ${station.type=='رئيسية'?'selected':''}>رئيسية</option><option ${station.type=='فرعية'?'selected':''}>فرعية</option><option ${station.type=='معالجة'?'selected':''}>معالجة</option></select></div>
+                        <div class="col-md-4 mb-3"><label>المصب</label><input type="text" id="outfall" class="form-control" value="${station.outfall||''}"></div>
+                        <div class="col-md-4 mb-3"><label>القدرة (m³/h)</label><input type="number" id="capacity" class="form-control" value="${station.capacity||''}"></div>
+                        <div class="col-md-12 mb-3"><label>الموقع الجغرافي</label><input type="text" id="location" class="form-control" value="${station.location||''}"></div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">💾 حفظ التعديلات</button>
+                    <button type="button" class="btn btn-secondary" onclick="loadPage('listStations')">رجوع</button>
+                </form>
+            </div>
+        `;
+        document.getElementById('editStationForm').onsubmit = async function(e) {
+            e.preventDefault();
+            const updatedStation = {
+                name: document.getElementById('stationName').value,
+                code: document.getElementById('stationCode').value,
+                type: document.getElementById('stationType').value,
+                outfall: document.getElementById('outfall').value,
+                capacity: document.getElementById('capacity').value,
+                location: document.getElementById('location').value,
+                updatedAt: new Date().toISOString()
+            };
+            try {
+                await apiCall('stations', 'update', updatedStation, stationId);
+                alert('تم حفظ التعديلات');
+                loadPage('listStations');
+            } catch (err) { alert('خطأ: ' + err.message); }
+        };
+    }
+
+    // ==================== دوال العاملين (مبسطة) ====================
+    async function loadAddEmployee(container) {
+        if (!canAdd()) {
+            container.innerHTML = '<div class="alert alert-danger">ليس لديك صلاحية لإضافة عاملين</div>';
+            return;
+        }
+        const stations = await apiCall('stations', 'select');
+        let stationOptions = '<option value="">اختر محطة</option>';
+        stations.forEach(s => { stationOptions += `<option value="${s.id}">${s.name}</option>`; });
+        container.innerHTML = `
+            <div class="form-card">
+                <h4>➕ إضافة عامل جديد</h4>
+                <form id="empForm">
+                    <div class="row">
+                        <div class="col-md-3 mb-3"><label>الكود</label><input type="text" id="empCode" class="form-control" required></div>
+                        <div class="col-md-3 mb-3"><label>الاسم</label><input type="text" id="empName" class="form-control" required></div>
+                        <div class="col-md-3 mb-3"><label>المحطة</label><select id="empStation" class="form-control">${stationOptions}</select></div>
+                        <div class="col-md-3 mb-3"><label>الوظيفة</label><select id="empRole" class="form-control"><option>مدير محطة</option><option>مهندس</option><option>فني</option><option>عامل</option></select></div>
+                        <div class="col-md-3 mb-3"><label>الوردية</label><select id="empShift" class="form-control"><option>أولى</option><option>ثانية</option><option>ثالثة</option></select></div>
+                        <div class="col-md-3 mb-3"><label>التليفون</label><input type="text" id="empPhone" class="form-control"></div>
+                        <div class="col-md-3 mb-3"><label>الحالة</label><select id="empStatus" class="form-control"><option>يعمل</option><option>إجازة</option></select></div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">حفظ</button>
+                </form>
+            </div>
+        `;
+        document.getElementById('empForm').onsubmit = async function(e) {
+            e.preventDefault();
+            const newEmployee = {
+                id: Date.now(),
+                code: document.getElementById('empCode').value,
+                name: document.getElementById('empName').value,
+                stationId: document.getElementById('empStation').value,
+                role: document.getElementById('empRole').value,
+                shift: document.getElementById('empShift').value,
+                phone: document.getElementById('empPhone').value,
+                status: document.getElementById('empStatus').value
+            };
+            try {
+                await apiCall('employees', 'insert', newEmployee);
+                alert('تم حفظ العامل');
+                loadPage('listEmployees');
+            } catch (err) { alert('خطأ: ' + err.message); }
+        };
+    }
+
+    async function loadListEmployees(container) {
+        const employees = await apiCall('employees', 'select');
+        const stations = await apiCall('stations', 'select');
+        const stationMap = {};
+        stations.forEach(s => stationMap[s.id] = s.name);
+        if (employees.length === 0) {
+            container.innerHTML = '<div class="alert alert-info">لا توجد عاملين</div>';
+            return;
+        }
+        let html = `<div class="search-bar"><input type="text" id="searchEmpInput" class="form-control" placeholder="بحث..."></div>
+                    <div class="table-responsive"><table class="table table-bordered"><thead>运转<th>الكود</th><th>الاسم</th><th>المحطة</th><th>الوظيفة</th><th>الوردية</th><th>التليفون</th><th>الحالة</th><th></th> </thead><tbody>`;
+        employees.forEach(e => {
+            html += `<tr>
+                        <td>${e.code}</td>
+                        <td>${e.name}</td>
+                        <td>${stationMap[e.stationId] || '-'}</td>
+                        <td>${e.role}</td>
+                        <td>${e.shift || '-'}</td>
+                        <td>${e.phone || '-'}</td>
+                        <td>${e.status}</td>
+                        <td>
+                            ${canEdit() ? '<button class="btn btn-sm btn-warning" onclick="editEmployee('+e.id+')">✏️ تعديل</button>' : ''}
+                            ${canDelete() ? '<button class="btn btn-sm btn-danger" onclick="deleteEmployeeNow('+e.id+')">🗑️ حذف</button>' : ''}
+                        </td>
+                    </tr>`;
+        });
+        html += `</tbody> </table></div>`;
+        container.innerHTML = html;
+
+        window.editEmployee = (id) => loadEditEmployee(document.getElementById('pageContent'), id);
+        window.deleteEmployeeNow = async (id) => {
+            if (confirm('هل تريد حذف هذا العامل؟')) {
+                try {
+                    await apiCall('employees', 'delete', null, id);
+                    alert('تم حذف العامل');
+                    loadPage('listEmployees');
+                } catch (err) { alert('خطأ: ' + err.message); }
+            }
+        };
+    }
+
+    async function loadEditEmployee(container, employeeId) {
+        const employees = await apiCall('employees', 'select');
+        const employee = employees.find(e => e.id == employeeId);
+        if (!employee) return;
+        const stations = await apiCall('stations', 'select');
+        let stationOptions = '<option value="">اختر محطة</option>';
+        stations.forEach(s => { stationOptions += `<option value="${s.id}" ${employee.stationId == s.id ? 'selected' : ''}>${s.name}</option>`; });
+        container.innerHTML = `
+            <div class="form-card">
+                <h4>✏️ تعديل بيانات العامل</h4>
+                <form id="editEmpForm">
+                    <div class="row">
+                        <div class="col-md-3 mb-3"><label>الكود</label><input type="text" id="empCode" class="form-control" value="${employee.code}" required></div>
+                        <div class="col-md-3 mb-3"><label>الاسم</label><input type="text" id="empName" class="form-control" value="${employee.name}" required></div>
+                        <div class="col-md-3 mb-3"><label>المحطة</label><select id="empStation" class="form-control">${stationOptions}</select></div>
+                        <div class="col-md-3 mb-3"><label>الوظيفة</label><select id="empRole" class="form-control"><option ${employee.role=='مدير محطة'?'selected':''}>مدير محطة</option><option ${employee.role=='مهندس'?'selected':''}>مهندس</option><option ${employee.role=='فني'?'selected':''}>فني</option><option ${employee.role=='عامل'?'selected':''}>عامل</option></select></div>
+                        <div class="col-md-3 mb-3"><label>الوردية</label><select id="empShift" class="form-control"><option ${employee.shift=='أولى'?'selected':''}>أولى</option><option ${employee.shift=='ثانية'?'selected':''}>ثانية</option><option ${employee.shift=='ثالثة'?'selected':''}>ثالثة</option></select></div>
+                        <div class="col-md-3 mb-3"><label>التليفون</label><input type="text" id="empPhone" class="form-control" value="${employee.phone||''}"></div>
+                        <div class="col-md-3 mb-3"><label>الحالة</label><select id="empStatus" class="form-control"><option ${employee.status=='يعمل'?'selected':''}>يعمل</option><option ${employee.status=='إجازة'?'selected':''}>إجازة</option></select></div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">💾 حفظ التعديل</button>
+                    <button type="button" class="btn btn-secondary" onclick="loadPage('listEmployees')">رجوع</button>
+                </form>
+            </div>
+        `;
+        document.getElementById('editEmpForm').onsubmit = async function(e) {
+            e.preventDefault();
+            const updatedEmployee = {
+                code: document.getElementById('empCode').value,
+                name: document.getElementById('empName').value,
+                stationId: document.getElementById('empStation').value,
+                role: document.getElementById('empRole').value,
+                shift: document.getElementById('empShift').value,
+                phone: document.getElementById('empPhone').value,
+                status: document.getElementById('empStatus').value
+            };
+            try {
+                await apiCall('employees', 'update', updatedEmployee, employeeId);
+                alert('تم حفظ التعديل');
+                loadPage('listEmployees');
+            } catch (err) { alert('خطأ: ' + err.message); }
+        };
+    }
+
+    // ==================== دوال الأعطال (مبسطة) ====================
+    async function loadAddFault(container) {
+        if (!canAdd()) {
+            container.innerHTML = '<div class="alert alert-danger">ليس لديك صلاحية لإضافة أعطال</div>';
+            return;
+        }
+        const stations = await apiCall('stations', 'select');
+        let stationOptions = '<option value="">اختر محطة</option>';
+        stations.forEach(s => { stationOptions += `<option value="${s.id}">${s.name}</option>`; });
+        container.innerHTML = `
+            <div class="form-card">
+                <h4>⚠️ بلاغ عطل جديد</h4>
+                <form id="faultForm">
+                    <div class="row">
+                        <div class="col-md-6 mb-3"><label>المحطة</label><select id="faultStation" class="form-control" required>${stationOptions}</select></div>
+                        <div class="col-md-6 mb-3"><label>نوع العطل</label><select id="faultType" class="form-control"><option>كهرباء</option><option>ميكانيكا</option></select></div>
+                        <div class="col-md-6 mb-3"><label>التاريخ</label><input type="date" id="faultDate" class="form-control" required></div>
+                        <div class="col-12 mb-3"><label>وصف العطل</label><textarea id="faultDesc" class="form-control" rows="3" required></textarea></div>
+                        <div class="col-12 mb-3"><label>إجراءات الإصلاح</label><textarea id="faultActions" class="form-control" rows="2"></textarea></div>
+                        <div class="col-12 mb-3"><label>قطع الغيار</label><input type="text" id="faultParts" class="form-control"></div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">حفظ البلاغ</button>
+                </form>
+            </div>
+        `;
+        document.getElementById('faultForm').onsubmit = async function(e) {
+            e.preventDefault();
+            const newFault = {
+                id: Date.now(),
+                stationId: document.getElementById('faultStation').value,
+                stationName: document.getElementById('faultStation').selectedOptions[0]?.text,
+                type: document.getElementById('faultType').value,
+                date: document.getElementById('faultDate').value,
+                description: document.getElementById('faultDesc').value,
+                actions: document.getElementById('faultActions').value,
+                parts: document.getElementById('faultParts').value,
+                status: 'open'
+            };
+            try {
+                await apiCall('faults', 'insert', newFault);
+                alert('تم حفظ البلاغ');
+                loadPage('listFaults');
+            } catch (err) { alert('خطأ: ' + err.message); }
+        };
+    }
+
+    async function loadListFaults(container) {
+        const faults = await apiCall('faults', 'select');
+        const stations = await apiCall('stations', 'select');
+        const stationMap = {};
+        stations.forEach(s => stationMap[s.id] = s.name);
+        if (faults.length === 0) {
+            container.innerHTML = '<div class="alert alert-info">لا توجد بلاغات</div>';
+            return;
+        }
+        let html = `<div class="table-responsive"><table class="table table-bordered"><thead>运转<th>المحطة</th><th>النوع</th><th>التاريخ</th><th>الوصف</th><th>الحالة</th><th></th> </thead><tbody>`;
+        faults.forEach(f => {
+            html += `<tr>
+                        <td>${f.stationName || stationMap[f.stationId]}</td>
+                        <td>${f.type}</td>
+                        <td>${f.date}</td>
+                        <td>${f.description}</td>
+                        <td>${f.status === 'open' ? '<span class="badge bg-danger">مفتوح</span>' : '<span class="badge bg-success">مغلق</span>'}</td>
+                        <td>
+                            ${canEdit() ? '<button class="btn btn-sm btn-warning" onclick="editFault('+f.id+')">✏️ تعديل</button>' : ''}
+                            <button class="btn btn-sm btn-info" onclick="viewFaultDetail('+f.id+')">عرض</button>
+                        </td>
+                    </tr>`;
+        });
+        html += `</tbody> </table></div>`;
+        container.innerHTML = html;
+
+        window.editFault = (id) => loadEditFault(document.getElementById('pageContent'), id);
+        window.viewFaultDetail = async (id) => {
+            const fault = faults.find(f => f.id === id);
+            container.innerHTML = `<div class="form-card"><h4>تفاصيل البلاغ</h4><p><strong>المحطة:</strong> ${fault.stationName || stationMap[fault.stationId]}</p><p><strong>النوع:</strong> ${fault.type}</p><p><strong>التاريخ:</strong> ${fault.date}</p><p><strong>الوصف:</strong> ${fault.description}</p><p><strong>إجراءات الإصلاح:</strong> ${fault.actions || '-'}</p><p><strong>قطع الغيار:</strong> ${fault.parts || '-'}</p><p><strong>الحالة:</strong> ${fault.status === 'open' ? 'مفتوح' : 'مغلق'}</p><button class="btn btn-secondary" onclick="loadPage(\'listFaults\')">رجوع</button></div>`;
+        };
+        window.closeFaultNow = async (id) => {
+            try {
+                await apiCall('faults', 'update', { status: 'closed' }, id);
+                alert('تم إقفال البلاغ');
+                loadPage('listFaults');
+            } catch (err) { alert('خطأ: ' + err.message); }
+        };
+    }
+
+    async function loadEditFault(container, faultId) {
+        const faults = await apiCall('faults', 'select');
+        const fault = faults.find(f => f.id == faultId);
+        if (!fault) return;
+        const stations = await apiCall('stations', 'select');
+        let stationOptions = '<option value="">اختر محطة</option>';
+        stations.forEach(s => { stationOptions += `<option value="${s.id}" ${fault.stationId == s.id ? 'selected' : ''}>${s.name}</option>`; });
+        container.innerHTML = `
+            <div class="form-card">
+                <h4>✏️ تعديل البلاغ</h4>
+                <form id="editFaultForm">
+                    <div class="row">
+                        <div class="col-md-6 mb-3"><label>المحطة</label><select id="faultStation" class="form-control">${stationOptions}</select></div>
+                        <div class="col-md-6 mb-3"><label>نوع العطل</label><select id="faultType" class="form-control"><option ${fault.type=='كهرباء'?'selected':''}>كهرباء</option><option ${fault.type=='ميكانيكا'?'selected':''}>ميكانيكا</option></select></div>
+                        <div class="col-md-6 mb-3"><label>التاريخ</label><input type="date" id="faultDate" class="form-control" value="${fault.date}"></div>
+                        <div class="col-12 mb-3"><label>وصف العطل</label><textarea id="faultDesc" class="form-control" rows="3">${fault.description||''}</textarea></div>
+                        <div class="col-12 mb-3"><label>إجراءات الإصلاح</label><textarea id="faultActions" class="form-control" rows="2">${fault.actions||''}</textarea></div>
+                        <div class="col-12 mb-3"><label>قطع الغيار</label><input type="text" id="faultParts" class="form-control" value="${fault.parts||''}"></div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">💾 حفظ التعديل</button>
+                    <button type="button" class="btn btn-secondary" onclick="loadPage('listFaults')">رجوع</button>
+                </form>
+            </div>
+        `;
+        document.getElementById('editFaultForm').onsubmit = async function(e) {
+            e.preventDefault();
+            const updatedFault = {
+                stationId: document.getElementById('faultStation').value,
+                stationName: document.getElementById('faultStation').selectedOptions[0]?.text,
+                type: document.getElementById('faultType').value,
+                date: document.getElementById('faultDate').value,
+                description: document.getElementById('faultDesc').value,
+                actions: document.getElementById('faultActions').value,
+                parts: document.getElementById('faultParts').value
+            };
+            try {
+                await apiCall('faults', 'update', updatedFault, faultId);
+                alert('تم حفظ التعديل');
+                loadPage('listFaults');
+            } catch (err) { alert('خطأ: ' + err.message); }
+        };
+    }
+
+    // ==================== دوال أخرى (مبسطة) ====================
+    async function loadTariffs(container) {
+        let tariffs = { electricity: 1.2, water: 3.5 };
+        try {
+            const data = await apiCall('tariffs', 'select');
+            if (data && data.length > 0) tariffs = data[0];
+        } catch (e) {}
+        container.innerHTML = `
+            <div class="form-card">
+                <h4>💰 تعريفات</h4>
+                <form id="tariffsForm">
+                    <div class="mb-3"><label>تعريفة الكهرباء (جنيه/كيلو وات)</label><input type="number" step="0.01" id="elecTariff" class="form-control" value="${tariffs.electricity}"></div>
+                    <div class="mb-3"><label>تعريفة المياه (جنيه/متر مكعب)</label><input type="number" step="0.01" id="waterTariff" class="form-control" value="${tariffs.water}"></div>
+                    <button type="submit" class="btn btn-primary">حفظ</button>
+                </form>
+            </div>
+        `;
+        document.getElementById('tariffsForm').onsubmit = async function(e) {
+            e.preventDefault();
+            const newTariffs = {
+                electricity: parseFloat(document.getElementById('elecTariff').value),
+                water: parseFloat(document.getElementById('waterTariff').value)
+            };
+            try {
+                const existing = await apiCall('tariffs', 'select');
+                if (existing && existing.length > 0) {
+                    await apiCall('tariffs', 'update', newTariffs, existing[0].id);
+                } else {
+                    await apiCall('tariffs', 'insert', { id: 1, ...newTariffs });
+                }
+                alert('تم حفظ التعريفات');
+            } catch (err) { alert('خطأ: ' + err.message); }
+        };
+    }
+
+    async function loadMonthlyCosts(container) {
+        const stations = await apiCall('stations', 'select');
+        let stationOptions = '<option value="">اختر محطة</option>';
+        stations.forEach(s => { stationOptions += `<option value="${s.id}">${s.name}</option>`; });
+        container.innerHTML = `
+            <div class="form-card">
+                <h4>📊 التقرير الشهري</h4>
+                <form id="monthlyForm">
+                    <div class="row">
+                        <div class="col-md-4 mb-3"><label>المحطة</label><select id="monthStation" class="form-control" required>${stationOptions}</select></div>
+                        <div class="col-md-4 mb-3"><label>شهر المحاسبة</label><input type="month" id="monthPeriod" class="form-control" required></div>
+                    </div>
+                    <div class="mt-4 p-3 border rounded">
+                        <h5>💧 كمية المياه المرفوعة</h5>
+                        <div class="row">
+                            <div class="col-md-6"><label>ساعات التشغيل</label><input type="number" id="operatingHours" class="form-control" step="0.5"></div>
+                            <div class="col-md-6"><label>المياه المرفوعة (m³)</label><input type="text" id="waterPumped" class="form-control" readonly></div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary mt-3">💾 حفظ التقرير</button>
+                </form>
+            </div>
+        `;
+        document.getElementById('monthlyForm').onsubmit = async function(e) {
+            e.preventDefault();
+            const stationId = document.getElementById('monthStation').value;
+            const month = document.getElementById('monthPeriod').value;
+            const operatingHours = parseFloat(document.getElementById('operatingHours').value) || 0;
+            const waterPumped = operatingHours * 500;
+            const report = {
+                id: Date.now(),
+                stationId: stationId,
+                stationName: stations.find(s=>s.id==stationId)?.name,
+                month: month,
+                operatingHours: operatingHours,
+                waterPumped: waterPumped
+            };
+            try {
+                await apiCall('monthly_costs', 'insert', report);
+                alert('تم حفظ التقرير');
+                loadPage('home');
+            } catch (err) { alert('خطأ: ' + err.message); }
+        };
+    }
+
+    async function loadUsers(container) {
+        const users = await apiCall('users', 'select');
+        container.innerHTML = `
+            <div class="form-card">
+                <h4>⚙️ إدارة المستخدمين والصلاحيات</h4>
+                <form id="userForm">
+                    <div class="row">
+                        <div class="col-md-3 mb-2"><input type="text" id="userCode" class="form-control" placeholder="كود المستخدم" required></div>
+                        <div class="col-md-3 mb-2"><input type="text" id="userName" class="form-control" placeholder="الاسم" required></div>
+                        <div class="col-md-3 mb-2"><input type="password" id="userPass" class="form-control" placeholder="كلمة المرور" required></div>
+                        <div class="col-md-3 mb-2"><select id="userRole" class="form-control">
+                            <option>مدير (كل الصلاحيات)</option>
+                            <option>مدير محدود</option>
+                            <option>مدير موقع</option>
+                            <option>عرض فقط (لا يمكنه الإضافة أو التعديل أو الحذف)</option>
+                        </select></div>
+                    </div>
+                    <button type="submit" class="btn btn-primary mt-2">➕ إضافة مستخدم</button>
+                </form>
+            </div>
+            <div class="table-responsive mt-4"><table class="table table-bordered"><thead>运转<th>الكود</th><th>الاسم</th><th>الصلاحية</th><th></th> </thead><tbody id="usersTableBody"></tbody> </div>
+        `;
+        function renderUsersTable() {
+            const tbody = document.getElementById('usersTableBody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            users.forEach(u => {
+                const row = tbody.insertRow();
+                row.insertCell(0).innerText = u.username;
+                row.insertCell(1).innerText = u.name;
+                row.insertCell(2).innerText = u.role;
+                const delCell = row.insertCell(3);
+                const delBtn = document.createElement('button');
+                delBtn.className = 'btn btn-sm btn-danger';
+                delBtn.innerHTML = '🗑️ حذف';
+                delBtn.onclick = async () => {
+                    if (u.username === 'admin') { alert('لا يمكن حذف admin'); return; }
+                    if (confirm(`حذف ${u.name}؟`)) {
+                        try {
+                            await apiCall('users', 'delete', null, u.id);
+                            const index = users.findIndex(us => us.id === u.id);
+                            if (index !== -1) users.splice(index, 1);
+                            renderUsersTable();
+                            alert('تم الحذف');
+                        } catch (err) { alert('خطأ: ' + err.message); }
+                    }
+                };
+                delCell.appendChild(delBtn);
+            });
+        }
+        document.getElementById('userForm').onsubmit = async function(e) {
+            e.preventDefault();
+            const newUser = {
+                id: Date.now(),
+                username: document.getElementById('userCode').value,
+                name: document.getElementById('userName').value,
+                password: document.getElementById('userPass').value,
+                role: document.getElementById('userRole').value,
+                createdAt: new Date().toISOString()
+            };
+            if (users.find(u => u.username === newUser.username)) { alert('موجود'); return; }
+            try {
+                await apiCall('users', 'insert', newUser);
+                users.push(newUser);
+                renderUsersTable();
+                alert('تم الإضافة');
+                document.getElementById('userForm').reset();
+            } catch (err) { alert('خطأ: ' + err.message); }
+        };
+        renderUsersTable();
+    }
+
+    // ==================== الدالة الرئيسية ====================
+    async function loadPage(page) {
+        if (!checkAuth()) return;
+
+        const sidebar = document.getElementById('sidebar');
+        if (sidebar && window.innerWidth <= 768) {
+            sidebar.classList.remove('active');
+        }
+
+        const container = document.getElementById('pageContent');
+        if (!container) return;
+
+        if (page === 'home') await loadHome(container);
+        else if (page === 'addStation') await loadAddStation(container);
+        else if (page === 'listStations') await loadListStations(container);
+        else if (page === 'editStation') await loadEditStation(container);
+        else if (page === 'addEmployee') await loadAddEmployee(container);
+        else if (page === 'listEmployees') await loadListEmployees(container);
+        else if (page === 'editEmployee') await loadEditEmployee(container);
+        else if (page === 'addFault') await loadAddFault(container);
+        else if (page === 'listFaults') await loadListFaults(container);
+        else if (page === 'editFault') await loadEditFault(container);
+        else if (page === 'tariffs') await loadTariffs(container);
+        else if (page === 'monthlyCosts') await loadMonthlyCosts(container);
+        else if (page === 'users') await loadUsers(container);
+        else container.innerHTML = '<div class="alert alert-info">صفحة قيد التطوير: ' + page + '</div>';
+    }
+
+    // ==================== دوال القائمة ====================
+    function toggleSubMenu(menuId) {
+        const menu = document.getElementById(menuId);
+        if (menu) menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+    }
+
+    // ==================== تصدير الدوال ====================
+    window.loadPage = loadPage;
+    window.logout = logout;
+    window.toggleSubMenu = toggleSubMenu;
+    window.canAdd = canAdd;
+    window.canEdit = canEdit;
+    window.canDelete = canDelete;
+
+    console.log('✅ النظام جاهز');
+
+    // ==================== إخفاء الأزرار لمستخدم "عرض فقط" ====================
     setInterval(function() {
         const user = JSON.parse(localStorage.getItem('loggedUser') || '{}');
         if (user.role === 'عرض فقط') {
-            // إخفاء أزرار الإضافة في القائمة الجانبية
             document.querySelectorAll('a[onclick*="add"]').forEach(btn => {
                 const li = btn.closest('li');
                 if (li) li.style.display = 'none';
             });
-            
-            // إخفاء أزرار التعديل والحذف في الجداول
             document.querySelectorAll('.btn-warning, .btn-danger').forEach(btn => {
                 btn.style.display = 'none';
             });
         }
     }, 500);
-<script>
-    // تعريف loadPage مؤقتاً للتأكد من عدم ظهور الخطأ
-    window.loadPage = function(page) {
-        console.log('loadPage called with:', page);
-        const container = document.getElementById('pageContent');
-        if (container) {
-            container.innerHTML = '<div class="alert alert-warning">جاري تحميل النظام... يرجى الانتظار</div>';
-        }
-    };
-    console.log('✅ تم تعريف loadPage مؤقتاً');
-</script>
-<script>
-    console.log('فحص تحميل app.js');
-    setTimeout(function() {
-        if (typeof loadPage === 'function') {
-            console.log('✅ loadPage موجودة');
-            loadPage('home');
-        } else {
-            console.error('❌ loadPage غير موجودة');
-            document.getElementById('pageContent').innerHTML = '<div class="alert alert-danger">لم يتم تحميل النظام. تأكد من وجود ملف app.js في المسار الصحيح.</div>';
-        }
-    }, 1000);
+
+    // ==================== تحميل الصفحة الرئيسية ====================
+    if (typeof loadPage === 'function') {
+        loadPage('home');
+    } else {
+        console.error('loadPage غير معرفة');
+        document.getElementById('pageContent').innerHTML = '<div class="alert alert-danger">خطأ في تحميل النظام</div>';
+    }
 </script>
 </body>
 </html>
