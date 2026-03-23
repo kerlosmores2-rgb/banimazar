@@ -233,6 +233,16 @@
             });
         }
     }, 500);
+<script>
+    // تعريف loadPage مؤقتاً للتأكد من عدم ظهور الخطأ
+    window.loadPage = function(page) {
+        console.log('loadPage called with:', page);
+        const container = document.getElementById('pageContent');
+        if (container) {
+            container.innerHTML = '<div class="alert alert-warning">جاري تحميل النظام... يرجى الانتظار</div>';
+        }
+    };
+    console.log('✅ تم تعريف loadPage مؤقتاً');
 </script>
 
 </body>
