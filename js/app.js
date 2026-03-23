@@ -2147,3 +2147,4 @@ async function loadPage(page) {
 // ==================== تصدير الدوال للاستخدام ====================
 window.loadPage = loadPage;
 window.logout = logout;
+window.toggleSubMenu = toggleSubMenu;
