@@ -69,6 +69,21 @@ function logout() {
 function getCurrentUser() {
     return JSON.parse(localStorage.getItem('loggedUser') || '{}');
 }
+// التحقق من صلاحية المستخدم
+function canEdit() {
+    const user = getCurrentUser();
+    return user && user.role !== 'عرض فقط';
+}
+
+function canAdd() {
+    const user = getCurrentUser();
+    return user && user.role !== 'عرض فقط';
+}
+
+function canDelete() {
+    const user = getCurrentUser();
+    return user && user.role !== 'عرض فقط';
+}
 
 // ==================== دوال HTML المساعدة (لإضافة الأصول الديناميكية) ====================
 function getPowerSourceHTML() {
@@ -215,6 +230,10 @@ async function loadHome(container) {
 }
 
 async function loadAddStation(container) {
+    if (!canAdd()) {
+        container.innerHTML = '<div class="alert alert-danger">ليس لديك صلاحية لإضافة محطات</div>';
+        return;
+    }
     const stations = await apiCall('stations', 'select');
     let outfallOptions = '<option value="">بدون</option>';
     stations.forEach(s => { outfallOptions += `<option value="${s.name}">${s.name}</option>`; });
@@ -294,18 +313,18 @@ async function loadListStations(container) {
     let html = `<div class="search-bar"><input type="text" id="searchInput" class="form-control" placeholder="بحث..."></div>
                 <div class="table-responsive"><table class="table table-bordered"><thead>运转<th>الكود</th><th>الاسم</th><th>النوع</th><th>المصب</th><th></th> </thead><tbody id="stationsTable">`;
     stations.forEach(s => {
-        html += `运转
-            <td>${s.code}</td>
-            <td>${s.name}</td>
-            <td>${s.type}</td>
-            <td>${s.outfall || '-'}</td>
-            <td>
-                <button class="btn btn-sm btn-warning" onclick="editStation(${s.id})">✏️ تعديل</button>
-                <button class="btn btn-sm btn-danger" onclick="deleteStationNow(${s.id})">🗑️ حذف</button>
-                <button class="btn btn-sm btn-info" onclick="viewStation(${s.id})">عرض</button>
-              </td>
-          </tr>`;
-    });
+    html += `运转
+         <td>${s.code}</td>
+         <td>${s.name}</td>
+         <td>${s.type}</td>
+         <td>${s.outfall || '-'}</td>
+         <td>
+            ${canEdit() ? '<button class="btn btn-sm btn-warning" onclick="editStation('+s.id+')">✏️ تعديل</button>' : ''}
+            ${canDelete() ? '<button class="btn btn-sm btn-danger" onclick="deleteStationNow('+s.id+')">🗑️ حذف</button>' : ''}
+            <button class="btn btn-sm btn-info" onclick="viewStation('+s.id+')">عرض</button>
+         </td>
+     </tr>`;
+});
     html += `</tbody>  </div>`;
     container.innerHTML = html;
 
@@ -445,6 +464,10 @@ async function loadEditStation(container, stationId) {
 
 // ==================== دوال الموارد البشرية ====================
 async function loadAddEmployee(container) {
+    if (!canAdd()) {
+    container.innerHTML = '<div class="alert alert-danger">ليس لديك صلاحية لإضافة بيانات</div>';
+    return;
+}
     const stations = await apiCall('stations', 'select');
     let stationOptions = '<option value="">اختر محطة</option>';
     stations.forEach(s => { stationOptions += `<option value="${s.id}">${s.name}</option>`; });
@@ -502,22 +525,21 @@ async function loadListEmployees(container) {
     }
     let html = `<div class="search-bar"><input type="text" id="searchEmpInput" class="form-control" placeholder="بحث..."></div>
                 <div class="table-responsive"><table class="table table-bordered"><thead>运转<th>الكود</th><th>الاسم</th><th>المحطة</th><th>الوظيفة</th><th>الوردية</th><th>التليفون</th><th>الحالة</th><th></th> </thead><tbody id="empTable">`;
-    employees.forEach(e => {
-        html += `运转
-            <td>${e.code}</td>
-            <td>${e.name}</td>
-            <td>${stationMap[e.stationId] || '-'}</td>
-            <td>${e.role}</td>
-            <td>${e.shift || '-'}</td>
-            <td>${e.phone || '-'}</td>
-            <td>${e.status}</td>
-            <td>
-                <button class="btn btn-sm btn-warning" onclick="editEmployee(${e.id})">✏️ تعديل</button>
-                <button class="btn btn-sm btn-danger" onclick="deleteEmployeeNow(${e.id})">🗑️ حذف</button>
-             </td>
-          </tr>`;
-    });
-    html += `</tbody>  </div>`;
+employees.forEach(e => {
+    html += `运转
+         <td>${e.code}</td>
+         <td>${e.name}</td>
+         <td>${stationMap[e.stationId] || '-'}</td>
+         <td>${e.role}</td>
+         <td>${e.shift || '-'}</td>
+         <td>${e.phone || '-'}</td>
+         <td>${e.status}</td>
+         <td>
+            ${canEdit() ? '<button class="btn btn-sm btn-warning" onclick="editEmployee('+e.id+')">✏️ تعديل</button>' : ''}
+            ${canDelete() ? '<button class="btn btn-sm btn-danger" onclick="deleteEmployeeNow('+e.id+')">🗑️ حذف</button>' : ''}
+         </td>
+     </tr>`;
+});    html += `</tbody>  </div>`;
     container.innerHTML = html;
 
     document.getElementById('searchEmpInput').onkeyup = function() {
@@ -600,6 +622,10 @@ async function loadEditEmployee(container, employeeId) {
 
 // ==================== دوال الصيانة (الأعطال) ====================
 async function loadAddFault(container) {
+    if (!canAdd()) {
+    container.innerHTML = '<div class="alert alert-danger">ليس لديك صلاحية لإضافة بيانات</div>';
+    return;
+}
     const stations = await apiCall('stations', 'select');
     const employees = await apiCall('employees', 'select');
     let stationOptions = '<option value="">اختر محطة</option>';
@@ -710,19 +736,19 @@ async function loadListFaults(container) {
             return;
         }
         let html = '<div class="table-responsive"><table class="table table-bordered"><thead>运转<th>المحطة</th><th>الأصل</th><th>النوع</th><th>التاريخ</th><th>الحالة</th><th></th> </thead><tbody>';
-        list.forEach(f => {
-            html += `运转
-                <td>${f.stationName || stationMap[f.stationId]}</td>
-                <td>${f.assetName || '-'}</td>
-                <td>${f.type}</td>
-                <td>${f.date}</td>
-                <td>${f.status === 'open' ? '<span class="badge bg-danger">مفتوح</span>' : '<span class="badge bg-success">مغلق</span>'}</td>
-                <td>
-                    <button class="btn btn-sm btn-warning" onclick="editFault(${f.id})">✏️ تعديل</button>
-                    <button class="btn btn-sm btn-info" onclick="viewFaultDetail(${f.id})">عرض</button>
-                 </td>
-              </tr>`;
-        });
+         list.forEach(f => {
+    html += `运转
+         <td>${f.stationName || stationMap[f.stationId]}</td>
+         <td>${f.assetName || '-'}</td>
+         <td>${f.type}</td>
+         <td>${f.date}</td>
+         <td>${f.status === 'open' ? '<span class="badge bg-danger">مفتوح</span>' : '<span class="badge bg-success">مغلق</span>'}</td>
+         <td>
+            ${canEdit() ? '<button class="btn btn-sm btn-warning" onclick="editFault('+f.id+')">✏️ تعديل</button>' : ''}
+            <button class="btn btn-sm btn-info" onclick="viewFaultDetail('+f.id+')">عرض</button>
+         </td>
+     </tr>`;
+});
         html += '</tbody>  </div>';
         containerDiv.innerHTML = html;
     }
