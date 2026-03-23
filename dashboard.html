@@ -150,7 +150,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/app.js"></script>
 <script>
-    // ==================== التحقق من تسجيل الدخول ====================
+    // 1. تحقق تسجيل دخول
     const loggedUser = localStorage.getItem('loggedUser');
     if (!loggedUser) {
         window.location.href = 'index.html';
@@ -158,31 +158,24 @@
         console.log('مستخدم مسجل:', JSON.parse(loggedUser).name);
     }
 
-    // ==================== دوال القائمة الجانبية ====================
+    // 2. دوال القائمة
     function toggleSubMenu(menuId) {
         const menu = document.getElementById(menuId);
         if (menu) menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
     }
 
     const toggleBtn = document.getElementById('toggleSidebar');
-    if (toggleBtn) {
-        toggleBtn.onclick = () => {
-            document.getElementById('sidebar').classList.toggle('active');
-        };
-    }
+    if (toggleBtn) toggleBtn.onclick = () => document.getElementById('sidebar').classList.toggle('active');
 
-    // ==================== تسجيل الخروج ====================
     async function logout() {
         localStorage.removeItem('loggedUser');
         localStorage.removeItem('loginTime');
         window.location.href = 'index.html';
     }
 
-    // ==================== تحميل الصفحة الرئيسية ====================
     if (typeof loadPage === 'function') {
         loadPage('home');
     } else {
-        console.warn('loadPage غير معرفة، انتظار تحميل app.js...');
         setTimeout(() => {
             if (typeof loadPage === 'function') loadPage('home');
             else document.getElementById('pageContent').innerHTML = '<div class="alert alert-danger">خطأ: لم يتم تحميل النظام بشكل صحيح</div>';
@@ -190,11 +183,10 @@
     }
 </script>
 
-<!-- ==================== إعادة ربط الأزرار (لضمان عمل القائمة) ==================== -->
 <script>
-    function fixSidebarLinks() {
+    // 3. إعادة ربط الأزرار (عشان الأزرار تشتغل)
+    (function fixSidebarLinks() {
         const allLinks = document.querySelectorAll('#sidebar a');
-        console.log('عدد الأزرار:', allLinks.length);
         allLinks.forEach(link => {
             const onclickAttr = link.getAttribute('onclick');
             if (onclickAttr && onclickAttr.includes('loadPage')) {
@@ -202,53 +194,40 @@
                 if (match) {
                     const pageName = match[1];
                     link.removeAttribute('onclick');
-                    link.onclick = function(e) {
+                    link.onclick = (e) => {
                         e.preventDefault();
                         loadPage(pageName);
                         return false;
                     };
-                    console.log('✅ تم ربط الزر:', pageName);
                 }
             }
         });
-    }
-    fixSidebarLinks();
+    })();
 </script>
 
-<!-- ==================== صلاحية "عرض فقط" (منع الإضافة والتعديل والحذف) ==================== -->
 <script>
+    // 4. صلاحية "عرض فقط" (إخفاء كل أزرار الإضافة والتعديل والحذف)
     (function applyViewOnly() {
-        setTimeout(function() {
+        setTimeout(() => {
             const user = JSON.parse(localStorage.getItem('loggedUser') || '{}');
-            console.log('🔍 صلاحية المستخدم:', user.role);
-            
             if (user.role === 'عرض فقط') {
                 // إخفاء أزرار الإضافة في القائمة الجانبية
-                const addButtons = document.querySelectorAll('a[onclick*="add"]');
-                addButtons.forEach(btn => {
+                document.querySelectorAll('a[onclick*="add"]').forEach(btn => {
                     const li = btn.closest('li');
                     if (li) li.style.display = 'none';
                 });
-                console.log('✅ تم إخفاء أزرار الإضافة');
-                
-                // إخفاء أزرار التعديل والحذف
-                function hideEditDelete() {
-                    const btns = document.querySelectorAll('.btn-warning, .btn-danger');
-                    btns.forEach(btn => btn.style.display = 'none');
-                    if (btns.length > 0) console.log('✅ تم إخفاء', btns.length, 'زر تعديل/حذف');
-                }
-                
-                // تنفيذ فوري
-                hideEditDelete();
-                
-                // مراقبة التغييرات في المحتوى
-                const observer = new MutationObserver(hideEditDelete);
-                const pageContent = document.getElementById('pageContent');
-                if (pageContent) {
-                    observer.observe(pageContent, { childList: true, subtree: true });
-                }
-                
-                console.log('✅ تم تطبيق صلاحية عرض فقط');
+
+                // إخفاء أزرار التعديل والحذف في كل صفحة
+                const hideButtons = () => {
+                    document.querySelectorAll('.btn-warning, .btn-danger').forEach(btn => {
+                        btn.style.display = 'none';
+                    });
+                };
+
+                hideButtons();
+                const observer = new MutationObserver(hideButtons);
+                const content = document.getElementById('pageContent');
+                if (content) observer.observe(content, { childList: true, subtree: true });
             }
         }, 500);
     })();
