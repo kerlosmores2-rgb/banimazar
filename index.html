@@ -69,12 +69,8 @@
                     <div class="footer-text mt-3">
                         تم إعداد النظام بواسطة فني / كيرلس موريس يعقوب
                     </div>
-                    <div class="footer-text">
-                        نائب مدير الفرع مهندس / منصور رجب عبدالله 
-                     </div>
-                     <div class="footer-text">
-                        مدير عام الفرع مهندسة / زينب أحمد عبدالمنعم
-                    </div>
+                    <div class="footer-text">نائب مدير الفرع مهندس / منصور رجب عبدالله</div>
+                    <div class="footer-text">مدير عام الفرع مهندسة / زينب أحمد عبدالمنعم</div>
                 </div>
             </div>
         </div>
@@ -83,56 +79,34 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-    // ==================== إعدادات Supabase ====================
     const SUPABASE_URL = 'https://pbzpumetrmirnsshjdoe.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_O9BKPIjk5xXvbGNjvsBXVw_9V_TIoUu';
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     window.supabaseClient = supabaseClient;
 
-    // ==================== منع إعادة التحميل المتكررة ====================
-    let redirectCount = sessionStorage.getItem('redirectCount') || 0;
-    
-    // ==================== التحقق من وجود جلسة سابقة ====================
-    const loggedUser = localStorage.getItem('loggedUser');
-    
-    if (loggedUser) {
-        // منع الحلقة اللانهائية
-        if (redirectCount < 2) {
-            sessionStorage.setItem('redirectCount', parseInt(redirectCount) + 1);
-            window.location.href = 'dashboard.html';
-        } else {
-            // إذا كان هناك أكثر من محاولتين، امسح الجلسة
-            sessionStorage.removeItem('redirectCount');
-            localStorage.removeItem('loggedUser');
-        }
-    } else {
-        sessionStorage.removeItem('redirectCount');
+    // التحقق من الجلسة السابقة - مرة واحدة فقط
+    if (localStorage.getItem('loggedUser')) {
+        window.location.href = 'dashboard.html';
     }
 
-    // ==================== تسجيل الدخول ====================
     document.getElementById('loginForm').onsubmit = async function(e) {
         e.preventDefault();
         const username = document.getElementById('username').value.trim();
         const password = document.getElementById('password').value;
         const errorDiv = document.getElementById('errorMsg');
-        
         errorDiv.classList.add('d-none');
-        
+
         try {
-            // البحث عن المستخدم في قاعدة البيانات
             const { data, error } = await supabaseClient
                 .from('users')
                 .select('*')
                 .eq('username', username)
                 .eq('password', password);
-            
+
             if (error) throw error;
-            
+
             if (data && data.length > 0) {
                 const user = data[0];
-                console.log('تم تسجيل الدخول:', user.name);
-                
-                // تخزين بيانات المستخدم
                 localStorage.setItem('loggedUser', JSON.stringify({
                     id: user.id,
                     username: user.username,
@@ -140,14 +114,9 @@
                     role: user.role
                 }));
                 localStorage.setItem('loginTime', Date.now());
-                
                 if (document.getElementById('remember').checked) {
                     localStorage.setItem('rememberedUser', username);
                 }
-                
-                // مسح عداد إعادة التوجيه
-                sessionStorage.removeItem('redirectCount');
-                
                 window.location.href = 'dashboard.html';
             } else {
                 errorDiv.textContent = '❌ الكود الوظيفي أو الرقم السري غير صحيح';
@@ -155,12 +124,11 @@
             }
         } catch (err) {
             console.error(err);
-            errorDiv.textContent = 'خطأ في الاتصال بقاعدة البيانات: ' + err.message;
+            errorDiv.textContent = 'خطأ: ' + err.message;
             errorDiv.classList.remove('d-none');
         }
     };
-    
-    // تذكر المستخدم
+
     const remembered = localStorage.getItem('rememberedUser');
     if (remembered) {
         document.getElementById('username').value = remembered;
