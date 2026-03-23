@@ -231,6 +231,37 @@
             }
         }, 500);
     })();
+<script>
+    // تطبيق صلاحية عرض فقط بشكل فوري وقوي
+    (function() {
+        const user = JSON.parse(localStorage.getItem('loggedUser') || '{}');
+        if (user.role === 'عرض فقط') {
+            console.log('🔍 تطبيق صلاحية عرض فقط...');
+            
+            // إخفاء أزرار الإضافة في القائمة الجانبية
+            document.querySelectorAll('a[onclick*="add"]').forEach(btn => {
+                const li = btn.closest('li');
+                if (li) li.style.display = 'none';
+            });
+            
+            // إخفاء أزرار التعديل والحذف
+            function hideEditDelete() {
+                document.querySelectorAll('.btn-warning, .btn-danger').forEach(btn => {
+                    btn.style.display = 'none';
+                });
+            }
+            
+            // تنفيذ فوري
+            hideEditDelete();
+            
+            // مراقبة التغييرات
+            const observer = new MutationObserver(hideEditDelete);
+            const content = document.getElementById('pageContent');
+            if (content) observer.observe(content, { childList: true, subtree: true });
+            
+            console.log('✅ تم تطبيق صلاحية عرض فقط');
+        }
+    })();
 </script>
 
 </body>
