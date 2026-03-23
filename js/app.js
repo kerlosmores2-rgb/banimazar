@@ -2108,7 +2108,14 @@ async function loadUsers(container) {
 // ==================== الدالة الرئيسية ====================
 async function loadPage(page) {
     if (!checkAuth()) return;
+    // للفحص فقط
+    console.log('📌 الصفحة المطلوبة:', page);
+    console.log('✅ loadAddStation موجودة؟', typeof loadAddStation);
+    console.log('✅ loadListStations موجودة؟', typeof loadListStations);
+    console.log('✅ loadAddEmployee موجودة؟', typeof loadAddEmployee);
 
+    // ... باقي الكود
+}
     // إغلاق القائمة الجانبية في الموبايل
     const sidebar = document.getElementById('sidebar');
     if (sidebar && window.innerWidth <= 768) {
