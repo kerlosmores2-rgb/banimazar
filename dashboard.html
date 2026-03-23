@@ -100,16 +100,12 @@
         <div class="footer-credit">تم إعداد النظام بواسطة فني / كيرلس موريس يعقوب</div>
     </div>
 </div>
-
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/app.js"></script>
 <script>
-    // التحقق من تسجيل الدخول - مرة واحدة فقط
     const loggedUser = localStorage.getItem('loggedUser');
     if (!loggedUser) {
         window.location.href = 'index.html';
-    } else {
-        console.log('مستخدم مسجل:', JSON.parse(loggedUser).name);
     }
 
     function toggleSubMenu(menuId) {
@@ -117,16 +113,45 @@
         if (menu) menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
     }
 
-    // إخفاء أزرار الإضافة لمستخدمي "عرض فقط"
-    const userRole = JSON.parse(loggedUser).role;
-    if (userRole === 'عرض فقط') {
-        const addButtons = document.querySelectorAll('a[onclick*="add"]');
-        addButtons.forEach(btn => {
-            const parentLi = btn.closest('li');
-            if (parentLi) parentLi.style.display = 'none';
-        });
+    const toggleBtn = document.getElementById('toggleSidebar');
+    if (toggleBtn) {
+        toggleBtn.onclick = () => {
+            document.getElementById('sidebar').classList.toggle('active');
+        };
     }
 
+    async function logout() {
+        localStorage.removeItem('loggedUser');
+        localStorage.removeItem('loginTime');
+        window.location.href = 'index.html';
+    }
+
+    if (typeof loadPage === 'function') {
+        loadPage('home');
+    }
+</script>
+    <script>
+    // إخفاء أزرار الإضافة لمستخدمي "عرض فقط"
+    const user = JSON.parse(localStorage.getItem('loggedUser') || '{}');
+    if (user.role === 'عرض فقط') {
+        // إخفاء أزرار الإضافة في القائمة الجانبية
+        const addLinks = document.querySelectorAll('a[onclick*="add"]');
+        addLinks.forEach(link => {
+            const parentLi = link.closest('li');
+            if (parentLi) parentLi.style.display = 'none';
+        });
+        
+        // إخفاء أزرار التعديل والحذف في الصفحات (يتم تنفيذه بعد تحميل كل صفحة)
+        window.addEventListener('load', function() {
+            const observer = new MutationObserver(function() {
+                document.querySelectorAll('.btn-warning, .btn-danger').forEach(btn => {
+                    btn.style.display = 'none';
+                });
+            });
+            observer.observe(document.getElementById('pageContent'), { childList: true, subtree: true });
+        });
+    }
+</script>
     const toggleBtn = document.getElementById('toggleSidebar');
     if (toggleBtn) {
         toggleBtn.onclick = () => {
