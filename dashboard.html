@@ -199,6 +199,20 @@
             else document.getElementById('pageContent').innerHTML = '<div class="alert alert-danger">خطأ: لم يتم تحميل النظام بشكل صحيح</div>';
         }, 1000);
     }
+    <script>
+    setTimeout(function() {
+        const allLinks = document.querySelectorAll('#sidebar a');
+        console.log('عدد الأزرار:', allLinks.length);
+        allLinks.forEach(link => {
+            const onclickAttr = link.getAttribute('onclick');
+            if (onclickAttr && onclickAttr.includes('loadPage')) {
+                link.onclick = function(e) {
+                    eval(onclickAttr);
+                };
+            }
+        });
+        console.log('✅ تم إعادة ربط الأزرار');
+    }, 1000);
 </script>
 </body>
 </html>
