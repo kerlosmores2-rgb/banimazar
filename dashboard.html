@@ -203,65 +203,50 @@
             }
         });
     })();
-</script>
-
-<script>
-    // 4. صلاحية "عرض فقط" (إخفاء كل أزرار الإضافة والتعديل والحذف)
+</script><script>
+    // ==================== تطبيق صلاحية "عرض فقط" ====================
     (function applyViewOnly() {
-        setTimeout(() => {
-            const user = JSON.parse(localStorage.getItem('loggedUser') || '{}');
-            if (user.role === 'عرض فقط') {
-                // إخفاء أزرار الإضافة في القائمة الجانبية
-                document.querySelectorAll('a[onclick*="add"]').forEach(btn => {
-                    const li = btn.closest('li');
-                    if (li) li.style.display = 'none';
-                });
-
-                // إخفاء أزرار التعديل والحذف في كل صفحة
-                const hideButtons = () => {
-                    document.querySelectorAll('.btn-warning, .btn-danger').forEach(btn => {
-                        btn.style.display = 'none';
-                    });
-                };
-
-                hideButtons();
-                const observer = new MutationObserver(hideButtons);
-                const content = document.getElementById('pageContent');
-                if (content) observer.observe(content, { childList: true, subtree: true });
-            }
-        }, 500);
-    })();
-<script>
-    // تطبيق صلاحية عرض فقط بشكل فوري وقوي
-    (function() {
         const user = JSON.parse(localStorage.getItem('loggedUser') || '{}');
+        console.log('🔍 صلاحية المستخدم:', user.role);
+        
         if (user.role === 'عرض فقط') {
-            console.log('🔍 تطبيق صلاحية عرض فقط...');
+            console.log('⚠️ تطبيق قيود عرض فقط...');
             
-            // إخفاء أزرار الإضافة في القائمة الجانبية
+            // 1. إخفاء أزرار الإضافة في القائمة الجانبية
             document.querySelectorAll('a[onclick*="add"]').forEach(btn => {
                 const li = btn.closest('li');
                 if (li) li.style.display = 'none';
             });
             
-            // إخفاء أزرار التعديل والحذف
-            function hideEditDelete() {
-                document.querySelectorAll('.btn-warning, .btn-danger').forEach(btn => {
-                    btn.style.display = 'none';
-                });
+            // 2. إخفاء أزرار التعديل والحذف
+            function hideAllEditDelete() {
+                const btns = document.querySelectorAll('.btn-warning, .btn-danger');
+                if (btns.length > 0) {
+                    console.log(`✅ إخفاء ${btns.length} زر تعديل/حذف`);
+                    btns.forEach(btn => btn.style.display = 'none');
+                }
             }
             
             // تنفيذ فوري
-            hideEditDelete();
+            hideAllEditDelete();
             
-            // مراقبة التغييرات
-            const observer = new MutationObserver(hideEditDelete);
-            const content = document.getElementById('pageContent');
-            if (content) observer.observe(content, { childList: true, subtree: true });
+            // مراقبة التغييرات في المحتوى (لأن الأزرار تظهر بعد تحميل الصفحات)
+            const observer = new MutationObserver(function(mutations) {
+                hideAllEditDelete();
+            });
+            const targetNode = document.getElementById('pageContent');
+            if (targetNode) {
+                observer.observe(targetNode, { childList: true, subtree: true });
+            }
             
-            console.log('✅ تم تطبيق صلاحية عرض فقط');
+            // تأكيد إضافي بعد 1 ثانية
+            setTimeout(hideAllEditDelete, 1000);
+            setTimeout(hideAllEditDelete, 2000);
+            
+            console.log('✅ تم تفعيل وضع "عرض فقط" بنجاح');
         }
     })();
+</script>
 </script>
 
 </body>
