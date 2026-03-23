@@ -224,6 +224,36 @@
             hideEditDelete();
         }
     }, 500);
+    <script>
+    // إعادة ربط جميع أزرار القائمة الجانبية
+    function fixSidebarLinks() {
+        const allLinks = document.querySelectorAll('#sidebar a');
+        console.log('عدد الأزرار:', allLinks.length);
+        
+        allLinks.forEach(link => {
+            const onclickAttr = link.getAttribute('onclick');
+            if (onclickAttr && onclickAttr.includes('loadPage')) {
+                const match = onclickAttr.match(/loadPage\('(.*?)'\)/);
+                if (match) {
+                    const pageName = match[1];
+                    link.removeAttribute('onclick');
+                    link.onclick = function(e) {
+                        e.preventDefault();
+                        loadPage(pageName);
+                        return false;
+                    };
+                    console.log('✅ تم ربط الزر:', pageName);
+                }
+            }
+        });
+    }
+    
+    // تنفيذ بعد تحميل الصفحة
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', fixSidebarLinks);
+    } else {
+        fixSidebarLinks();
+    }
 </script>
 </body>
 </html>
