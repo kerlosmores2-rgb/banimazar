@@ -217,74 +217,42 @@
 
 <!-- ==================== صلاحية "عرض فقط" (منع الإضافة والتعديل والحذف) ==================== -->
 <script>
-    setTimeout(function() {
-        const user = JSON.parse(localStorage.getItem('loggedUser') || '{}');
-        const userRole = user.role;
-        console.log('🔍 صلاحية المستخدم:', userRole);
-        
-        if (userRole === 'عرض فقط') {
-            // إخفاء أزرار الإضافة في القائمة الجانبية
-            const addButtons = document.querySelectorAll('a[onclick*="add"]');
-            addButtons.forEach(btn => {
-                const parentLi = btn.closest('li');
-                if (parentLi) parentLi.style.display = 'none';
-            });
-            console.log('✅ تم إخفاء أزرار الإضافة');
-            
-            // دالة إخفاء أزرار التعديل والحذف
-            function hideEditDelete() {
-                document.querySelectorAll('.btn-warning, .btn-danger').forEach(btn => {
-                    btn.style.display = 'none';
-                });
-            }
-            
-            // مراقبة التغييرات في المحتوى (عند تحميل الصفحات)
-            const observer = new MutationObserver(function() {
-                hideEditDelete();
-            });
-            const pageContent = document.getElementById('pageContent');
-            if (pageContent) {
-                observer.observe(pageContent, { childList: true, subtree: true });
-            }
-            
-            // تنفيذ فوري
-            hideEditDelete();
-            console.log('✅ تم تقييد صلاحيات المستخدم (عرض فقط)');
-        }
-    }, 500);
-    <script>
-    // تطبيق صلاحية "عرض فقط" بشكل قوي
     (function applyViewOnly() {
-        const user = JSON.parse(localStorage.getItem('loggedUser') || '{}');
-        console.log('🔍 صلاحية المستخدم:', user.role);
-        
-        if (user.role === 'عرض فقط') {
-            // إخفاء أزرار الإضافة
-            const addButtons = document.querySelectorAll('a[onclick*="add"]');
-            addButtons.forEach(btn => {
-                const li = btn.closest('li');
-                if (li) li.style.display = 'none';
-            });
-            console.log('✅ تم إخفاء أزرار الإضافة');
+        setTimeout(function() {
+            const user = JSON.parse(localStorage.getItem('loggedUser') || '{}');
+            console.log('🔍 صلاحية المستخدم:', user.role);
             
-            // إخفاء أزرار التعديل والحذف
-            function hideEditDelete() {
-                const btns = document.querySelectorAll('.btn-warning, .btn-danger');
-                btns.forEach(btn => btn.style.display = 'none');
-                if (btns.length > 0) console.log('✅ تم إخفاء', btns.length, 'زر تعديل/حذف');
+            if (user.role === 'عرض فقط') {
+                // إخفاء أزرار الإضافة في القائمة الجانبية
+                const addButtons = document.querySelectorAll('a[onclick*="add"]');
+                addButtons.forEach(btn => {
+                    const li = btn.closest('li');
+                    if (li) li.style.display = 'none';
+                });
+                console.log('✅ تم إخفاء أزرار الإضافة');
+                
+                // إخفاء أزرار التعديل والحذف
+                function hideEditDelete() {
+                    const btns = document.querySelectorAll('.btn-warning, .btn-danger');
+                    btns.forEach(btn => btn.style.display = 'none');
+                    if (btns.length > 0) console.log('✅ تم إخفاء', btns.length, 'زر تعديل/حذف');
+                }
+                
+                // تنفيذ فوري
+                hideEditDelete();
+                
+                // مراقبة التغييرات في المحتوى
+                const observer = new MutationObserver(hideEditDelete);
+                const pageContent = document.getElementById('pageContent');
+                if (pageContent) {
+                    observer.observe(pageContent, { childList: true, subtree: true });
+                }
+                
+                console.log('✅ تم تطبيق صلاحية عرض فقط');
             }
-            
-            // تنفيذ فوري
-            hideEditDelete();
-            
-            // مراقبة التغييرات
-            const observer = new MutationObserver(hideEditDelete);
-            const pageContent = document.getElementById('pageContent');
-            if (pageContent) {
-                observer.observe(pageContent, { childList: true, subtree: true });
-            }
-        }
+        }, 500);
     })();
 </script>
+
 </body>
 </html>
