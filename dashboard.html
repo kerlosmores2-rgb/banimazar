@@ -149,6 +149,21 @@
             else document.getElementById('pageContent').innerHTML = '<div class="alert alert-danger">خطأ: لم يتم تحميل النظام بشكل صحيح</div>';
         }, 1000);
     }
+    <script>
+    // إخفاء أزرار الإضافة لمستخدمي "عرض فقط" بعد تحميل الصفحة
+    setTimeout(function() {
+        const user = JSON.parse(localStorage.getItem('loggedUser') || '{}');
+        console.log('الصلاحية:', user.role);
+        
+        if (user.role === 'عرض فقط') {
+            const addButtons = document.querySelectorAll('a[onclick*="add"]');
+            addButtons.forEach(btn => {
+                const parentLi = btn.closest('li');
+                if (parentLi) parentLi.style.display = 'none';
+            });
+            console.log('✅ تم إخفاء أزرار الإضافة لمستخدم عرض فقط');
+        }
+    }, 500);
 </script>
 </body>
 </html>
