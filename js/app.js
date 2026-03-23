@@ -2149,6 +2149,12 @@ app.js:2150 Uncaught ReferenceError: toggleSubMenu is not defined
     at app.js:2150:24
 
 dashboard.html:152 Uncaught SyntaxError: Identifier 'SUPABASE_URL' has already been declared (at dashboard.html:152:9)
+function toggleSubMenu(menuId) {
+    const menu = document.getElementById(menuId);
+    if (menu) {
+        menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+    }
+}
 ﻿
 
 window.loadPage = loadPage;
