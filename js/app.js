@@ -2145,6 +2145,7 @@ async function loadPage(page) {
 // ==================== دوال مساعدة للقائمة الجانبية ====================
 function toggleSubMenu(menuId) {
     const menu = document.getElementById(menuId);
+}
 
 // ==================== تصدير الدوال للاستخدام ====================
 window.loadPage = loadPage;
