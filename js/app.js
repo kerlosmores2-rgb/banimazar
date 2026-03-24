@@ -1,9 +1,3 @@
-// ==================== إعدادات Supabase ====================
-const SUPABASE_URL = 'https://pbzpumetrmirnsshjdoe.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_O9BKPIjk5xXvbGNjvsBXVw_9V_TIoUu';
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-window.supabaseClient = supabaseClient;
-
 
 // ==================== ???? ?????? ??? Supabase ====================
 async function apiCall(table, action, data = null, id = null) {
