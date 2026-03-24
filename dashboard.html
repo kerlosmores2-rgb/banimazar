@@ -227,6 +227,129 @@
             <div class="form-card"><h4>مرحباً بك</h4><p>نظام إدارة محطات رفع الصرف الصحي - بني مزار</p><small>آخر تحديث: ${new Date().toLocaleDateString('ar-EG')}</small></div>
         `;
     }
+    // ==================== قائمة المحطات ====================
+async function loadListStations(container) {
+    const stations = await apiCall('stations', 'select');
+    if (stations.length === 0) {
+        container.innerHTML = '<div class="alert alert-info">لا توجد محطات</div>';
+        return;
+    }
+    let html = `<div class="table-responsive"><table class="table table-bordered"><thead>运转<th>الكود</th><th>الاسم</th><th>النوع</th><th>المصب</th><th></th> </thead><tbody>`;
+    stations.forEach(s => {
+        html += `运转
+            <td>${s.code || '-'}</td>
+            <td>${s.name || '-'}</td>
+            <td>${s.type || '-'}</td>
+            <td>${s.outfall || '-'}</td>
+            <td><button class="btn btn-sm btn-info" onclick="alert('عرض: ${s.name}')">عرض</button></td>
+        </tr>`;
+    });
+    html += `</tbody> </div>`;
+    container.innerHTML = html;
+}
+
+// ==================== إضافة محطة ====================
+async function loadAddStation(container) {
+    container.innerHTML = `
+        <div class="form-card">
+            <h4>➕ إضافة محطة جديدة</h4>
+            <form id="stationForm">
+                <div class="row">
+                    <div class="col-md-6 mb-3"><label>اسم المحطة</label><input type="text" id="stationName" class="form-control" required></div>
+                    <div class="col-md-6 mb-3"><label>كود المحطة</label><input type="text" id="stationCode" class="form-control" required></div>
+                    <div class="col-md-4 mb-3"><label>النوع</label><select id="stationType" class="form-control"><option>رئيسية</option><option>فرعية</option><option>معالجة</option></select></div>
+                    <div class="col-md-4 mb-3"><label>المصب</label><input type="text" id="outfall" class="form-control"></div>
+                    <div class="col-md-4 mb-3"><label>القدرة</label><input type="text" id="capacity" class="form-control"></div>
+                </div>
+                <button type="submit" class="btn btn-primary">حفظ</button>
+            </form>
+        </div>
+    `;
+    document.getElementById('stationForm').onsubmit = async function(e) {
+        e.preventDefault();
+        const newStation = {
+            id: Date.now(),
+            name: document.getElementById('stationName').value,
+            code: document.getElementById('stationCode').value,
+            type: document.getElementById('stationType').value,
+            outfall: document.getElementById('outfall').value,
+            capacity: document.getElementById('capacity').value
+        };
+        try {
+            await apiCall('stations', 'insert', newStation);
+            alert('تم الإضافة');
+            loadPage('listStations');
+        } catch (err) { alert('خطأ: ' + err.message); }
+    };
+}
+
+// ==================== قائمة العاملين ====================
+async function loadListEmployees(container) {
+    const employees = await apiCall('employees', 'select');
+    const stations = await apiCall('stations', 'select');
+    const stationMap = {};
+    stations.forEach(s => stationMap[s.id] = s.name);
+    
+    if (employees.length === 0) {
+        container.innerHTML = '<div class="alert alert-info">لا توجد عاملين</div>';
+        return;
+    }
+    let html = `<div class="table-responsive"><table class="table table-bordered"><thead>运转<th>الكود</th><th>الاسم</th><th>المحطة</th><th>الوظيفة</th><th>التليفون</th><th>الحالة</th> </thead><tbody>`;
+    employees.forEach(e => {
+        html += `运转
+            <td>${e.code || '-'}</td>
+            <td>${e.name || '-'}</td>
+            <td>${stationMap[e.stationId] || '-'}</td>
+            <td>${e.role || '-'}</td>
+            <td>${e.phone || '-'}</td>
+            <td>${e.status || '-'}</td>
+        </tr>`;
+    });
+    html += `</tbody> </div>`;
+    container.innerHTML = html;
+}
+
+// ==================== إضافة عامل ====================
+async function loadAddEmployee(container) {
+    const stations = await apiCall('stations', 'select');
+    let stationOptions = '<option value="">اختر محطة</option>';
+    stations.forEach(s => { stationOptions += `<option value="${s.id}">${s.name}</option>`; });
+    
+    container.innerHTML = `
+        <div class="form-card">
+            <h4>➕ إضافة عامل جديد</h4>
+            <form id="empForm">
+                <div class="row">
+                    <div class="col-md-3"><label>الكود</label><input type="text" id="empCode" class="form-control" required></div>
+                    <div class="col-md-3"><label>الاسم</label><input type="text" id="empName" class="form-control" required></div>
+                    <div class="col-md-3"><label>المحطة</label><select id="empStation" class="form-control">${stationOptions}</select></div>
+                    <div class="col-md-3"><label>الوظيفة</label><select id="empRole" class="form-control"><option>مدير محطة</option><option>مهندس</option><option>فني</option><option>عامل</option></select></div>
+                    <div class="col-md-3"><label>التليفون</label><input type="text" id="empPhone" class="form-control"></div>
+                    <div class="col-md-3"><label>الحالة</label><select id="empStatus" class="form-control"><option>يعمل</option><option>إجازة</option></select></div>
+                </div>
+                <button type="submit" class="btn btn-primary">حفظ</button>
+            </form>
+        </div>
+    `;
+    
+    document.getElementById('empForm').onsubmit = async function(e) {
+        e.preventDefault();
+        const newEmp = {
+            id: Date.now(),
+            code: document.getElementById('empCode').value,
+            name: document.getElementById('empName').value,
+            stationId: document.getElementById('empStation').value,
+            role: document.getElementById('empRole').value,
+            phone: document.getElementById('empPhone').value,
+            status: document.getElementById('empStatus').value
+        };
+        try {
+            await apiCall('employees', 'insert', newEmp);
+            alert('تم الإضافة');
+            loadPage('listEmployees');
+        } catch (err) { alert('خطأ: ' + err.message); }
+    };
+}
 
     // ==================== الدالة الرئيسية ====================
     async function loadPage(page) {
