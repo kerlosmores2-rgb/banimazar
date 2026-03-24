@@ -2283,6 +2283,11 @@ async function loadPage(page) {
     else if (page === 'reportDiesel') await loadReportDiesel(container);
     else if (page === 'reportSparePartsAdvanced') await loadReportSparePartsAdvanced(container);
     else container.innerHTML = '<div class="alert alert-danger">صفحة غير موجودة</div>';
+    else if (page === 'reportWaterPumped') await loadReportWaterPumped(container);
+else if (page === 'reportElectricity') await loadReportElectricity(container);
+else if (page === 'reportWaterConsumption') await loadReportWaterConsumption(container);
+else if (page === 'reportDiesel') await loadReportDiesel(container);
+else if (page === 'reportSparePartsAdvanced') await loadReportSparePartsAdvanced(container);
 }
 
 // ==================== دوال مساعدة للقائمة الجانبية ====================
