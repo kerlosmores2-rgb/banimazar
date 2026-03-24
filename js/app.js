@@ -1406,34 +1406,76 @@ async function loadReportStation(container) {
             <button id="printStationBtn" class="btn btn-secondary mt-3" style="display:none" onclick="printStationReport()">طباعة</button>
         </div>
     `;
-    window.showStationFullReport = () => {
-        const stationId = document.getElementById('stationReportSelect').value;
-        const station = stations.find(s => s.id == stationId);
-        if (!station) { alert('اختر محطة'); return; }
-        const lastDaily = dailyReports.filter(r => r.stationId == stationId).sort((a,b)=>b.date.localeCompare(a.date))[0];
-        const dailyMap = {};
-        if (lastDaily && lastDaily.assets) lastDaily.assets.forEach(a => { dailyMap[a.name] = { status: a.status, notes: a.notes, reason: a.reason }; });
-        const stationOpenFaults = openFaults.filter(f => f.stationId == stationId);
-        const faultMap = {};
-        stationOpenFaults.forEach(f => { faultMap[f.assetName] = { reason: f.description, date: f.date }; });
-        const allAssets = [];
-        if (station.mainPumps) station.mainPumps.forEach((p,i) => allAssets.push(p['رقم/اسم الطلمبة'] || `طلمبة رئيسية ${i+1}`));
-        if (station.drainPumps) station.drainPumps.forEach((p,i) => allAssets.push(p['رقم/اسم الطلمبة'] || `طلمبة نزح ${i+1}`));
-        if (station.winches) station.winches.forEach((w,i) => allAssets.push(w['رقم/اسم الونش'] || `ونش ${i+1}`));
-        if (station.panels) station.panels.forEach((p,i) => allAssets.push(p['رقم/اسم اللوحة'] || `لوحة ${i+1}`));
-        if (station.fans) station.fans.forEach((f,i) => allAssets.push(f['رقم/اسم المروحة'] || `مروحة ${i+1}`));
-        if (station.sealPumps) station.sealPumps.forEach((s,i) => allAssets.push(s['رقم/اسم الطلمبة'] || `حبس جلندات ${i+1}`));
-        let html = `<h5>${station.name} (${station.code})</h5><table class="table table-bordered"><thead> <th>الأصل</th><th>الحالة</th><th>سبب التوقف</th><th>المصدر</th> </thead><tbody>`;
-        allAssets.forEach(name => {
-            let status = '-', reason = '-', source = '';
-            if (faultMap[name]) { status = 'لا يعمل'; reason = faultMap[name].reason; source = `بلاغ عطل (${faultMap[name].date})`; }
-            else if (dailyMap[name]) { status = dailyMap[name].status; reason = dailyMap[name].reason; source = `تقرير متابعة (${lastDaily?.date})`; if(dailyMap[name].notes) source += ` - ملاحظات: ${dailyMap[name].notes}`; }
-            html += `   <td>${name}</td><td>${status}</td><td>${reason}</td><td>${source}</td> `;
-        });
-        html += '</tbody> </div>';
-        document.getElementById('stationFullReport').innerHTML = html;
-        document.getElementById('printStationBtn').style.display = 'block';
-    };
+  window.showStationFullReport = () => {
+    const stationId = document.getElementById('stationReportSelect').value;
+    const station = stations.find(s => s.id == stationId);
+    if (!station) { alert('اختر محطة'); return; }
+    
+    const lastDaily = dailyReports.filter(r => r.stationId == stationId).sort((a,b)=>b.date.localeCompare(a.date))[0];
+    const dailyMap = {};
+    if (lastDaily && lastDaily.assets) lastDaily.assets.forEach(a => { dailyMap[a.name] = { status: a.status, notes: a.notes, reason: a.reason }; });
+    
+    const stationOpenFaults = openFaults.filter(f => f.stationId == stationId);
+    const faultMap = {};
+    stationOpenFaults.forEach(f => { faultMap[f.assetName] = { reason: f.description, date: f.date }; });
+    
+    const allAssets = [];
+    if (station.mainPumps) station.mainPumps.forEach((p,i) => allAssets.push(p['رقم/اسم الطلمبة'] || `طلمبة رئيسية ${i+1}`));
+    if (station.drainPumps) station.drainPumps.forEach((p,i) => allAssets.push(p['رقم/اسم الطلمبة'] || `طلمبة نزح ${i+1}`));
+    if (station.winches) station.winches.forEach((w,i) => allAssets.push(w['رقم/اسم الونش'] || `ونش ${i+1}`));
+    if (station.panels) station.panels.forEach((p,i) => allAssets.push(p['رقم/اسم اللوحة'] || `لوحة ${i+1}`));
+    if (station.fans) station.fans.forEach((f,i) => allAssets.push(f['رقم/اسم المروحة'] || `مروحة ${i+1}`));
+    if (station.sealPumps) station.sealPumps.forEach((s,i) => allAssets.push(s['رقم/اسم الطلمبة'] || `حبس جلندات ${i+1}`));
+    
+    // إنشاء الجدول بشكل عمودي (كل أصل في صف منفصل)
+    let html = `<h5 class="mb-3">${station.name} (${station.code})</h5>
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead class="table-primary">
+                            <tr>
+                                <th>#</th>
+                                <th>الأصل</th>
+                                <th>الحالة</th>
+                                <th>سبب التوقف</th>
+                                <th>المصدر / ملاحظات</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
+    
+    allAssets.forEach((name, index) => {
+        let status = '-', reason = '-', source = '';
+        if (faultMap[name]) { 
+            status = 'لا يعمل'; 
+            reason = faultMap[name].reason; 
+            source = `بلاغ عطل (${faultMap[name].date})`; 
+        } else if (dailyMap[name]) { 
+            status = dailyMap[name].status; 
+            reason = dailyMap[name].reason; 
+            source = `تقرير متابعة (${lastDaily?.date})`; 
+            if(dailyMap[name].notes) source += `<br><small class="text-muted">ملاحظات: ${dailyMap[name].notes}</small>`; 
+        }
+        
+        // تحديد لون الحالة
+        let statusClass = '';
+        if (status === 'يعمل') statusClass = 'text-success fw-bold';
+        else if (status === 'لا يعمل') statusClass = 'text-danger fw-bold';
+        
+        html += `<tr>
+                    <td class="text-center">${index + 1}</td>
+                    <td class="fw-bold">${name}</td>
+                    <td class="${statusClass}">${status}</td>
+                    <td>${reason}</td>
+                    <td>${source}</td>
+                 </tr>`;
+    });
+    
+    html += `</tbody>
+            </table>
+        </div>`;
+    
+    document.getElementById('stationFullReport').innerHTML = html;
+    document.getElementById('printStationBtn').style.display = 'block';
+};
     window.printStationReport = () => {
         const content = document.getElementById('stationFullReport').innerHTML;
         const stationName = document.getElementById('stationReportSelect').selectedOptions[0]?.text;
