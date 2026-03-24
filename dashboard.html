@@ -1,78 +1,32 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
- 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>لوحة التحكم</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
- 
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Tahoma', sans-serif; background: #f0f2f5; }
         .wrapper { display: flex; width: 100%; min-height: 100vh; }
-        #sidebar {
-            width: 280px;
-            background: #1e2a3e;
-            color: white;
-            transition: all 0.3s;
-            height: 100vh;
-            position: sticky;
-            top: 0;
-            overflow-y: auto;
-        }
+        #sidebar { width: 280px; background: #1e2a3e; color: white; transition: all 0.3s; height: 100vh; position: sticky; top: 0; overflow-y: auto; }
         #sidebar.active { margin-right: -280px; }
         .sidebar-header { padding: 20px; background: #0d6efd; text-align: center; }
         .sidebar-header h4 { font-size: 1.2rem; margin-bottom: 5px; }
         #sidebar ul { padding: 20px 0; list-style: none; }
-        #sidebar ul li a {
-            padding: 12px 20px;
-            display: block;
-            color: #ecf0f1;
-            text-decoration: none;
-            cursor: pointer;
-        }
+        #sidebar ul li a { padding: 12px 20px; display: block; color: #ecf0f1; text-decoration: none; cursor: pointer; }
         #sidebar ul li a:hover { background: #0d6efd; padding-right: 25px; }
         #sidebar ul li a i { margin-left: 10px; width: 25px; }
         #sidebar ul ul li a { padding-right: 50px; background: #2c3e50; }
         .sidebar-footer { padding: 20px; border-top: 1px solid #2c3e50; }
-        .sidebar-footer button {
-            width: 100%;
-            padding: 10px;
-            background: #dc3545;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-        }
+        .sidebar-footer button { width: 100%; padding: 10px; background: #dc3545; color: white; border: none; border-radius: 8px; cursor: pointer; }
         #content { flex: 1; padding: 20px; }
-        #toggleSidebar {
-            margin-bottom: 20px;
-            background: #0d6efd;
-            border: none;
-            border-radius: 8px;
-            padding: 10px 20px;
-            color: white;
-            cursor: pointer;
-        }
-        .stats-card {
-            background: white;
-            border-radius: 15px;
-            padding: 20px;
-            text-align: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
+        #toggleSidebar { margin-bottom: 20px; background: #0d6efd; border: none; border-radius: 8px; padding: 10px 20px; color: white; cursor: pointer; }
+        .stats-card { background: white; border-radius: 15px; padding: 20px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
         .stats-card i { font-size: 2.5rem; color: #0d6efd; }
         .stats-card h3 { font-size: 2rem; font-weight: bold; margin: 10px 0; }
-        .form-card {
-            background: white;
-            border-radius: 15px;
-            padding: 25px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
+        .form-card { background: white; border-radius: 15px; padding: 25px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
         .form-card h4 { color: #0d6efd; margin-bottom: 20px; border-bottom: 2px solid #0d6efd; padding-bottom: 10px; }
         .table-responsive { background: white; border-radius: 15px; padding: 15px; overflow-x: auto; }
         .table th { background: #0d6efd; color: white; text-align: center; }
@@ -80,10 +34,7 @@
         .search-bar { background: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
         .footer-credit { font-size: 12px; color: #666; text-align: center; margin-top: 30px; padding-top: 15px; border-top: 1px solid #ddd; }
         .btn-primary { background: #0d6efd; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; }
-        @media (max-width: 768px) {
-            #sidebar { position: fixed; z-index: 1000; margin-right: -280px; }
-            #sidebar.active { margin-right: 0; }
-        }
+        @media (max-width: 768px) { #sidebar { position: fixed; z-index: 1000; margin-right: -280px; } #sidebar.active { margin-right: 0; } }
     </style>
 </head>
 <body>
@@ -144,44 +95,167 @@
     </nav>
     <div id="content">
         <button id="toggleSidebar" class="btn-primary">☰ القائمة</button>
-        <div id="pageContent"></div>
+        <div id="pageContent">
+            <div class="text-center p-5">جاري تحميل النظام...</div>
+        </div>
         <div class="footer-credit">تم إعداد النظام بواسطة فني / كيرلس موريس يعقوب</div>
     </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/app.js"></script>
 <script>
-    const loggedUser = localStorage.getItem('loggedUser');
-    if (!loggedUser) {
+    // ==================== تعريف الدوال الأساسية ====================
+    const SUPABASE_URL = 'https://pbzpumetrmirnsshjdoe.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_O9BKPIjk5xXvbGNjvsBXVw_9V_TIoUu';
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    window.supabaseClient = supabaseClient;
+    
+    console.log('✅ Supabase initialized');
+    
+    function checkAuth() {
+        if (!localStorage.getItem('loggedUser')) {
+            window.location.href = 'index.html';
+            return false;
+        }
+        return true;
+    }
+    
+    function logout() {
+        localStorage.removeItem('loggedUser');
         window.location.href = 'index.html';
     }
-
+    
+    function getCurrentUser() {
+        return JSON.parse(localStorage.getItem('loggedUser') || '{}');
+    }
+    
+    // ==================== دوال الصلاحيات ====================
+    function canAdd() {
+        const user = getCurrentUser();
+        return user && user.role !== 'عرض فقط';
+    }
+    function canEdit() {
+        const user = getCurrentUser();
+        return user && user.role !== 'عرض فقط';
+    }
+    function canDelete() {
+        const user = getCurrentUser();
+        return user && user.role !== 'عرض فقط';
+    }
+    
+    // ==================== دالة مساعدة ====================
+    async function apiCall(table, action, data = null, id = null) {
+        try {
+            if (action === 'select') {
+                const { data: result, error } = await window.supabaseClient.from(table).select('*');
+                if (error) throw error;
+                return result || [];
+            }
+            if (action === 'insert') {
+                const { data: result, error } = await window.supabaseClient.from(table).insert([data]).select();
+                if (error) throw error;
+                return result[0];
+            }
+            return null;
+        } catch (err) {
+            console.error(err);
+            return [];
+        }
+    }
+    
+    // ==================== الصفحة الرئيسية ====================
+    async function loadHome(container) {
+        const stations = await apiCall('stations', 'select');
+        container.innerHTML = `
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="form-card">
+                        <h4>مرحباً بك</h4>
+                        <p>نظام إدارة محطات رفع الصرف الصحي - بني مزار</p>
+                        <p>عدد المحطات: ${stations.length}</p>
+                        <small>آخر تحديث: ${new Date().toLocaleDateString('ar-EG')}</small>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    // ==================== قائمة المحطات ====================
+    async function loadListStations(container) {
+        const stations = await apiCall('stations', 'select');
+        if (stations.length === 0) {
+            container.innerHTML = '<div class="alert alert-info">لا توجد محطات</div>';
+            return;
+        }
+        let html = `<div class="table-responsive"><table class="table table-bordered"><thead>运转<th>الكود</th><th>الاسم</th><th>النوع</th><th>المصب</th><th></th> </thead><tbody>`;
+        stations.forEach(s => {
+            html += `运转
+                <td>${s.code}  <td>${s.name}  <td>${s.type}  <td>${s.outfall || '-'}  <td><button class="btn btn-sm btn-info" onclick="alert('عرض: ${s.name}')">عرض</button>   `;
+        });
+        html += `</tbody> </div>`;
+        container.innerHTML = html;
+    }
+    
+    // ==================== الدالة الرئيسية ====================
+    async function loadPage(page) {
+        if (!checkAuth()) return;
+        
+        const container = document.getElementById('pageContent');
+        if (!container) return;
+        
+        if (page === 'home') {
+            await loadHome(container);
+        } else if (page === 'listStations') {
+            await loadListStations(container);
+        } else {
+            container.innerHTML = `<div class="alert alert-info">صفحة قيد التطوير: ${page}</div>`;
+        }
+    }
+    
+    // ==================== دوال القائمة ====================
     function toggleSubMenu(menuId) {
         const menu = document.getElementById(menuId);
         if (menu) menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
     }
-
+    
+    // ==================== تصدير الدوال ====================
+    window.loadPage = loadPage;
+    window.logout = logout;
+    window.toggleSubMenu = toggleSubMenu;
+    
+    console.log('✅ app.js loaded');
+</script>
+<script>
+    // ==================== التحقق من تسجيل الدخول ====================
+    const loggedUser = localStorage.getItem('loggedUser');
+    if (!loggedUser) {
+        window.location.href = 'index.html';
+    } else {
+        console.log('مستخدم مسجل:', JSON.parse(loggedUser).name);
+    }
+    
+    function toggleSubMenu(menuId) {
+        const menu = document.getElementById(menuId);
+        if (menu) menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+    }
+    
     const toggleBtn = document.getElementById('toggleSidebar');
     if (toggleBtn) {
         toggleBtn.onclick = () => {
             document.getElementById('sidebar').classList.toggle('active');
         };
     }
-
+    
     function logout() {
         localStorage.removeItem('loggedUser');
         window.location.href = 'index.html';
     }
-
+    
     if (typeof loadPage === 'function') {
         loadPage('home');
     } else {
-        console.log('انتظار تحميل app.js...');
-        setTimeout(() => {
-            if (typeof loadPage === 'function') loadPage('home');
-            else document.getElementById('pageContent').innerHTML = '<div class="alert alert-danger">لم يتم تحميل النظام</div>';
-        }, 1000);
+        console.error('loadPage غير معرفة');
+        document.getElementById('pageContent').innerHTML = '<div class="alert alert-danger">خطأ: لم يتم تحميل النظام</div>';
     }
 </script>
 </body>
