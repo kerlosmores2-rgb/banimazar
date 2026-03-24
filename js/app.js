@@ -221,9 +221,14 @@ async function loadHome(container) {
     const faults = await apiCall('faults', 'select');
     const openFaults = faults.filter(f => f.status === 'open').length;
     
-    // جلب اسم المستخدم من localStorage
-    const loggedUser = JSON.parse(localStorage.getItem('loggedUser') || '{}');
-    const userName = loggedUser.name || 'زائر';
+    // جلب اسم المستخدم
+    let userName = 'زائر';
+    try {
+        const loggedUser = JSON.parse(localStorage.getItem('loggedUser') || '{}');
+        userName = loggedUser.name || loggedUser.username || 'مستخدم';
+    } catch(e) {
+        console.error('خطأ في جلب المستخدم', e);
+    }
 
     container.innerHTML = `
         <div class="row">
