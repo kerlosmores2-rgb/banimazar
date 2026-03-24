@@ -352,17 +352,47 @@ async function loadAddEmployee(container) {
 }
 
     // ==================== الدالة الرئيسية ====================
-    async function loadPage(page) {
-        const container = document.getElementById('pageContent');
-        if (!container) return;
-        
-        if (page === 'home') {
-            await loadHome(container);
-        } else {
-            container.innerHTML = `<div class="alert alert-info">صفحة قيد التطوير: ${page}</div>`;
-        }
+async function loadPage(page) {
+    const container = document.getElementById('pageContent');
+    if (!container) return;
+    
+    if (page === 'home') {
+        await loadHome(container);
     }
-
+    else if (page === 'listStations') {
+        await loadListStations(container);
+    }
+    else if (page === 'addStation') {
+        await loadAddStation(container);
+    }
+    else if (page === 'listEmployees') {
+        await loadListEmployees(container);
+    }
+    else if (page === 'addEmployee') {
+        await loadAddEmployee(container);
+    }
+    else if (page === 'listFaults') {
+        await loadListFaults(container);
+    }
+    else if (page === 'addFault') {
+        await loadAddFault(container);
+    }
+    else if (page === 'tariffs') {
+        await loadTariffs(container);
+    }
+    else if (page === 'monthlyCosts') {
+        await loadMonthlyCosts(container);
+    }
+    else if (page === 'users') {
+        await loadUsers(container);
+    }
+    else if (page === 'archive') {
+        await loadArchive(container);
+    }
+    else {
+        container.innerHTML = `<div class="alert alert-info">صفحة قيد التطوير: ${page}</div>`;
+    }
+}
     // ==================== تحميل الصفحة ====================
     loadPage('home');
 </script>
