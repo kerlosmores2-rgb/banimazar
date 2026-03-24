@@ -1575,6 +1575,7 @@ async function loadReportAsset(container) {
         win.print();
     };
 }
+
 async function loadReportEmployees(container) {
     const stations = await apiCall('stations', 'select');
     const employees = await apiCall('employees', 'select');
