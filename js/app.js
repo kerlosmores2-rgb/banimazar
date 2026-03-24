@@ -1426,7 +1426,8 @@ async function loadReportStation(container) {
     if (station.panels) station.panels.forEach((p,i) => allAssets.push(p['رقم/اسم اللوحة'] || `لوحة ${i+1}`));
     if (station.fans) station.fans.forEach((f,i) => allAssets.push(f['رقم/اسم المروحة'] || `مروحة ${i+1}`));
     if (station.sealPumps) station.sealPumps.forEach((s,i) => allAssets.push(s['رقم/اسم الطلمبة'] || `حبس جلندات ${i+1}`));
-    
+    console.log('عدد الأصول:', allAssets.length);
+console.log('الأصول:', allAssets);
     // إنشاء الجدول بشكل عمودي (كل أصل في صف منفصل)
     let html = `<h5 class="mb-3">${station.name} (${station.code})</h5>
                 <div class="table-responsive">
