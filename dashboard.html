@@ -185,10 +185,10 @@ const loginTime = localStorage.getItem('loginTime');
     }
 
     function logout() {
-        sessionStorage.removeItem('loggedUser');
-        sessionStorage.removeItem('loginTime');
-        window.location.href = 'index.html';
-    }
+    localStorage.removeItem('loggedUser');
+    localStorage.removeItem('loginTime');
+    window.location.href = 'index.html';
+}
 
     // تحميل الصفحة الرئيسية بعد التأكد من وجود الدالة
     if (typeof loadPage === 'function') {
