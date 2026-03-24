@@ -1406,7 +1406,7 @@ async function loadReportStation(container) {
             <button id="printStationBtn" class="btn btn-secondary mt-3" style="display:none" onclick="printStationReport()">طباعة</button>
         </div>
     `;
-  window.showStationFullReport = () => {
+    window.showStationFullReport = () => {
     const stationId = document.getElementById('stationReportSelect').value;
     const station = stations.find(s => s.id == stationId);
     if (!station) { alert('اختر محطة'); return; }
@@ -1419,6 +1419,7 @@ async function loadReportStation(container) {
     const faultMap = {};
     stationOpenFaults.forEach(f => { faultMap[f.assetName] = { reason: f.description, date: f.date }; });
     
+    // جمع جميع الأصول
     const allAssets = [];
     if (station.mainPumps) station.mainPumps.forEach((p,i) => allAssets.push(p['رقم/اسم الطلمبة'] || `طلمبة رئيسية ${i+1}`));
     if (station.drainPumps) station.drainPumps.forEach((p,i) => allAssets.push(p['رقم/اسم الطلمبة'] || `طلمبة نزح ${i+1}`));
@@ -1426,52 +1427,56 @@ async function loadReportStation(container) {
     if (station.panels) station.panels.forEach((p,i) => allAssets.push(p['رقم/اسم اللوحة'] || `لوحة ${i+1}`));
     if (station.fans) station.fans.forEach((f,i) => allAssets.push(f['رقم/اسم المروحة'] || `مروحة ${i+1}`));
     if (station.sealPumps) station.sealPumps.forEach((s,i) => allAssets.push(s['رقم/اسم الطلمبة'] || `حبس جلندات ${i+1}`));
-    console.log('عدد الأصول:', allAssets.length);
-console.log('الأصول:', allAssets);
-    // إنشاء الجدول بشكل عمودي (كل أصل في صف منفصل)
-    let html = `<h5 class="mb-3">${station.name} (${station.code})</h5>
-                <div class="table-responsive">
-                    <table class="table table-bordered">
-                        <thead class="table-primary">
-                            <tr>
-                                <th>#</th>
-                                <th>الأصل</th>
-                                <th>الحالة</th>
-                                <th>سبب التوقف</th>
-                                <th>المصدر / ملاحظات</th>
+    
+    if (allAssets.length === 0) {
+        document.getElementById('stationFullReport').innerHTML = '<div class="alert alert-warning">لا توجد أصول مسجلة لهذه المحطة</div>';
+        document.getElementById('printStationBtn').style.display = 'none';
+        return;
+    }
+    
+    // بناء الجدول - كل أصل في صف منفصل
+    let html = `<h5 class="mb-3">تقرير متابعة محطة: ${station.name} (${station.code})</h5>
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; direction: rtl;">
+                        <thead>
+                            <tr style="background-color: #0d6efd; color: white;">
+                                <th style="border: 1px solid #ddd; padding: 10px; text-align: center;">#</th>
+                                <th style="border: 1px solid #ddd; padding: 10px; text-align: center;">الأصل</th>
+                                <th style="border: 1px solid #ddd; padding: 10px; text-align: center;">الحالة</th>
+                                <th style="border: 1px solid #ddd; padding: 10px; text-align: center;">سبب التوقف</th>
+                                <th style="border: 1px solid #ddd; padding: 10px; text-align: center;">المصدر / ملاحظات</th>
                             </tr>
                         </thead>
                         <tbody>`;
     
-    allAssets.forEach((name, index) => {
+    for (let i = 0; i < allAssets.length; i++) {
+        const name = allAssets[i];
         let status = '-', reason = '-', source = '';
+        
         if (faultMap[name]) { 
             status = 'لا يعمل'; 
             reason = faultMap[name].reason; 
-            source = `بلاغ عطل (${faultMap[name].date})`; 
+            source = `⚠️ بلاغ عطل (${faultMap[name].date})`; 
         } else if (dailyMap[name]) { 
             status = dailyMap[name].status; 
             reason = dailyMap[name].reason; 
-            source = `تقرير متابعة (${lastDaily?.date})`; 
-            if(dailyMap[name].notes) source += `<br><small class="text-muted">ملاحظات: ${dailyMap[name].notes}</small>`; 
+            source = `📋 تقرير متابعة (${lastDaily?.date})`; 
+            if(dailyMap[name].notes) source += `<br><small style="color:#666;">ملاحظات: ${dailyMap[name].notes}</small>`; 
         }
         
-        // تحديد لون الحالة
-        let statusClass = '';
-        if (status === 'يعمل') statusClass = 'text-success fw-bold';
-        else if (status === 'لا يعمل') statusClass = 'text-danger fw-bold';
+        const statusColor = status === 'يعمل' ? 'green' : (status === 'لا يعمل' ? 'red' : 'black');
         
-        html += `<tr>
-                    <td class="text-center">${index + 1}</td>
-                    <td class="fw-bold">${name}</td>
-                    <td class="${statusClass}">${status}</td>
-                    <td>${reason}</td>
-                    <td>${source}</td>
-                 </tr>`;
-    });
+        html += `<tr style="border-bottom: 1px solid #ddd;">
+                    <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${i + 1}</td>
+                    <td style="border: 1px solid #ddd; padding: 8px; text-align: center;"><strong>${name}</strong></td>
+                    <td style="border: 1px solid #ddd; padding: 8px; text-align: center; color: ${statusColor}; font-weight: bold;">${status}</td>
+                    <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${reason}</td>
+                    <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${source}</td>
+                </tr>`;
+    }
     
     html += `</tbody>
-            </table>
+             </table>
         </div>`;
     
     document.getElementById('stationFullReport').innerHTML = html;
