@@ -150,48 +150,35 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/app.js"></script>
 <script>
-    // ==================== التحقق من تسجيل الدخول ====================
     const loggedUser = localStorage.getItem('loggedUser');
-    const loginTime = localStorage.getItem('loginTime');
-    
-    if (!loggedUser || !loginTime) {
+    if (!loggedUser) {
         window.location.href = 'index.html';
-    } else {
-        console.log('مستخدم مسجل:', JSON.parse(loggedUser).name);
     }
 
     function toggleSubMenu(menuId) {
         const menu = document.getElementById(menuId);
-        if (menu) {
-            menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
-        }
+        if (menu) menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
     }
 
     const toggleBtn = document.getElementById('toggleSidebar');
-    const sidebar = document.getElementById('sidebar');
     if (toggleBtn) {
-        toggleBtn.onclick = function() {
-            sidebar.classList.toggle('active');
+        toggleBtn.onclick = () => {
+            document.getElementById('sidebar').classList.toggle('active');
         };
     }
 
     function logout() {
         localStorage.removeItem('loggedUser');
-        localStorage.removeItem('loginTime');
         window.location.href = 'index.html';
     }
 
-    // ==================== التأكد من تحميل app.js ====================
     if (typeof loadPage === 'function') {
         loadPage('home');
     } else {
-        console.error('loadPage غير معرفة - انتظر قليلاً');
-        setTimeout(function() {
-            if (typeof loadPage === 'function') {
-                loadPage('home');
-            } else {
-                document.getElementById('pageContent').innerHTML = '<div class="alert alert-danger">لم يتم تحميل النظام. تأكد من وجود ملف app.js في المجلد js/</div>';
-            }
+        console.log('انتظار تحميل app.js...');
+        setTimeout(() => {
+            if (typeof loadPage === 'function') loadPage('home');
+            else document.getElementById('pageContent').innerHTML = '<div class="alert alert-danger">لم يتم تحميل النظام</div>';
         }, 1000);
     }
 </script>
