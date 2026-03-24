@@ -4,6 +4,8 @@
 // ============================================================
 
 // ==================== إعدادات Supabase ====================
+document.charset = "UTF-8";
+// باقي الكود...
 const SUPABASE_URL = 'https://pbzpumetrmirnsshjdoe.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_O9BKPIjk5xXvbGNjvsBXVw_9V_TIoUu';
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
