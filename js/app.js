@@ -220,6 +220,10 @@ async function loadHome(container) {
     const employees = await apiCall('employees', 'select');
     const faults = await apiCall('faults', 'select');
     const openFaults = faults.filter(f => f.status === 'open').length;
+    
+    // جلب اسم المستخدم من localStorage
+    const loggedUser = JSON.parse(localStorage.getItem('loggedUser') || '{}');
+    const userName = loggedUser.name || 'زائر';
 
     container.innerHTML = `
         <div class="row">
@@ -227,10 +231,13 @@ async function loadHome(container) {
             <div class="col-md-4"><div class="stats-card"><i class="fas fa-users"></i><h3>${employees.length}</h3><p>عدد العاملين</p></div></div>
             <div class="col-md-4"><div class="stats-card"><i class="fas fa-exclamation-triangle"></i><h3>${openFaults}</h3><p>أعطال مفتوحة</p></div></div>
         </div>
-        <div class="form-card"><h4>مرحباً بك</h4><p>نظام إدارة محطات رفع الصرف الصحي - بني مزار</p><small>آخر تحديث: ${new Date().toLocaleDateString('ar-EG')}</small></div>
+        <div class="form-card">
+            <h4>مرحباً بك، ${userName}</h4>
+            <p>نظام إدارة محطات رفع الصرف الصحي - بني مزار</p>
+            <small>آخر تحديث: ${new Date().toLocaleDateString('ar-EG')}</small>
+        </div>
     `;
 }
-
 // ==================== إضافة محطة ====================
 async function loadAddStation(container) {
     if (!canAdd()) {
