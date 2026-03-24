@@ -1719,7 +1719,317 @@ async function loadReportSpareParts(container) {
         win.print();
     };
 }
+// ==================== تقرير المياه المرفوعة ====================
+async function loadReportWaterPumped(container) {
+    const stations = await apiCall('stations', 'select');
+    const monthlyCosts = await apiCall('monthly_costs', 'select');
+    let stationOptions = '<option value="">كل المحطات</option>';
+    stations.forEach(s => { stationOptions += `<option value="${s.id}">${s.name}</option>`; });
+    
+    container.innerHTML = `
+        <div class="form-card">
+            <h4>💧 تقرير المياه المرفوعة</h4>
+            <div class="row">
+                <div class="col-md-4 mb-2"><label>المحطة</label><select id="waterReportStation" class="form-control">${stationOptions}</select></div>
+                <div class="col-md-4 mb-2"><label>من شهر</label><input type="month" id="waterFromMonth" class="form-control"></div>
+                <div class="col-md-4 mb-2"><label>إلى شهر</label><input type="month" id="waterToMonth" class="form-control"></div>
+            </div>
+            <button class="btn btn-primary mt-2" onclick="showWaterPumpedReport()">عرض</button>
+            <button class="btn btn-secondary mt-2" onclick="printWaterPumpedReport()">🖨️ طباعة</button>
+            <div id="waterPumpedReportResult" class="mt-4"></div>
+        </div>
+    `;
+    
+    window.showWaterPumpedReport = () => {
+        const stationId = document.getElementById('waterReportStation').value;
+        const fromMonth = document.getElementById('waterFromMonth').value;
+        const toMonth = document.getElementById('waterToMonth').value;
+        let filtered = monthlyCosts;
+        if (stationId) filtered = filtered.filter(c => c.stationId == stationId);
+        if (fromMonth) filtered = filtered.filter(c => c.month >= fromMonth);
+        if (toMonth) filtered = filtered.filter(c => c.month <= toMonth);
+        filtered.sort((a,b) => a.month.localeCompare(b.month));
+        const resultDiv = document.getElementById('waterPumpedReportResult');
+        if (filtered.length === 0) { resultDiv.innerHTML = '<div class="alert alert-info">لا توجد بيانات</div>'; return; }
+        let totalWater = 0;
+        let html = `<table class="table table-bordered"><thead><tr><th>الشهر</th><th>المحطة</th><th>ساعات التشغيل</th><th>التصرف (m³/h)</th><th>المياه المرفوعة (m³)</th></tr></thead><tbody>`;
+        filtered.forEach(c => {
+            const station = stations.find(s => s.id == c.stationId);
+            totalWater += (c.waterPumped || 0);
+            html += `<tr><td>${c.month}</td><td>${station?.name || '-'}</td><td>${c.operatingHours || 0}</td><td>${c.pumpFlow || 0}</td><td><strong>${(c.waterPumped || 0).toLocaleString()} m³</strong></td></tr>`;
+        });
+        html += `<tr class="table-secondary"><td colspan="4" class="text-center">الإجمالي</td><td><strong>${totalWater.toLocaleString()} m³</strong></td></tr>`;
+        html += `</tbody></table>`;
+        resultDiv.innerHTML = html;
+    };
+    
+    window.printWaterPumpedReport = () => {
+        const content = document.getElementById('waterPumpedReportResult').innerHTML;
+        const win = window.open('', '_blank');
+        win.document.write(`<html dir="rtl"><head><title>تقرير المياه المرفوعة</title><style>body{font-family:Tahoma;padding:20px} table{border-collapse:collapse;width:100%} th,td{border:1px solid #ddd;padding:8px}</style></head><body><h2>تقرير المياه المرفوعة</h2>${content}</body></html>`);
+        win.document.close();
+        win.print();
+    };
+}
 
+// ==================== تقرير استهلاك الكهرباء ====================
+async function loadReportElectricity(container) {
+    const stations = await apiCall('stations', 'select');
+    const monthlyCosts = await apiCall('monthly_costs', 'select');
+    let stationOptions = '<option value="">كل المحطات</option>';
+    stations.forEach(s => { stationOptions += `<option value="${s.id}">${s.name}</option>`; });
+    
+    container.innerHTML = `
+        <div class="form-card">
+            <h4>⚡ تقرير استهلاك الكهرباء</h4>
+            <div class="row">
+                <div class="col-md-4 mb-2"><label>المحطة</label><select id="elecReportStation" class="form-control">${stationOptions}</select></div>
+                <div class="col-md-4 mb-2"><label>المحول</label><select id="elecReportTransformer" class="form-control"><option value="">كل المحولات</option></select></div>
+                <div class="col-md-4 mb-2"><label>من شهر</label><input type="month" id="elecFromMonth" class="form-control"></div>
+                <div class="col-md-4 mb-2"><label>إلى شهر</label><input type="month" id="elecToMonth" class="form-control"></div>
+            </div>
+            <button class="btn btn-primary mt-2" onclick="showElectricityReport()">عرض</button>
+            <button class="btn btn-secondary mt-2" onclick="printElectricityReport()">🖨️ طباعة</button>
+            <div id="electricityReportResult" class="mt-4"></div>
+        </div>
+    `;
+    
+    document.getElementById('elecReportStation').addEventListener('change', function() {
+        const stationId = this.value;
+        const station = stations.find(s => s.id == stationId);
+        const transformerSelect = document.getElementById('elecReportTransformer');
+        if (!station || !station.powerSources) { transformerSelect.innerHTML = '<option value="">لا توجد محولات</option>'; return; }
+        const transformers = station.powerSources.filter(ps => ps['النوع'] === 'محول');
+        if (transformers.length) {
+            transformerSelect.innerHTML = '<option value="">كل المحولات</option>' + transformers.map((t, idx) => `<option value="${idx}">${t['رقم/اسم المصدر'] || `محول ${idx+1}`}</option>`).join('');
+        } else {
+            transformerSelect.innerHTML = '<option value="">لا توجد محولات</option>';
+        }
+    });
+    
+    window.showElectricityReport = () => {
+        const stationId = document.getElementById('elecReportStation').value;
+        const transformerIdx = document.getElementById('elecReportTransformer').value;
+        const fromMonth = document.getElementById('elecFromMonth').value;
+        const toMonth = document.getElementById('elecToMonth').value;
+        let filtered = monthlyCosts;
+        if (stationId) filtered = filtered.filter(c => c.stationId == stationId);
+        if (fromMonth) filtered = filtered.filter(c => c.month >= fromMonth);
+        if (toMonth) filtered = filtered.filter(c => c.month <= toMonth);
+        filtered.sort((a,b) => a.month.localeCompare(b.month));
+        const resultDiv = document.getElementById('electricityReportResult');
+        if (filtered.length === 0) { resultDiv.innerHTML = '<div class="alert alert-info">لا توجد بيانات</div>'; return; }
+        let totalKwh = 0, totalCost = 0;
+        let html = `<table class="table table-bordered"><thead><tr><th>الشهر</th><th>المحطة</th><th>المحول</th><th>الاستهلاك (kWh)</th><th>التكلفة (جنيه)</th></tr></thead><tbody>`;
+        filtered.forEach(c => {
+            const station = stations.find(s => s.id == c.stationId);
+            if (c.transformers && c.transformers.length) {
+                c.transformers.forEach((t, idx) => {
+                    if (transformerIdx !== '' && transformerIdx != idx) return;
+                    const transformerName = (station?.powerSources?.[idx]?.['رقم/اسم المصدر']) || `محول ${idx+1}`;
+                    totalKwh += (t.diff || 0);
+                    totalCost += (t.cost || 0);
+                    html += `<tr><td>${c.month}</td><td>${station?.name || '-'}</td><td>${transformerName}</td><td>${(t.diff || 0).toLocaleString()}</td><td>${(t.cost || 0).toLocaleString()}</td></tr>`;
+                });
+            }
+        });
+        html += `<tr class="table-secondary"><td colspan="3" class="text-center">الإجمالي</td><td>${totalKwh.toLocaleString()} kWh</td><td>${totalCost.toLocaleString()} جنيه</td></tr>`;
+        html += `</tbody></table>`;
+        resultDiv.innerHTML = html;
+    };
+    
+    window.printElectricityReport = () => {
+        const content = document.getElementById('electricityReportResult').innerHTML;
+        const win = window.open('', '_blank');
+        win.document.write(`<html dir="rtl"><head><title>تقرير استهلاك الكهرباء</title><style>body{font-family:Tahoma;padding:20px} table{border-collapse:collapse;width:100%} th,td{border:1px solid #ddd;padding:8px}</style></head><body><h2>تقرير استهلاك الكهرباء</h2>${content}</body></html>`);
+        win.document.close();
+        win.print();
+    };
+}
+
+// ==================== تقرير استهلاك المياه ====================
+async function loadReportWaterConsumption(container) {
+    const stations = await apiCall('stations', 'select');
+    const monthlyCosts = await apiCall('monthly_costs', 'select');
+    let stationOptions = '<option value="">كل المحطات</option>';
+    stations.forEach(s => { stationOptions += `<option value="${s.id}">${s.name}</option>`; });
+    
+    container.innerHTML = `
+        <div class="form-card">
+            <h4>💧 تقرير استهلاك المياه (عدادات)</h4>
+            <div class="row">
+                <div class="col-md-4 mb-2"><label>المحطة</label><select id="waterConsumptionStation" class="form-control">${stationOptions}</select></div>
+                <div class="col-md-4 mb-2"><label>من شهر</label><input type="month" id="waterConsumptionFrom" class="form-control"></div>
+                <div class="col-md-4 mb-2"><label>إلى شهر</label><input type="month" id="waterConsumptionTo" class="form-control"></div>
+            </div>
+            <button class="btn btn-primary mt-2" onclick="showWaterConsumptionReport()">عرض</button>
+            <button class="btn btn-secondary mt-2" onclick="printWaterConsumptionReport()">🖨️ طباعة</button>
+            <div id="waterConsumptionResult" class="mt-4"></div>
+        </div>
+    `;
+    
+    window.showWaterConsumptionReport = () => {
+        const stationId = document.getElementById('waterConsumptionStation').value;
+        const fromMonth = document.getElementById('waterConsumptionFrom').value;
+        const toMonth = document.getElementById('waterConsumptionTo').value;
+        let filtered = monthlyCosts;
+        if (stationId) filtered = filtered.filter(c => c.stationId == stationId);
+        if (fromMonth) filtered = filtered.filter(c => c.month >= fromMonth);
+        if (toMonth) filtered = filtered.filter(c => c.month <= toMonth);
+        filtered.sort((a,b) => a.month.localeCompare(b.month));
+        const resultDiv = document.getElementById('waterConsumptionResult');
+        if (filtered.length === 0) { resultDiv.innerHTML = '<div class="alert alert-info">لا توجد بيانات</div>'; return; }
+        let totalConsumed = 0, totalCost = 0;
+        let html = `<table class="table table-bordered"><thead><tr><th>الشهر</th><th>المحطة</th><th>الاستهلاك (m³)</th><th>التكلفة (جنيه)</th></tr></thead><tbody>`;
+        filtered.forEach(c => {
+            const station = stations.find(s => s.id == c.stationId);
+            const consumed = c.water?.consumed || 0;
+            const cost = c.water?.cost || 0;
+            totalConsumed += consumed;
+            totalCost += cost;
+            html += `<tr><td>${c.month}</td><td>${station?.name || '-'}</td><td>${consumed.toLocaleString()} m³</td><td>${cost.toLocaleString()} جنيه</td></tr>`;
+        });
+        html += `<tr class="table-secondary"><td colspan="2" class="text-center">الإجمالي</td><td>${totalConsumed.toLocaleString()} m³</td><td>${totalCost.toLocaleString()} جنيه</td></tr>`;
+        html += `</tbody></table>`;
+        resultDiv.innerHTML = html;
+    };
+    
+    window.printWaterConsumptionReport = () => {
+        const content = document.getElementById('waterConsumptionResult').innerHTML;
+        const win = window.open('', '_blank');
+        win.document.write(`<html dir="rtl"><head><title>تقرير استهلاك المياه</title><style>body{font-family:Tahoma;padding:20px} table{border-collapse:collapse;width:100%} th,td{border:1px solid #ddd;padding:8px}</style></head><body><h2>تقرير استهلاك المياه</h2>${content}</body></html>`);
+        win.document.close();
+        win.print();
+    };
+}
+
+// ==================== تقرير استهلاك سولار ====================
+async function loadReportDiesel(container) {
+    const stations = await apiCall('stations', 'select');
+    const monthlyCosts = await apiCall('monthly_costs', 'select');
+    let stationOptions = '<option value="">كل المحطات</option>';
+    stations.forEach(s => { stationOptions += `<option value="${s.id}">${s.name}</option>`; });
+    
+    container.innerHTML = `
+        <div class="form-card">
+            <h4>🛢️ تقرير استهلاك السولار</h4>
+            <div class="row">
+                <div class="col-md-4 mb-2"><label>المحطة</label><select id="dieselReportStation" class="form-control">${stationOptions}</select></div>
+                <div class="col-md-4 mb-2"><label>المولد</label><select id="dieselReportGenerator" class="form-control"><option value="">كل المولدات</option></select></div>
+                <div class="col-md-4 mb-2"><label>من شهر</label><input type="month" id="dieselFromMonth" class="form-control"></div>
+                <div class="col-md-4 mb-2"><label>إلى شهر</label><input type="month" id="dieselToMonth" class="form-control"></div>
+            </div>
+            <button class="btn btn-primary mt-2" onclick="showDieselReport()">عرض</button>
+            <button class="btn btn-secondary mt-2" onclick="printDieselReport()">🖨️ طباعة</button>
+            <div id="dieselReportResult" class="mt-4"></div>
+        </div>
+    `;
+    
+    document.getElementById('dieselReportStation').addEventListener('change', function() {
+        const stationId = this.value;
+        const station = stations.find(s => s.id == stationId);
+        const generatorSelect = document.getElementById('dieselReportGenerator');
+        if (!station || !station.powerSources) { generatorSelect.innerHTML = '<option value="">لا توجد مولدات</option>'; return; }
+        const generators = station.powerSources.filter(ps => ps['النوع'] === 'مولد');
+        if (generators.length) {
+            generatorSelect.innerHTML = '<option value="">كل المولدات</option>' + generators.map((g, idx) => `<option value="${idx}">${g['رقم/اسم المصدر'] || `مولد ${idx+1}`}</option>`).join('');
+        } else {
+            generatorSelect.innerHTML = '<option value="">لا توجد مولدات</option>';
+        }
+    });
+    
+    window.showDieselReport = () => {
+        const stationId = document.getElementById('dieselReportStation').value;
+        const generatorIdx = document.getElementById('dieselReportGenerator').value;
+        const fromMonth = document.getElementById('dieselFromMonth').value;
+        const toMonth = document.getElementById('dieselToMonth').value;
+        let filtered = monthlyCosts;
+        if (stationId) filtered = filtered.filter(c => c.stationId == stationId);
+        if (fromMonth) filtered = filtered.filter(c => c.month >= fromMonth);
+        if (toMonth) filtered = filtered.filter(c => c.month <= toMonth);
+        filtered.sort((a,b) => a.month.localeCompare(b.month));
+        const resultDiv = document.getElementById('dieselReportResult');
+        if (filtered.length === 0) { resultDiv.innerHTML = '<div class="alert alert-info">لا توجد بيانات</div>'; return; }
+        let totalConsumed = 0;
+        let html = `<table class="table table-bordered"><thead><tr><th>الشهر</th><th>المحطة</th><th>المولد</th><th>الاستهلاك (لتر)</th><th>الرصيد المتبقي (لتر)</th></tr></thead><tbody>`;
+        filtered.forEach(c => {
+            const station = stations.find(s => s.id == c.stationId);
+            if (c.generators && c.generators.length) {
+                c.generators.forEach((g, idx) => {
+                    if (generatorIdx !== '' && generatorIdx != idx) return;
+                    const generatorName = (station?.powerSources?.[idx]?.['رقم/اسم المصدر']) || `مولد ${idx+1}`;
+                    totalConsumed += (g.consumed || 0);
+                    html += `<tr><td>${c.month}</td><td>${station?.name || '-'}</td><td>${generatorName}</td><td>${(g.consumed || 0).toLocaleString()} لتر</td><td>${(g.balance || 0).toLocaleString()} لتر</td></tr>`;
+                });
+            }
+        });
+        html += `<tr class="table-secondary"><td colspan="3" class="text-center">إجمالي الاستهلاك</td><td>${totalConsumed.toLocaleString()} لتر</td><td>-</td></tr>`;
+        html += `</tbody></table>`;
+        resultDiv.innerHTML = html;
+    };
+    
+    window.printDieselReport = () => {
+        const content = document.getElementById('dieselReportResult').innerHTML;
+        const win = window.open('', '_blank');
+        win.document.write(`<html dir="rtl"><head><title>تقرير استهلاك السولار</title><style>body{font-family:Tahoma;padding:20px} table{border-collapse:collapse;width:100%} th,td{border:1px solid #ddd;padding:8px}</style></head><body><h2>تقرير استهلاك السولار</h2>${content}</body></html>`);
+        win.document.close();
+        win.print();
+    };
+}
+
+// ==================== تقرير قطع الغيار المتقدم ====================
+async function loadReportSparePartsAdvanced(container) {
+    const stations = await apiCall('stations', 'select');
+    const faults = await apiCall('faults', 'select');
+    const faultsWithParts = faults.filter(f => f.parts && f.parts.trim() !== '');
+    let stationOptions = '<option value="">كل المحطات</option>';
+    stations.forEach(s => { stationOptions += `<option value="${s.id}">${s.name}</option>`; });
+    
+    container.innerHTML = `
+        <div class="form-card">
+            <h4>🔧 تقرير قطع الغيار المستخدمة</h4>
+            <div class="row">
+                <div class="col-md-4 mb-2"><label>المحطة</label><select id="spareAdvancedStation" class="form-control">${stationOptions}</select></div>
+                <div class="col-md-4 mb-2"><label>من تاريخ</label><input type="date" id="spareAdvancedFrom" class="form-control"></div>
+                <div class="col-md-4 mb-2"><label>إلى تاريخ</label><input type="date" id="spareAdvancedTo" class="form-control"></div>
+                <div class="col-md-12 mb-2"><label>بحث في قطع الغيار</label><input type="text" id="spareAdvancedSearch" class="form-control" placeholder="اكتب اسم قطعة الغيار..."></div>
+            </div>
+            <button class="btn btn-primary mt-2" onclick="showSparePartsAdvancedReport()">عرض</button>
+            <button class="btn btn-secondary mt-2" onclick="printSparePartsAdvancedReport()">🖨️ طباعة</button>
+            <div id="sparePartsAdvancedResult" class="mt-4"></div>
+        </div>
+    `;
+    
+    window.showSparePartsAdvancedReport = () => {
+        const stationId = document.getElementById('spareAdvancedStation').value;
+        const fromDate = document.getElementById('spareAdvancedFrom').value;
+        const toDate = document.getElementById('spareAdvancedTo').value;
+        const searchTerm = document.getElementById('spareAdvancedSearch').value.toLowerCase();
+        let filtered = faultsWithParts;
+        if (stationId) filtered = filtered.filter(f => f.stationId == stationId);
+        if (fromDate) filtered = filtered.filter(f => f.date >= fromDate);
+        if (toDate) filtered = filtered.filter(f => f.date <= toDate);
+        if (searchTerm) filtered = filtered.filter(f => f.parts.toLowerCase().includes(searchTerm));
+        filtered.sort((a,b) => b.date.localeCompare(a.date));
+        const resultDiv = document.getElementById('sparePartsAdvancedResult');
+        if (filtered.length === 0) { resultDiv.innerHTML = '<div class="alert alert-info">لا توجد قطع غيار مطابقة</div>'; return; }
+        let html = `<table class="table table-bordered"><thead><tr><th>التاريخ</th><th>المحطة</th><th>الأصل المعطل</th><th>قطع الغيار المستخدمة</th><th>نوع العطل</th><th>إجراءات الإصلاح</th></tr></thead><tbody>`;
+        filtered.forEach(f => {
+            const station = stations.find(s => s.id == f.stationId);
+            html += `<tr><td>${f.date}</td><td>${station?.name || '-'}</td><td>${f.assetName || '-'}</td><td class="fw-bold text-primary">${f.parts}</td><td>${f.type}</td><td>${f.actions || '-'}</td></tr>`;
+        });
+        html += `</tbody></table>`;
+        resultDiv.innerHTML = html;
+    };
+    
+    window.printSparePartsAdvancedReport = () => {
+        const content = document.getElementById('sparePartsAdvancedResult').innerHTML;
+        const win = window.open('', '_blank');
+        win.document.write(`<html dir="rtl"><head><title>تقرير قطع الغيار</title><style>body{font-family:Tahoma;padding:20px} table{border-collapse:collapse;width:100%} th,td{border:1px solid #ddd;padding:8px}</style></head><body><h2>تقرير قطع الغيار المستخدمة</h2>${content}</body></html>`);
+        win.document.close();
+        win.print();
+    };
+}
 async function loadArchive(container) {
     const stations = await apiCall('stations', 'select');
     let stationOptions = '<option value="">اختر محطة</option>';
