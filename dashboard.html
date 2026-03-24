@@ -125,12 +125,12 @@
                     <li><a onclick="loadPage('reportAsset')">⚙️ متابعة أصل</a></li>
                     <li><a onclick="loadPage('reportEmployees')">👥 تقرير العاملين</a></li>
                     <li><a onclick="loadPage('reportSpareParts')">🔧 تقرير قطع غيار</a></li>
-					<li><hr class="dropdown-divider" style="margin: 10px 0; border-color: #444;"></li>
-<li><a onclick="loadPage('reportWaterPumped')"><i class="fas fa-chart-line"></i> 💧 تقرير المياه المرفوعة</a></li>
-<li><a onclick="loadPage('reportElectricity')"><i class="fas fa-bolt"></i> ⚡ تقرير استهلاك كهرباء</a></li>
-<li><a onclick="loadPage('reportWaterConsumption')"><i class="fas fa-tint"></i> 💧 تقرير استهلاك مياه</a></li>
-<li><a onclick="loadPage('reportDiesel')"><i class="fas fa-oil-can"></i> 🛢️ تقرير استهلاك سولار</a></li>
-<li><a onclick="loadPage('reportSparePartsAdvanced')"><i class="fas fa-tools"></i> 🔧 تقرير قطع غيار متقدم</a></li>
+                    <li><hr class="dropdown-divider" style="margin: 10px 0; border-color: #444;"></li>
+                    <li><a onclick="loadPage('reportWaterPumped')">💧 تقرير المياه المرفوعة</a></li>
+                    <li><a onclick="loadPage('reportElectricity')">⚡ تقرير استهلاك كهرباء</a></li>
+                    <li><a onclick="loadPage('reportWaterConsumption')">💧 تقرير استهلاك مياه</a></li>
+                    <li><a onclick="loadPage('reportDiesel')">🛢️ تقرير استهلاك سولار</a></li>
+                    <li><a onclick="loadPage('reportSparePartsAdvanced')">🔧 تقرير قطع غيار متقدم</a></li>
                 </ul>
             </li>
             <li><a onclick="loadPage('archive')"><i class="fas fa-archive"></i> الأرشيف</a></li>
@@ -147,16 +147,16 @@
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/app.js"></script>
 <script>
-    // التحقق من تسجيل الدخول
-    const loggedUser = sessionStorage.getItem('loggedUser');
-    const loginTime = sessionStorage.getItem('loginTime');
+    // ==================== التحقق من تسجيل الدخول ====================
+    const loggedUser = localStorage.getItem('loggedUser');
+    const loginTime = localStorage.getItem('loginTime');
     
     if (!loggedUser || !loginTime) {
         window.location.href = 'index.html';
     } else {
-        // عرض اسم المستخدم في console للتأكد
         console.log('مستخدم مسجل:', JSON.parse(loggedUser).name);
     }
 
@@ -176,23 +176,23 @@
     }
 
     function logout() {
-        sessionStorage.removeItem('loggedUser');
-        sessionStorage.removeItem('loginTime');
+        localStorage.removeItem('loggedUser');
+        localStorage.removeItem('loginTime');
         window.location.href = 'index.html';
     }
 
-    // تحميل الصفحة الرئيسية بعد التأكد من وجود الدالة
+    // ==================== التأكد من تحميل app.js ====================
     if (typeof loadPage === 'function') {
         loadPage('home');
     } else {
-        console.log('انتظار تحميل app.js...');
+        console.error('loadPage غير معرفة - انتظر قليلاً');
         setTimeout(function() {
             if (typeof loadPage === 'function') {
                 loadPage('home');
             } else {
-                document.getElementById('pageContent').innerHTML = '<div class="alert alert-danger">خطأ: لم يتم تحميل النظام بشكل صحيح</div>';
+                document.getElementById('pageContent').innerHTML = '<div class="alert alert-danger">لم يتم تحميل النظام. تأكد من وجود ملف app.js في المجلد js/</div>';
             }
-        }, 500);
+        }, 1000);
     }
 </script>
 </body>
