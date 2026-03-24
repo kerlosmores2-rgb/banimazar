@@ -1,1 +1,156 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام محطات الصرف الصحي - بني مزار</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            font-family: 'Tahoma', sans-serif;
+        }
+        .card {
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            border: none;
+        }
+        .card-header {
+            background: #0d6efd;
+            color: white;
+            text-align: center;
+            border-radius: 20px 20px 0 0;
+            padding: 25px;
+        }
+        .btn-login {
+            background: #0d6efd;
+            width: 100%;
+            padding: 12px;
+            font-weight: bold;
+        }
+        .footer-text {
+            font-size: 12px;
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            <div class="card">
+                <div class="card-header">
+                    <h5>شركة مياه الشرب والصرف الصحي بالمنيا</h5>
+                    <small>فرع بني مزار - إدارة محطات الصرف الصحي</small>
+                </div>
+                <div class="card-body p-4">
+                    <div id="errorMsg" class="alert alert-danger d-none"></div>
+                    <form id="loginForm">
+                        <div class="mb-3">
+                            <label>اسم المستخدم</label>
+                            <input type="text" id="username" class="form-control" value="admin" required>
+                        </div>
+                        <div class="mb-3">
+                            <label>كلمة المرور</label>
+                            <input type="password" id="password" class="form-control" value="admin123" required>
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="remember">
+                            <label class="form-check-label">تذكرني</label>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-login">دخول</button>
+                    </form>
+                    <div class="footer-text mt-3">
+                        تم إعداد النظام بواسطة فني / كيرلس موريس يعقوب
+                    </div>
+                    <div class="footer-text">
+                        نائب مدير الفرع مهندس / منصور رجب عبدالله 
+                     </div>
+					  <div class="footer-text">
+						مدير عام الفرع مهندسة / زينب أحمد عبدالمنعم
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
+<script>
+    // حذف أي بيانات قديمة وتهيئة بيانات جديدة
+    localStorage.clear();
+    
+    // إنشاء المستخدمين
+    const users = [
+        { username: 'admin', password: 'admin123', name: 'مدير النظام', role: 'مدير' },
+        { username: 'eng_mansour', password: '123456', name: 'منصور رجب', role: 'نائب مدير' },
+        { username: 'keroles', password: '123', name: 'كيرلس موريس', role: 'فني' }
+    ];
+    localStorage.setItem('users', JSON.stringify(users));
+    
+    // تهيئة البيانات الفارغة
+    localStorage.setItem('stations', JSON.stringify([]));
+    localStorage.setItem('employees', JSON.stringify([]));
+    localStorage.setItem('faults', JSON.stringify([]));
+    localStorage.setItem('tariffs', JSON.stringify({ electricity: 1.2, water: 3.5 }));
+    localStorage.setItem('monthlyCosts', JSON.stringify([]));
+    
+    // إضافة بيانات تجريبية للمحطات
+    const sampleStations = [
+        { id: 1, name: 'محطة بني مزار الرئيسية', code: 'ST001', type: 'رئيسية', outfall: 'محطة المعالجة', capacity: '500' },
+        { id: 2, name: 'محطة المعالجة المركزية', code: 'ST002', type: 'معالجة', outfall: '', capacity: '2000' }
+    ];
+    localStorage.setItem('stations', JSON.stringify(sampleStations));
+    
+    // إضافة بيانات تجريبية للعاملين
+    const sampleEmployees = [
+        { id: 1, name: 'أحمد محمد', code: 'EMP001', stationId: '1', role: 'مدير محطة', phone: '01234567890', status: 'يعمل' },
+        { id: 2, name: 'محمود علي', code: 'EMP002', stationId: '1', role: 'فني', phone: '01123456789', status: 'يعمل' }
+    ];
+    localStorage.setItem('employees', JSON.stringify(sampleEmployees));
+    
+    console.log('تم تهيئة البيانات بنجاح');
+    console.log('المستخدمين:', JSON.parse(localStorage.getItem('users')));
+    
+    document.getElementById('loginForm').onsubmit = function(e) {
+        e.preventDefault();
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        const usersList = JSON.parse(localStorage.getItem('users'));
+        
+        console.log('محاولة دخول:', username, password);
+        console.log('المستخدمين المتاحين:', usersList);
+        
+        const user = usersList.find(u => u.username === username && u.password === password);
+        
+        if (user) {
+            console.log('تم تسجيل الدخول بنجاح:', user.name);
+            sessionStorage.setItem('loggedUser', JSON.stringify(user));
+            sessionStorage.setItem('loginTime', Date.now());
+            
+            if (document.getElementById('remember').checked) {
+                localStorage.setItem('rememberedUser', username);
+            }
+            
+            window.location.href = 'dashboard.html';
+        } else {
+            console.log('فشل تسجيل الدخول');
+            const errorDiv = document.getElementById('errorMsg');
+            errorDiv.textContent = 'اسم المستخدم أو كلمة المرور غير صحيحة. جرب: admin / admin123';
+            errorDiv.classList.remove('d-none');
+        }
+    };
+    
+    const remembered = localStorage.getItem('rememberedUser');
+    if (remembered) {
+        document.getElementById('username').value = remembered;
+        document.getElementById('remember').checked = true;
+    }
+</script>
+</body>
+</html>
