@@ -203,6 +203,52 @@ const loginTime = localStorage.getItem('loginTime');
             }
         }, 500);
     }
+	<script src="js/app.js"></script>
+<script>
+    // ==================== التحقق من تسجيل الدخول ====================
+    const loggedUser = localStorage.getItem('loggedUser');
+    const loginTime = localStorage.getItem('loginTime');
+    
+    if (!loggedUser || !loginTime) {
+        window.location.href = 'index.html';
+    } else {
+        console.log('مستخدم مسجل:', JSON.parse(loggedUser).name);
+    }
+
+    function toggleSubMenu(menuId) {
+        const menu = document.getElementById(menuId);
+        if (menu) {
+            menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+        }
+    }
+
+    const toggleBtn = document.getElementById('toggleSidebar');
+    const sidebar = document.getElementById('sidebar');
+    if (toggleBtn) {
+        toggleBtn.onclick = function() {
+            sidebar.classList.toggle('active');
+        };
+    }
+
+    function logout() {
+        localStorage.removeItem('loggedUser');
+        localStorage.removeItem('loginTime');
+        window.location.href = 'index.html';
+    }
+
+    // تحميل الصفحة الرئيسية
+    if (typeof loadPage === 'function') {
+        loadPage('home');
+    } else {
+        console.log('انتظار تحميل app.js...');
+        setTimeout(function() {
+            if (typeof loadPage === 'function') {
+                loadPage('home');
+            } else {
+                document.getElementById('pageContent').innerHTML = '<div class="alert alert-danger">خطأ: لم يتم تحميل النظام بشكل صحيح</div>';
+            }
+        }, 500);
+    }
 </script>
 </body>
 </html>
