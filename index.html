@@ -84,8 +84,9 @@
     // 1. إعدادات Supabase (ضع بياناتك هنا)
     const SUPABASE_URL = 'https://pbzpumetrmirnsshjdoe.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_O9BKPIjk5xXvbGNjvsBXVw_9V_TIoUu';
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
+  //  const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+// قمنا بتغيير الاسم هنا لـ supabaseClient لتجنب التعارض
+window.supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     const loginForm = document.getElementById('loginForm');
     const errorMsg = document.getElementById('errorMsg');
     const submitBtn = document.getElementById('submitBtn');
