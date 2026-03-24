@@ -1580,45 +1580,99 @@ async function loadReportEmployees(container) {
     const employees = await apiCall('employees', 'select');
     const stationMap = {};
     stations.forEach(s => stationMap[s.id] = s.name);
-    let stationOptions = '<option value="">كل المحطات</option>' + stations.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+    
+    let stationOptions = '<option value="">كل المحطات</option>';
+    stations.forEach(s => { stationOptions += `<option value="${s.id}">${s.name}</option>`; });
+    
     container.innerHTML = `
         <div class="form-card">
             <h4>👥 تقرير العاملين</h4>
             <div class="row">
                 <div class="col-md-4 mb-2"><label>المحطة</label><select id="empReportStationFilter" class="form-control">${stationOptions}</select></div>
-                <div class="col-md-4 mb-2"><label>الوظيفة</label><select id="empReportRoleFilter" class="form-control"><option value="">الكل</option><option>مدير محطة</option><option>مهندس</option><option>فني</option><option>عامل</option></select></div>
-                <div class="col-md-4 mb-2"><label>الحالة</label><select id="empReportStatusFilter" class="form-control"><option value="">الكل</option><option>يعمل</option><option>إجازة</option></select></div>
+                <div class="col-md-4 mb-2"><label>الوظيفة</label><select id="empReportRoleFilter" class="form-control">
+                    <option value="">الكل</option>
+                    <option>مدير محطة</option>
+                    <option>مهندس</option>
+                    <option>فني</option>
+                    <option>عامل</option>
+                </select></div>
+                <div class="col-md-4 mb-2"><label>الحالة</label><select id="empReportStatusFilter" class="form-control">
+                    <option value="">الكل</option>
+                    <option>يعمل</option>
+                    <option>إجازة</option>
+                </select></div>
             </div>
             <button class="btn btn-primary mt-2" onclick="showEmployeesReport()">عرض</button>
             <button class="btn btn-secondary mt-2" onclick="printEmployeesReport()">🖨️ طباعة</button>
             <div id="employeesReportResult" class="mt-4"></div>
         </div>
     `;
+    
     window.showEmployeesReport = () => {
         const stationId = document.getElementById('empReportStationFilter').value;
         const role = document.getElementById('empReportRoleFilter').value;
         const status = document.getElementById('empReportStatusFilter').value;
+        
         let filtered = employees;
         if (stationId) filtered = filtered.filter(e => e.stationId == stationId);
         if (role) filtered = filtered.filter(e => e.role == role);
         if (status) filtered = filtered.filter(e => e.status == status);
+        
         const resultDiv = document.getElementById('employeesReportResult');
-        if (filtered.length === 0) { resultDiv.innerHTML = '<div class="alert alert-info">لا توجد بيانات مطابقة</div>'; return; }
-        let html = `<div class="table-responsive"><table class="table table-bordered"><thead> <th>الكود</th><th>الاسم</th><th>المحطة</th><th>الوظيفة</th><th>الوردية</th><th>التليفون</th><th>الحالة</th> </thead><tbody>`;
-        filtered.forEach(e => {
-            html += `    <td class="text-center">${e.code}  <td class="text-center">${e.name}  <td class="text-center">${stationMap[e.stationId] || '-'}  <td class="text-center">${e.role}  <td class="text-center">${e.shift || '-'}  <td class="text-center">${e.phone || '-'}  <td class="text-center">${e.status}   `;
-        });
-        html += `</tbody> </div>`;
+        if (filtered.length === 0) {
+            resultDiv.innerHTML = '<div class="alert alert-info">لا توجد بيانات مطابقة</div>';
+            return;
+        }
+        
+        // بناء الجدول - كل عامل في صف منفصل
+        let html = `<h5 class="mb-3">تقرير العاملين</h5>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; direction: rtl;">
+                            <thead>
+                                <tr style="background-color: #0d6efd; color: white;">
+                                    <th style="border: 1px solid #ddd; padding: 10px; text-align: center;">#</th>
+                                    <th style="border: 1px solid #ddd; padding: 10px; text-align: center;">الكود</th>
+                                    <th style="border: 1px solid #ddd; padding: 10px; text-align: center;">الاسم</th>
+                                    <th style="border: 1px solid #ddd; padding: 10px; text-align: center;">المحطة</th>
+                                    <th style="border: 1px solid #ddd; padding: 10px; text-align: center;">الوظيفة</th>
+                                    <th style="border: 1px solid #ddd; padding: 10px; text-align: center;">الوردية</th>
+                                    <th style="border: 1px solid #ddd; padding: 10px; text-align: center;">التليفون</th>
+                                    <th style="border: 1px solid #ddd; padding: 10px; text-align: center;">الحالة</th>
+                                </tr>
+                            </thead>
+                            <tbody>`;
+        
+        for (let i = 0; i < filtered.length; i++) {
+            const e = filtered[i];
+            const statusColor = e.status === 'يعمل' ? 'green' : 'orange';
+            
+            html += `<tr style="border-bottom: 1px solid #ddd;">
+                        <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${i + 1}  <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${e.code}  <td style="border: 1px solid #ddd; padding: 8px; text-align: center;"><strong>${e.name}</strong>  <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${stationMap[e.stationId] || '-'}  <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${e.role}  <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${e.shift || '-'}  <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${e.phone || '-'}  <td style="border: 1px solid #ddd; padding: 8px; text-align: center; color: ${statusColor}; font-weight: bold;">${e.status}  </tr>`;
+        }
+        
+        html += `</tbody>
+                </table>
+            </div>`;
+        
         resultDiv.innerHTML = html;
     };
+    
     window.printEmployeesReport = () => {
         const content = document.getElementById('employeesReportResult').innerHTML;
         const win = window.open('', '_blank');
-        win.document.write(`<html dir="rtl"><head><title>تقرير العاملين</title><style>body{font-family:Tahoma;padding:20px} table{border-collapse:collapse;width:100%} th,td{border:1px solid #ddd;padding:8px}</style></head><body><h2>تقرير العاملين</h2>${content}</body></html>`);
+        win.document.write(`<html dir="rtl"><head><title>تقرير العاملين</title>
+        <style>
+            body{font-family:Tahoma;padding:20px}
+            table{border-collapse:collapse;width:100%}
+            th,td{border:1px solid #ddd;padding:8px;text-align:center}
+            th{background:#0d6efd;color:white}
+        </style></head>
+        <body><h2>تقرير العاملين</h2>${content}</body></html>`);
         win.document.close();
         win.print();
     };
 }
+
 
 async function loadReportSpareParts(container) {
     const stations = await apiCall('stations', 'select');
