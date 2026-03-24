@@ -53,12 +53,12 @@
                     <div id="errorMsg" class="alert alert-danger d-none"></div>
                     <form id="loginForm">
                         <div class="mb-3">
-                            <label>الكود الوظيفي</label>
-                            <input type="text" id="username" class="form-control" placeholder="أدخل الكود الوظيفي" required>
+                            <label>اسم المستخدم</label>
+                            <input type="text" id="username" class="form-control" value="admin" required>
                         </div>
                         <div class="mb-3">
-                            <label>الرقم السري</label>
-                            <input type="password" id="password" class="form-control" placeholder="أدخل الرقم السري" required>
+                            <label>كلمة المرور</label>
+                            <input type="password" id="password" class="form-control" value="admin123" required>
                         </div>
                         <div class="mb-3 form-check">
                             <input type="checkbox" class="form-check-input" id="remember">
@@ -69,8 +69,12 @@
                     <div class="footer-text mt-3">
                         تم إعداد النظام بواسطة فني / كيرلس موريس يعقوب
                     </div>
-                    <div class="footer-text">نائب مدير الفرع مهندس / منصور رجب عبدالله</div>
-                    <div class="footer-text">مدير عام الفرع مهندسة / زينب أحمد عبدالمنعم</div>
+                    <div class="footer-text">
+                        نائب مدير الفرع مهندس / منصور رجب عبدالله 
+                     </div>
+					  <div class="footer-text">
+						مدير عام الفرع مهندسة / زينب أحمد عبدالمنعم
+                    </div>
                 </div>
             </div>
         </div>
@@ -79,55 +83,71 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+    // ==================== إعدادات Supabase ====================
     const SUPABASE_URL = 'https://pbzpumetrmirnsshjdoe.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_O9BKPIjk5xXvbGNjvsBXVw_9V_TIoUu';
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    window.supabaseClient = supabaseClient;
-
-    if (localStorage.getItem('loggedUser')) {
-        window.location.href = 'dashboard.html';
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    
+    // ==================== التحقق من تسجيل الدخول ====================
+    async function checkLogin() {
+        const token = localStorage.getItem('supabaseToken');
+        if (token) {
+            const { data: { user } } = await supabase.auth.getUser(token);
+            if (user) {
+                window.location.href = 'dashboard.html';
+            }
+        }
     }
-
+    checkLogin();
+    
+    // ==================== تسجيل الدخول ====================
     document.getElementById('loginForm').onsubmit = async function(e) {
         e.preventDefault();
-        const username = document.getElementById('username').value.trim();
+        const username = document.getElementById('username').value;
         const password = document.getElementById('password').value;
-        const errorDiv = document.getElementById('errorMsg');
-        errorDiv.classList.add('d-none');
-
-        try {
-            const { data, error } = await supabaseClient
-                .from('users')
-                .select('*')
-                .eq('username', username)
-                .eq('password', password);
-
-            if (error) throw error;
-
-            if (data && data.length > 0) {
-                const user = data[0];
-                localStorage.setItem('loggedUser', JSON.stringify({
-                    id: user.id,
-                    username: user.username,
-                    name: user.name,
-                    role: user.role
-                }));
-                localStorage.setItem('loginTime', Date.now());
-                if (document.getElementById('remember').checked) {
-                    localStorage.setItem('rememberedUser', username);
-                }
-                window.location.href = 'dashboard.html';
-            } else {
-                errorDiv.textContent = '❌ الكود الوظيفي أو الرقم السري غير صحيح';
-                errorDiv.classList.remove('d-none');
+        
+        // البحث عن المستخدم في جدول users (لأننا مش بنستخدم Auth حالياً)
+        const { data: users, error } = await supabase
+            .from('users')
+            .select('*')
+            .eq('username', username)
+            .eq('password', password);
+        
+        if (error) {
+            console.error('خطأ:', error);
+            const errorDiv = document.getElementById('errorMsg');
+            errorDiv.textContent = 'خطأ في الاتصال بقاعدة البيانات';
+            errorDiv.classList.remove('d-none');
+            return;
+        }
+        
+        if (users && users.length > 0) {
+            const user = users[0];
+            console.log('تم تسجيل الدخول بنجاح:', user.name);
+            
+            // تخزين بيانات المستخدم
+            localStorage.setItem('loggedUser', JSON.stringify({
+                id: user.id,
+                username: user.username,
+                name: user.name,
+                role: user.role
+            }));
+            localStorage.setItem('loginTime', Date.now());
+            
+            if (document.getElementById('remember').checked) {
+                localStorage.setItem('rememberedUser', username);
             }
-        } catch (err) {
-            console.error(err);
-            errorDiv.textContent = 'خطأ: ' + err.message;
+            
+            window.location.href = 'dashboard.html';
+        } else {
+            console.log('فشل تسجيل الدخول');
+            const errorDiv = document.getElementById('errorMsg');
+            errorDiv.textContent = 'اسم المستخدم أو كلمة المرور غير صحيحة. جرب: admin / admin123';
             errorDiv.classList.remove('d-none');
         }
     };
-
+    
+    // تذكر المستخدم
     const remembered = localStorage.getItem('rememberedUser');
     if (remembered) {
         document.getElementById('username').value = remembered;
