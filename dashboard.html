@@ -249,6 +249,16 @@ const loginTime = localStorage.getItem('loginTime');
             }
         }, 500);
     }
+	<script>
+    // تأكد من وجود loadPage
+    console.log('loadPage موجودة؟', typeof loadPage);
+    if (typeof loadPage === 'function') {
+        loadPage('home');
+    } else {
+        console.error('loadPage غير موجودة');
+        document.getElementById('pageContent').innerHTML = '<div class="alert alert-danger">لم يتم تحميل النظام. تأكد من وجود ملف app.js في المسار الصحيح.</div>';
+    }
+
 </script>
 </body>
 </html>
