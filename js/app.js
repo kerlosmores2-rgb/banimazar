@@ -174,6 +174,20 @@ function getFanHTML() {
         <div class="col-md-4"><select class="form-select"><option>يعمل</option><option>لا يعمل</option></select></div>
     </div>`;
 }
+function getGeneratorHTML() {
+    return `<div class="border p-2 mb-2 rounded">
+        <div class="row">
+            <div class="col-md-4 mb-2"><input type="text" class="form-control" placeholder="اسم المولد" required></div>
+            <div class="col-md-4 mb-2"><input type="text" class="form-control" placeholder="نوع المحرك"></div>
+            <div class="col-md-4 mb-2"><input type="text" class="form-control" placeholder="نوع المولد"></div>
+            <div class="col-md-3 mb-2"><input type="number" class="form-control" placeholder="قدرة المولد (kW)"></div>
+            <div class="col-md-3 mb-2"><input type="number" class="form-control" placeholder="كمية الزيت (لتر)"></div>
+            <div class="col-md-3 mb-2"><input type="number" class="form-control" placeholder="استهلاك على الحمل (لتر/س)"></div>
+            <div class="col-md-3 mb-2"><input type="number" class="form-control" placeholder="استهلاك بدون حمل (لتر/س)"></div>
+        </div>
+        <button type="button" class="btn btn-sm btn-danger mt-2" onclick="this.parentElement.remove()">🗑️ حذف</button>
+    </div>`;
+}
 
 function addDynamicItem(containerId, htmlFunc) {
     const container = document.getElementById(containerId);
@@ -266,8 +280,9 @@ async function loadAddStation(container) {
                     <div class="col-md-12 mb-3"><label>الموقع الجغرافي</label><input type="text" id="location" class="form-control" placeholder="إحداثيات أو عنوان"></div>
                 </div>
                 <div class="mt-3"><h5>مصادر التغذية</h5><div id="powerSources"></div><button type="button" class="btn btn-sm btn-success mt-2" onclick="addPowerSource()">+ إضافة مصدر</button></div>
-                <div class="mt-3"><h5>الوحدات الرئيسية (طلمبات)</h5><div id="mainPumps"></div><button type="button" class="btn btn-sm btn-success mt-2" onclick="addMainPump()">+ إضافة طلمبة</button></div>
+               // داخل loadAddStation، بعد قسم drainPumps وقبل winches                <div class="mt-3"><h5>الوحدات الرئيسية (طلمبات)</h5><div id="mainPumps"></div><button type="button" class="btn btn-sm btn-success mt-2" onclick="addMainPump()">+ إضافة طلمبة</button></div>
                 <div class="mt-3"><h5>طلمبات نزح</h5><div id="drainPumps"></div><button type="button" class="btn btn-sm btn-success mt-2" onclick="addDrainPump()">+ إضافة طلمبة نزح</button></div>
+                  <div class="mt-3"><h5>🛢️ المولدات</h5> <div id="generators"></div> <button type="button" class="btn btn-sm btn-success mt-2" onclick="addGenerator()">+ إضافة مولد</button></div> 
                 <div class="mt-3"><h5>أوناش</h5><div id="winches"></div><button type="button" class="btn btn-sm btn-success mt-2" onclick="addWinch()">+ إضافة ونش</button></div>
                 <div class="mt-3"><h5>لوحات كهربائية</h5><div id="panels"></div><button type="button" class="btn btn-sm btn-success mt-2" onclick="addPanel()">+ إضافة لوحة</button></div>
                 <div class="mt-3"><h5>مباني</h5><div id="buildings"></div><button type="button" class="btn btn-sm btn-success mt-2" onclick="addBuilding()">+ إضافة مبنى</button></div>
@@ -286,7 +301,9 @@ async function loadAddStation(container) {
     window.addBuilding = () => addDynamicItem('buildings', getBuildingHTML);
     window.addSealPump = () => addDynamicItem('sealPumps', getSealPumpHTML);
     window.addFan = () => addDynamicItem('fans', getFanHTML);
-
+    window.addGenerator = () => addDynamicItem('generators', getGeneratorHTML);
+addGenerator(); // إضافة مولد افتراضي واحد
+window.addGenerator = () => addDynamicItem('generators', getGeneratorHTML);
     addPowerSource(); addMainPump(); addDrainPump(); addWinch(); addPanel(); addBuilding(); addSealPump(); addFan();
 
     document.getElementById('stationForm').onsubmit = async function(e) {
@@ -300,6 +317,7 @@ async function loadAddStation(container) {
             capacity: document.getElementById('capacity').value,
             location: document.getElementById('location').value,
             powerSources: collectItems('powerSources'),
+            generators: generators
             mainPumps: collectItems('mainPumps'),
             drainPumps: collectItems('drainPumps'),
             winches: collectItems('winches'),
@@ -307,6 +325,20 @@ async function loadAddStation(container) {
             buildings: collectItems('buildings'),
             sealPumps: collectItems('sealPumps'),
             fans: collectItems('fans'),
+            // جمع بيانات المولدات
+const generators = [];
+document.querySelectorAll('#generators .border').forEach(div => {
+    const genData = {};
+    const inputs = div.querySelectorAll('input');
+    if (inputs[0]) genData['اسم المولد'] = inputs[0].value;
+    if (inputs[1]) genData['نوع المحرك'] = inputs[1].value;
+    if (inputs[2]) genData['نوع المولد'] = inputs[2].value;
+    if (inputs[3]) genData['قدرة المولد (kW)'] = inputs[3].value;
+    if (inputs[4]) genData['كمية الزيت (لتر)'] = inputs[4].value;
+    if (inputs[5]) genData['استهلاك على الحمل (لتر/س)'] = inputs[5].value;
+    if (inputs[6]) genData['استهلاك بدون حمل (لتر/س)'] = inputs[6].value;
+    generators.push(genData);
+});
             createdAt: new Date().toISOString()
         };
         try {
