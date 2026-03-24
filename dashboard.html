@@ -160,9 +160,8 @@
 <script src="js/app.js"></script>
 <script>
     // التحقق من تسجيل الدخول
-    const loggedUser = sessionStorage.getItem('loggedUser');
-    const loginTime = sessionStorage.getItem('loginTime');
-    
+const loggedUser = localStorage.getItem('loggedUser');
+const loginTime = localStorage.getItem('loginTime');
     if (!loggedUser || !loginTime) {
         window.location.href = 'index.html';
     } else {
