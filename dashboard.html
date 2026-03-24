@@ -1,13 +1,3 @@
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-    // ==================== إعدادات Supabase ====================
-    const SUPABASE_URL = 'https://pbzpumetrmirnsshjdoe.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_O9BKPIjk5xXvbGNjvsBXVw_9V_TIoUu';
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    window.supabaseClient = supabaseClient;
-    
-    // ... باقي الكود
-</script>
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -135,12 +125,12 @@
                     <li><a onclick="loadPage('reportAsset')">⚙️ متابعة أصل</a></li>
                     <li><a onclick="loadPage('reportEmployees')">👥 تقرير العاملين</a></li>
                     <li><a onclick="loadPage('reportSpareParts')">🔧 تقرير قطع غيار</a></li>
-					<li><hr class="dropdown-divider" style="margin: 10px 0; border-color: #444;"></li>
-<li><a onclick="loadPage('reportWaterPumped')"><i class="fas fa-chart-line"></i> 💧 تقرير المياه المرفوعة</a></li>
-<li><a onclick="loadPage('reportElectricity')"><i class="fas fa-bolt"></i> ⚡ تقرير استهلاك كهرباء</a></li>
-<li><a onclick="loadPage('reportWaterConsumption')"><i class="fas fa-tint"></i> 💧 تقرير استهلاك مياه</a></li>
-<li><a onclick="loadPage('reportDiesel')"><i class="fas fa-oil-can"></i> 🛢️ تقرير استهلاك سولار</a></li>
-<li><a onclick="loadPage('reportSparePartsAdvanced')"><i class="fas fa-tools"></i> 🔧 تقرير قطع غيار متقدم</a></li>
+                    <li><hr class="dropdown-divider" style="margin: 10px 0; border-color: #444;"></li>
+                    <li><a onclick="loadPage('reportWaterPumped')">💧 تقرير المياه المرفوعة</a></li>
+                    <li><a onclick="loadPage('reportElectricity')">⚡ تقرير استهلاك كهرباء</a></li>
+                    <li><a onclick="loadPage('reportWaterConsumption')">💧 تقرير استهلاك مياه</a></li>
+                    <li><a onclick="loadPage('reportDiesel')">🛢️ تقرير استهلاك سولار</a></li>
+                    <li><a onclick="loadPage('reportSparePartsAdvanced')">🔧 تقرير قطع غيار متقدم</a></li>
                 </ul>
             </li>
             <li><a onclick="loadPage('archive')"><i class="fas fa-archive"></i> الأرشيف</a></li>
@@ -157,108 +147,101 @@
     </div>
 </div>
 
-<script src="js/app.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-    // التحقق من تسجيل الدخول
-const loggedUser = localStorage.getItem('loggedUser');
-const loginTime = localStorage.getItem('loginTime');
-    if (!loggedUser || !loginTime) {
-        window.location.href = 'index.html';
-    } else {
-        // عرض اسم المستخدم في console للتأكد
-        console.log('مستخدم مسجل:', JSON.parse(loggedUser).name);
-    }
+    // ==================== إعدادات Supabase ====================
+    const SUPABASE_URL = 'https://pbzpumetrmirnsshjdoe.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_O9BKPIjk5xXvbGNjvsBXVw_9V_TIoUu';
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    window.supabaseClient = supabaseClient;
 
-    function toggleSubMenu(menuId) {
-        const menu = document.getElementById(menuId);
-        if (menu) {
-            menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
-        }
-    }
-
-    const toggleBtn = document.getElementById('toggleSidebar');
-    const sidebar = document.getElementById('sidebar');
-    if (toggleBtn) {
-        toggleBtn.onclick = function() {
-            sidebar.classList.toggle('active');
-        };
-    }
-
-    function logout() {
-    localStorage.removeItem('loggedUser');
-    localStorage.removeItem('loginTime');
-    window.location.href = 'index.html';
-}
-
-    // تحميل الصفحة الرئيسية بعد التأكد من وجود الدالة
-    if (typeof loadPage === 'function') {
-        loadPage('home');
-    } else {
-        console.log('انتظار تحميل app.js...');
-        setTimeout(function() {
-            if (typeof loadPage === 'function') {
-                loadPage('home');
-            } else {
-                document.getElementById('pageContent').innerHTML = '<div class="alert alert-danger">خطأ: لم يتم تحميل النظام بشكل صحيح</div>';
-            }
-        }, 500);
-    }
-	<script src="js/app.js"></script>
-<script>
     // ==================== التحقق من تسجيل الدخول ====================
     const loggedUser = localStorage.getItem('loggedUser');
-    const loginTime = localStorage.getItem('loginTime');
-    
-    if (!loggedUser || !loginTime) {
+    if (!loggedUser) {
         window.location.href = 'index.html';
     } else {
-        console.log('مستخدم مسجل:', JSON.parse(loggedUser).name);
+        console.log('✅ مستخدم مسجل:', JSON.parse(loggedUser).name);
     }
 
+    // ==================== دوال القائمة ====================
     function toggleSubMenu(menuId) {
         const menu = document.getElementById(menuId);
-        if (menu) {
-            menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
-        }
+        if (menu) menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
     }
 
     const toggleBtn = document.getElementById('toggleSidebar');
-    const sidebar = document.getElementById('sidebar');
     if (toggleBtn) {
-        toggleBtn.onclick = function() {
-            sidebar.classList.toggle('active');
+        toggleBtn.onclick = () => {
+            document.getElementById('sidebar').classList.toggle('active');
         };
     }
 
     function logout() {
         localStorage.removeItem('loggedUser');
-        localStorage.removeItem('loginTime');
         window.location.href = 'index.html';
     }
 
-    // تحميل الصفحة الرئيسية
-    if (typeof loadPage === 'function') {
-        loadPage('home');
-    } else {
-        console.log('انتظار تحميل app.js...');
-        setTimeout(function() {
-            if (typeof loadPage === 'function') {
-                loadPage('home');
-            } else {
-                document.getElementById('pageContent').innerHTML = '<div class="alert alert-danger">خطأ: لم يتم تحميل النظام بشكل صحيح</div>';
+    // ==================== دالة مساعدة ====================
+    async function apiCall(table, action, data = null, id = null) {
+        try {
+            if (action === 'select') {
+                const { data: result, error } = await window.supabaseClient.from(table).select('*');
+                if (error) throw error;
+                return result || [];
             }
-        }, 500);
-    }
-	<script>
-    // تأكد من وجود loadPage
-    console.log('loadPage موجودة؟', typeof loadPage);
-    if (typeof loadPage === 'function') {
-        loadPage('home');
-    } else {
-        console.error('loadPage غير موجودة');
-        document.getElementById('pageContent').innerHTML = '<div class="alert alert-danger">لم يتم تحميل النظام. تأكد من وجود ملف app.js في المسار الصحيح.</div>';
+            if (action === 'insert') {
+                const { data: result, error } = await window.supabaseClient.from(table).insert([data]).select();
+                if (error) throw error;
+                return result[0];
+            }
+            if (action === 'update') {
+                const { data: result, error } = await window.supabaseClient.from(table).update(data).eq('id', id).select();
+                if (error) throw error;
+                return result[0];
+            }
+            if (action === 'delete') {
+                const { error } = await window.supabaseClient.from(table).delete().eq('id', id);
+                if (error) throw error;
+                return true;
+            }
+            return null;
+        } catch (err) {
+            console.error(err);
+            throw err;
+        }
     }
 
+    // ==================== الصفحة الرئيسية ====================
+    async function loadHome(container) {
+        const stations = await apiCall('stations', 'select');
+        const employees = await apiCall('employees', 'select');
+        const faults = await apiCall('faults', 'select');
+        const openFaults = faults.filter(f => f.status === 'open').length;
+        
+        container.innerHTML = `
+            <div class="row">
+                <div class="col-md-4"><div class="stats-card"><i class="fas fa-water"></i><h3>${stations.length}</h3><p>عدد المحطات</p></div></div>
+                <div class="col-md-4"><div class="stats-card"><i class="fas fa-users"></i><h3>${employees.length}</h3><p>عدد العاملين</p></div></div>
+                <div class="col-md-4"><div class="stats-card"><i class="fas fa-exclamation-triangle"></i><h3>${openFaults}</h3><p>أعطال مفتوحة</p></div></div>
+            </div>
+            <div class="form-card"><h4>مرحباً بك</h4><p>نظام إدارة محطات رفع الصرف الصحي - بني مزار</p><small>آخر تحديث: ${new Date().toLocaleDateString('ar-EG')}</small></div>
+        `;
+    }
+
+    // ==================== الدالة الرئيسية ====================
+    async function loadPage(page) {
+        const container = document.getElementById('pageContent');
+        if (!container) return;
+        
+        if (page === 'home') {
+            await loadHome(container);
+        } else {
+            container.innerHTML = `<div class="alert alert-info">صفحة قيد التطوير: ${page}</div>`;
+        }
+    }
+
+    // ==================== تحميل الصفحة ====================
+    loadPage('home');
 </script>
 </body>
 </html>
