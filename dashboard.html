@@ -150,38 +150,49 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/app.js"></script>
 <script>
-    // ==================== التحقق من تسجيل الدخول ====================
+    // التحقق من تسجيل الدخول
     const loggedUser = localStorage.getItem('loggedUser');
-    if (!loggedUser) {
+    const loginTime = localStorage.getItem('loginTime');
+    
+    if (!loggedUser || !loginTime) {
         window.location.href = 'index.html';
     } else {
-        console.log('✅ مستخدم مسجل:', JSON.parse(loggedUser).name);
+        console.log('مستخدم مسجل:', JSON.parse(loggedUser).name);
     }
 
-    // ==================== دوال القائمة ====================
     function toggleSubMenu(menuId) {
         const menu = document.getElementById(menuId);
-        if (menu) menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+        if (menu) {
+            menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+        }
     }
 
     const toggleBtn = document.getElementById('toggleSidebar');
+    const sidebar = document.getElementById('sidebar');
     if (toggleBtn) {
-        toggleBtn.onclick = () => {
-            document.getElementById('sidebar').classList.toggle('active');
+        toggleBtn.onclick = function() {
+            sidebar.classList.toggle('active');
         };
     }
 
     function logout() {
         localStorage.removeItem('loggedUser');
+        localStorage.removeItem('loginTime');
         window.location.href = 'index.html';
     }
 
-    // ==================== تحميل الصفحة ====================
+    // تحميل الصفحة الرئيسية
     if (typeof loadPage === 'function') {
         loadPage('home');
     } else {
-        console.error('loadPage غير معرفة');
-        document.getElementById('pageContent').innerHTML = '<div class="alert alert-danger">لم يتم تحميل النظام. تأكد من وجود ملف app.js في المسار الصحيح.</div>';
+        console.log('انتظار تحميل app.js...');
+        setTimeout(function() {
+            if (typeof loadPage === 'function') {
+                loadPage('home');
+            } else {
+                document.getElementById('pageContent').innerHTML = '<div class="alert alert-danger">خطأ: لم يتم تحميل النظام بشكل صحيح</div>';
+            }
+        }, 500);
     }
 </script>
 </body>
