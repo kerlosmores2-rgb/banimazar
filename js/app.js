@@ -1,17 +1,17 @@
 // ============================================================
-//  app.js - نظام إدارة محطات الصرف الصحي (نسخة Supabase)
-//  تم تحويل جميع الدوال من localStorage إلى Supabase
+//  app.js - ???? ????? ????? ????? ????? (???? Supabase)
+//  ?? ????? ???? ?????? ?? localStorage ??? Supabase
 // ============================================================
 
-// ==================== إعدادات Supabase ====================
+// ==================== ??????? Supabase ====================
 const SUPABASE_URL = 'https://pbzpumetrmirnsshjdoe.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_O9BKPIjk5xXvbGNjvsBXVw_9V_TIoUu';
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 window.supabaseClient = supabaseClient;
 
-console.log('✅ Supabase initialized');
+console.log('? Supabase initialized');
 
-// ==================== دوال المصادقة والجلسة ====================
+// ==================== ???? ???????? ??????? ====================
 function checkAuth() {
     if (!localStorage.getItem('loggedUser')) {
         window.location.href = 'index.html';
@@ -30,23 +30,23 @@ function getCurrentUser() {
     return JSON.parse(localStorage.getItem('loggedUser') || '{}');
 }
 
-// ==================== دوال الصلاحيات ====================
+// ==================== ???? ????????? ====================
 function canEdit() {
     const user = getCurrentUser();
-    return user && user.role !== 'عرض فقط';
+    return user && user.role !== '??? ???';
 }
 
 function canAdd() {
     const user = getCurrentUser();
-    return user && user.role !== 'عرض فقط';
+    return user && user.role !== '??? ???';
 }
 
 function canDelete() {
     const user = getCurrentUser();
-    return user && user.role !== 'عرض فقط';
+    return user && user.role !== '??? ???';
 }
 
-// ==================== دالة مساعدة للتواصل مع Supabase ====================
+// ==================== ???? ?????? ??????? ?? Supabase ====================
 async function apiCall(table, action, data = null, id = null) {
     try {
         if (action === 'select') {
@@ -83,109 +83,95 @@ async function apiCall(table, action, data = null, id = null) {
             return true;
         }
     } catch (err) {
-        console.error(`خطأ في apiCall (${table}, ${action}):`, err);
+        console.error(`??? ?? apiCall (${table}, ${action}):`, err);
         throw err;
     }
 }
 
-// ==================== دوال HTML المساعدة (لإضافة الأصول الديناميكية) ====================
+// ==================== ???? HTML ???????? (?????? ?????? ???????????) ====================
 function getPowerSourceHTML() {
     return `<div class="row">
-        <div class="col-md-3"><input type="text" class="form-control" placeholder="رقم/اسم المصدر"></div>
-        <div class="col-md-3"><select class="form-select source-type" onchange="toggleSourceFields(this)"><option>محول</option><option>مولد</option></select></div>
-        <div class="col-md-6 transformer-fields"><input type="text" class="form-control" placeholder="جهد الدخول (V)"></div>
-        <div class="col-md-6 transformer-fields"><input type="text" class="form-control" placeholder="جهد الخروج (V)"></div>
-        <div class="col-md-6 transformer-fields"><input type="text" class="form-control" placeholder="القدرة (kVA)"></div>
-        <div class="col-md-6 generator-fields" style="display:none"><input type="text" class="form-control" placeholder="نوع المحرك"></div>
-        <div class="col-md-6 generator-fields" style="display:none"><input type="text" class="form-control" placeholder="قدرة المحرك (HP/kW)"></div>
-        <div class="col-md-6 generator-fields" style="display:none"><input type="text" class="form-control" placeholder="معدل الاستهلاك على الحمل (لتر/س)"></div>
-        <div class="col-md-6 generator-fields" style="display:none"><input type="text" class="form-control" placeholder="معدل الاستهلاك بدون حمل (لتر/س)"></div>
-        <div class="col-md-6 generator-fields" style="display:none"><input type="text" class="form-control" placeholder="نوع المولد"></div>
-        <div class="col-md-6 generator-fields" style="display:none"><input type="text" class="form-control" placeholder="قدرة المولد (kVA)"></div>
-        <div class="col-md-6 generator-fields" style="display:none"><input type="text" class="form-control" placeholder="قدرة المولد (kW)"></div>
+        <div class="col-md-3"><input type="text" class="form-control" placeholder="???/??? ??????"></div>
+        <div class="col-md-3"><select class="form-select source-type" onchange="toggleSourceFields(this)"><option>????</option><option>????</option></select></div>
+        <div class="col-md-6 transformer-fields"><input type="text" class="form-control" placeholder="??? ?????? (V)"></div>
+        <div class="col-md-6 transformer-fields"><input type="text" class="form-control" placeholder="??? ?????? (V)"></div>
+        <div class="col-md-6 transformer-fields"><input type="text" class="form-control" placeholder="?????? (kVA)"></div>
+        <div class="col-md-6 generator-fields" style="display:none"><input type="text" class="form-control" placeholder="??? ??????"></div>
+        <div class="col-md-6 generator-fields" style="display:none"><input type="text" class="form-control" placeholder="???? ?????? (HP/kW)"></div>
+        <div class="col-md-6 generator-fields" style="display:none"><input type="text" class="form-control" placeholder="???? ????????? ??? ????? (???/?)"></div>
+        <div class="col-md-6 generator-fields" style="display:none"><input type="text" class="form-control" placeholder="???? ????????? ???? ??? (???/?)"></div>
+        <div class="col-md-6 generator-fields" style="display:none"><input type="text" class="form-control" placeholder="??? ??????"></div>
+        <div class="col-md-6 generator-fields" style="display:none"><input type="text" class="form-control" placeholder="???? ?????? (kVA)"></div>
+        <div class="col-md-6 generator-fields" style="display:none"><input type="text" class="form-control" placeholder="???? ?????? (kW)"></div>
     </div>`;
 }
 
 function getMainPumpHTML() {
     return `<div class="row">
-        <div class="col-md-3"><input type="text" class="form-control" placeholder="رقم/اسم الطلمبة"></div>
-        <div class="col-md-3"><input type="text" class="form-control" placeholder="نوع الوحدة (غاطس/رأسية)"></div>
-        <div class="col-md-3"><input type="text" class="form-control" placeholder="الماركة"></div>
-        <div class="col-md-3"><input type="number" class="form-control" placeholder="التصرف m³/h"></div>
-        <div class="col-md-3"><input type="number" class="form-control" placeholder="الرفع m"></div>
-        <div class="col-md-3"><input type="text" class="form-control" placeholder="فتحة السحب/الطرد"></div>
-        <div class="col-md-3"><input type="text" class="form-control" placeholder="محبس السحب/الطرد"></div>
-        <div class="col-md-3"><input type="text" class="form-control" placeholder="محبس عدم رجوع"></div>
+        <div class="col-md-3"><input type="text" class="form-control" placeholder="???/??? ???????"></div>
+        <div class="col-md-3"><input type="text" class="form-control" placeholder="??? ?????? (????/?????)"></div>
+        <div class="col-md-3"><input type="text" class="form-control" placeholder="???????"></div>
+        <div class="col-md-3"><input type="number" class="form-control" placeholder="?????? m³/h"></div>
+        <div class="col-md-3"><input type="number" class="form-control" placeholder="????? m"></div>
+        <div class="col-md-3"><input type="text" class="form-control" placeholder="???? ?????/?????"></div>
+        <div class="col-md-3"><input type="text" class="form-control" placeholder="???? ?????/?????"></div>
+        <div class="col-md-3"><input type="text" class="form-control" placeholder="???? ??? ????"></div>
     </div>`;
 }
 
 function getDrainPumpHTML() {
     return `<div class="row">
-        <div class="col-md-3"><input type="text" class="form-control" placeholder="رقم/اسم الطلمبة"></div>
-        <div class="col-md-3"><input type="text" class="form-control" placeholder="النوع"></div>
-        <div class="col-md-3"><input type="number" class="form-control" placeholder="التصرف m³/h"></div>
-        <div class="col-md-3"><input type="number" class="form-control" placeholder="الرفع m"></div>
-        <div class="col-md-3"><input type="number" class="form-control" placeholder="قدرة المحرك kW"></div>
+        <div class="col-md-3"><input type="text" class="form-control" placeholder="???/??? ???????"></div>
+        <div class="col-md-3"><input type="text" class="form-control" placeholder="?????"></div>
+        <div class="col-md-3"><input type="number" class="form-control" placeholder="?????? m³/h"></div>
+        <div class="col-md-3"><input type="number" class="form-control" placeholder="????? m"></div>
+        <div class="col-md-3"><input type="number" class="form-control" placeholder="???? ?????? kW"></div>
     </div>`;
 }
 
 function getWinchHTML() {
     return `<div class="row">
-        <div class="col-md-3"><input type="text" class="form-control" placeholder="رقم/اسم الونش"></div>
-        <div class="col-md-3"><input type="text" class="form-control" placeholder="نوع الونش"></div>
-        <div class="col-md-3"><input type="text" class="form-control" placeholder="القدرة (طن)"></div>
-        <div class="col-md-3"><input type="text" class="form-control" placeholder="جهد التشغيل V"></div>
-        <div class="col-md-3"><input type="number" class="form-control" placeholder="قدرة المحرك kW"></div>
+        <div class="col-md-3"><input type="text" class="form-control" placeholder="???/??? ?????"></div>
+        <div class="col-md-3"><input type="text" class="form-control" placeholder="??? ?????"></div>
+        <div class="col-md-3"><input type="text" class="form-control" placeholder="?????? (??)"></div>
+        <div class="col-md-3"><input type="text" class="form-control" placeholder="??? ??????? V"></div>
+        <div class="col-md-3"><input type="number" class="form-control" placeholder="???? ?????? kW"></div>
     </div>`;
 }
 
 function getPanelHTML() {
     return `<div class="row">
-        <div class="col-md-3"><input type="text" class="form-control" placeholder="رقم/اسم اللوحة"></div>
-        <div class="col-md-3"><input type="text" class="form-control" placeholder="نوع اللوحة"></div>
-        <div class="col-md-3"><input type="text" class="form-control" placeholder="اسم اللوحة"></div>
-        <div class="col-md-3"><input type="text" class="form-control" placeholder="وظيفة اللوحة"></div>
-        <div class="col-md-3"><input type="text" class="form-control" placeholder="مصدر التغذية"></div>
-        <div class="col-md-3"><input type="text" class="form-control" placeholder="جهد التغذية V"></div>
-        <div class="col-md-6"><input type="text" class="form-control" placeholder="وصف اللوحة"></div>
+        <div class="col-md-3"><input type="text" class="form-control" placeholder="???/??? ??????"></div>
+        <div class="col-md-3"><input type="text" class="form-control" placeholder="??? ??????"></div>
+        <div class="col-md-3"><input type="text" class="form-control" placeholder="??? ??????"></div>
+        <div class="col-md-3"><input type="text" class="form-control" placeholder="????? ??????"></div>
+        <div class="col-md-3"><input type="text" class="form-control" placeholder="???? ???????"></div>
+        <div class="col-md-3"><input type="text" class="form-control" placeholder="??? ??????? V"></div>
+        <div class="col-md-6"><input type="text" class="form-control" placeholder="??? ??????"></div>
     </div>`;
 }
 
 function getBuildingHTML() {
     return `<div class="row">
-        <div class="col-md-6"><input type="text" class="form-control" placeholder="رقم/اسم المبنى"></div>
-        <div class="col-md-6"><input type="text" class="form-control" placeholder="اسم المبنى"></div>
+        <div class="col-md-6"><input type="text" class="form-control" placeholder="???/??? ??????"></div>
+        <div class="col-md-6"><input type="text" class="form-control" placeholder="??? ??????"></div>
     </div>`;
 }
 
 function getSealPumpHTML() {
     return `<div class="row">
-        <div class="col-md-4"><input type="text" class="form-control" placeholder="رقم/اسم الطلمبة"></div>
-        <div class="col-md-4"><input type="text" class="form-control" placeholder="نوع طلمبة حبس جلندات"></div>
-        <div class="col-md-4"><input type="number" class="form-control" placeholder="قدرة الطلمبة"></div>
-        <div class="col-md-4"><input type="number" class="form-control" placeholder="قدرة المحرك kW"></div>
+        <div class="col-md-4"><input type="text" class="form-control" placeholder="???/??? ???????"></div>
+        <div class="col-md-4"><input type="text" class="form-control" placeholder="??? ????? ??? ??????"></div>
+        <div class="col-md-4"><input type="number" class="form-control" placeholder="???? ???????"></div>
+        <div class="col-md-4"><input type="number" class="form-control" placeholder="???? ?????? kW"></div>
     </div>`;
 }
 
 function getFanHTML() {
     return `<div class="row">
-        <div class="col-md-4"><input type="text" class="form-control" placeholder="رقم/اسم المروحة"></div>
-        <div class="col-md-4"><input type="text" class="form-control" placeholder="نوع المروحة"></div>
-        <div class="col-md-4"><select class="form-select"><option>يعمل</option><option>لا يعمل</option></select></div>
-    </div>`;
-}
-function getGeneratorHTML() {
-    return `<div class="border p-2 mb-2 rounded">
-        <div class="row">
-            <div class="col-md-4 mb-2"><input type="text" class="form-control" placeholder="اسم المولد" required></div>
-            <div class="col-md-4 mb-2"><input type="text" class="form-control" placeholder="نوع المحرك"></div>
-            <div class="col-md-4 mb-2"><input type="text" class="form-control" placeholder="نوع المولد"></div>
-            <div class="col-md-3 mb-2"><input type="number" class="form-control" placeholder="قدرة المولد (kW)"></div>
-            <div class="col-md-3 mb-2"><input type="number" class="form-control" placeholder="كمية الزيت (لتر)"></div>
-            <div class="col-md-3 mb-2"><input type="number" class="form-control" placeholder="استهلاك على الحمل (لتر/س)"></div>
-            <div class="col-md-3 mb-2"><input type="number" class="form-control" placeholder="استهلاك بدون حمل (لتر/س)"></div>
-        </div>
-        <button type="button" class="btn btn-sm btn-danger mt-2" onclick="this.parentElement.remove()">🗑️ حذف</button>
+        <div class="col-md-4"><input type="text" class="form-control" placeholder="???/??? ???????"></div>
+        <div class="col-md-4"><input type="text" class="form-control" placeholder="??? ???????"></div>
+        <div class="col-md-4"><select class="form-select"><option>????</option><option>?? ????</option></select></div>
     </div>`;
 }
 
@@ -198,7 +184,7 @@ function addDynamicItem(containerId, htmlFunc) {
     const removeBtn = document.createElement('button');
     removeBtn.type = 'button';
     removeBtn.className = 'btn btn-sm btn-danger mt-2';
-    removeBtn.innerHTML = 'حذف';
+    removeBtn.innerHTML = '???';
     removeBtn.onclick = () => div.remove();
     div.appendChild(removeBtn);
     container.appendChild(div);
@@ -213,7 +199,7 @@ function collectItems(containerId) {
         div.querySelectorAll('input, select').forEach(input => {
             const placeholder = input.placeholder || '';
             if (placeholder) data[placeholder] = input.value;
-            else if (input.className.includes('source-type')) data['النوع'] = input.value;
+            else if (input.className.includes('source-type')) data['?????'] = input.value;
             else data[input.id || 'field'] = input.value;
         });
         items.push(data);
@@ -224,71 +210,58 @@ function collectItems(containerId) {
 window.toggleSourceFields = function(select) {
     const div = select.closest('.border');
     if (!div) return;
-    const isGenerator = select.value === 'مولد';
+    const isGenerator = select.value === '????';
     div.querySelectorAll('.transformer-fields').forEach(el => el.style.display = isGenerator ? 'none' : '');
     div.querySelectorAll('.generator-fields').forEach(el => el.style.display = isGenerator ? '' : 'none');
 };
-// ==================== الصفحة الرئيسية ====================
+// ==================== ?????? ???????? ====================
 async function loadHome(container) {
     const stations = await apiCall('stations', 'select');
     const employees = await apiCall('employees', 'select');
     const faults = await apiCall('faults', 'select');
     const openFaults = faults.filter(f => f.status === 'open').length;
-    
-    // جلب اسم المستخدم
-    let userName = 'زائر';
-    try {
-        const loggedUser = JSON.parse(localStorage.getItem('loggedUser') || '{}');
-        userName = loggedUser.name || loggedUser.username || 'مستخدم';
-    } catch(e) {
-        console.error('خطأ في جلب المستخدم', e);
-    }
 
     container.innerHTML = `
         <div class="row">
-            <div class="col-md-4"><div class="stats-card"><i class="fas fa-water"></i><h3>${stations.length}</h3><p>عدد المحطات</p></div></div>
-            <div class="col-md-4"><div class="stats-card"><i class="fas fa-users"></i><h3>${employees.length}</h3><p>عدد العاملين</p></div></div>
-            <div class="col-md-4"><div class="stats-card"><i class="fas fa-exclamation-triangle"></i><h3>${openFaults}</h3><p>أعطال مفتوحة</p></div></div>
+            <div class="col-md-4"><div class="stats-card"><i class="fas fa-water"></i><h3>${stations.length}</h3><p>??? ???????</p></div></div>
+            <div class="col-md-4"><div class="stats-card"><i class="fas fa-users"></i><h3>${employees.length}</h3><p>??? ????????</p></div></div>
+            <div class="col-md-4"><div class="stats-card"><i class="fas fa-exclamation-triangle"></i><h3>${openFaults}</h3><p>????? ??????</p></div></div>
         </div>
-        <div class="form-card">
-            <h4>مرحباً بك، ${userName}</h4>
-            <p>نظام إدارة محطات رفع الصرف الصحي - بني مزار</p>
-            <small>آخر تحديث: ${new Date().toLocaleDateString('ar-EG')}</small>
-        </div>
+        <div class="form-card"><h4>?????? ??</h4><p>???? ????? ????? ??? ????? ????? - ??? ????</p><small>??? ?????: ${new Date().toLocaleDateString('ar-EG')}</small></div>
     `;
 }
-// ==================== إضافة محطة ====================
+
+// ==================== ????? ???? ====================
 async function loadAddStation(container) {
     if (!canAdd()) {
-        container.innerHTML = '<div class="alert alert-danger">ليس لديك صلاحية لإضافة محطات</div>';
+        container.innerHTML = '<div class="alert alert-danger">??? ???? ?????? ?????? ?????</div>';
         return;
     }
     const stations = await apiCall('stations', 'select');
-    let outfallOptions = '<option value="">بدون</option>';
+    let outfallOptions = '<option value="">????</option>';
     stations.forEach(s => { outfallOptions += `<option value="${s.name}">${s.name}</option>`; });
 
     container.innerHTML = `
         <div class="form-card">
-            <h4>➕ إضافة محطة جديدة</h4>
+            <h4>? ????? ???? ?????</h4>
             <form id="stationForm">
                 <div class="row">
-                    <div class="col-md-6 mb-3"><label>اسم المحطة</label><input type="text" id="stationName" class="form-control" required></div>
-                    <div class="col-md-6 mb-3"><label>كود المحطة</label><input type="text" id="stationCode" class="form-control" required></div>
-                    <div class="col-md-4 mb-3"><label>النوع</label><select id="stationType" class="form-control"><option>رئيسية</option><option>فرعية</option><option>معالجة</option></select></div>
-                    <div class="col-md-4 mb-3"><label>المصب</label><select id="outfall" class="form-control">${outfallOptions}</select></div>
-                    <div class="col-md-4 mb-3"><label>القدرة (m³/h)</label><input type="number" id="capacity" class="form-control"></div>
-                    <div class="col-md-12 mb-3"><label>الموقع الجغرافي</label><input type="text" id="location" class="form-control" placeholder="إحداثيات أو عنوان"></div>
+                    <div class="col-md-6 mb-3"><label>??? ??????</label><input type="text" id="stationName" class="form-control" required></div>
+                    <div class="col-md-6 mb-3"><label>??? ??????</label><input type="text" id="stationCode" class="form-control" required></div>
+                    <div class="col-md-4 mb-3"><label>?????</label><select id="stationType" class="form-control"><option>??????</option><option>?????</option><option>??????</option></select></div>
+                    <div class="col-md-4 mb-3"><label>?????</label><select id="outfall" class="form-control">${outfallOptions}</select></div>
+                    <div class="col-md-4 mb-3"><label>?????? (m³/h)</label><input type="number" id="capacity" class="form-control"></div>
+                    <div class="col-md-12 mb-3"><label>?????? ????????</label><input type="text" id="location" class="form-control" placeholder="???????? ?? ?????"></div>
                 </div>
-                <div class="mt-3"><h5>مصادر التغذية</h5><div id="powerSources"></div><button type="button" class="btn btn-sm btn-success mt-2" onclick="addPowerSource()">+ إضافة مصدر</button></div>
-               // داخل loadAddStation، بعد قسم drainPumps وقبل winches                <div class="mt-3"><h5>الوحدات الرئيسية (طلمبات)</h5><div id="mainPumps"></div><button type="button" class="btn btn-sm btn-success mt-2" onclick="addMainPump()">+ إضافة طلمبة</button></div>
-                <div class="mt-3"><h5>طلمبات نزح</h5><div id="drainPumps"></div><button type="button" class="btn btn-sm btn-success mt-2" onclick="addDrainPump()">+ إضافة طلمبة نزح</button></div>
-                  <div class="mt-3"><h5>🛢️ المولدات</h5> <div id="generators"></div> <button type="button" class="btn btn-sm btn-success mt-2" onclick="addGenerator()">+ إضافة مولد</button></div> 
-                <div class="mt-3"><h5>أوناش</h5><div id="winches"></div><button type="button" class="btn btn-sm btn-success mt-2" onclick="addWinch()">+ إضافة ونش</button></div>
-                <div class="mt-3"><h5>لوحات كهربائية</h5><div id="panels"></div><button type="button" class="btn btn-sm btn-success mt-2" onclick="addPanel()">+ إضافة لوحة</button></div>
-                <div class="mt-3"><h5>مباني</h5><div id="buildings"></div><button type="button" class="btn btn-sm btn-success mt-2" onclick="addBuilding()">+ إضافة مبنى</button></div>
-                <div class="mt-3"><h5>طلمبات حبس جلندات</h5><div id="sealPumps"></div><button type="button" class="btn btn-sm btn-success mt-2" onclick="addSealPump()">+ إضافة طلمبة حبس جلندات</button></div>
-                <div class="mt-3"><h5>مراوح تهوية</h5><div id="fans"></div><button type="button" class="btn btn-sm btn-success mt-2" onclick="addFan()">+ إضافة مروحة</button></div>
-                <button type="submit" class="btn btn-primary mt-4">💾 حفظ المحطة</button>
+                <div class="mt-3"><h5>????? ???????</h5><div id="powerSources"></div><button type="button" class="btn btn-sm btn-success mt-2" onclick="addPowerSource()">+ ????? ????</button></div>
+                <div class="mt-3"><h5>??????? ???????? (??????)</h5><div id="mainPumps"></div><button type="button" class="btn btn-sm btn-success mt-2" onclick="addMainPump()">+ ????? ?????</button></div>
+                <div class="mt-3"><h5>?????? ???</h5><div id="drainPumps"></div><button type="button" class="btn btn-sm btn-success mt-2" onclick="addDrainPump()">+ ????? ????? ???</button></div>
+                <div class="mt-3"><h5>?????</h5><div id="winches"></div><button type="button" class="btn btn-sm btn-success mt-2" onclick="addWinch()">+ ????? ???</button></div>
+                <div class="mt-3"><h5>????? ????????</h5><div id="panels"></div><button type="button" class="btn btn-sm btn-success mt-2" onclick="addPanel()">+ ????? ????</button></div>
+                <div class="mt-3"><h5>?????</h5><div id="buildings"></div><button type="button" class="btn btn-sm btn-success mt-2" onclick="addBuilding()">+ ????? ????</button></div>
+                <div class="mt-3"><h5>?????? ??? ??????</h5><div id="sealPumps"></div><button type="button" class="btn btn-sm btn-success mt-2" onclick="addSealPump()">+ ????? ????? ??? ??????</button></div>
+                <div class="mt-3"><h5>????? ?????</h5><div id="fans"></div><button type="button" class="btn btn-sm btn-success mt-2" onclick="addFan()">+ ????? ?????</button></div>
+                <button type="submit" class="btn btn-primary mt-4">?? ??? ??????</button>
             </form>
         </div>
     `;
@@ -301,9 +274,7 @@ async function loadAddStation(container) {
     window.addBuilding = () => addDynamicItem('buildings', getBuildingHTML);
     window.addSealPump = () => addDynamicItem('sealPumps', getSealPumpHTML);
     window.addFan = () => addDynamicItem('fans', getFanHTML);
-    window.addGenerator = () => addDynamicItem('generators', getGeneratorHTML);
-addGenerator(); // إضافة مولد افتراضي واحد
-window.addGenerator = () => addDynamicItem('generators', getGeneratorHTML);
+
     addPowerSource(); addMainPump(); addDrainPump(); addWinch(); addPanel(); addBuilding(); addSealPump(); addFan();
 
     document.getElementById('stationForm').onsubmit = async function(e) {
@@ -317,7 +288,6 @@ window.addGenerator = () => addDynamicItem('generators', getGeneratorHTML);
             capacity: document.getElementById('capacity').value,
             location: document.getElementById('location').value,
             powerSources: collectItems('powerSources'),
-            generators: generators
             mainPumps: collectItems('mainPumps'),
             drainPumps: collectItems('drainPumps'),
             winches: collectItems('winches'),
@@ -325,51 +295,37 @@ window.addGenerator = () => addDynamicItem('generators', getGeneratorHTML);
             buildings: collectItems('buildings'),
             sealPumps: collectItems('sealPumps'),
             fans: collectItems('fans'),
-            // جمع بيانات المولدات
-const generators = [];
-document.querySelectorAll('#generators .border').forEach(div => {
-    const genData = {};
-    const inputs = div.querySelectorAll('input');
-    if (inputs[0]) genData['اسم المولد'] = inputs[0].value;
-    if (inputs[1]) genData['نوع المحرك'] = inputs[1].value;
-    if (inputs[2]) genData['نوع المولد'] = inputs[2].value;
-    if (inputs[3]) genData['قدرة المولد (kW)'] = inputs[3].value;
-    if (inputs[4]) genData['كمية الزيت (لتر)'] = inputs[4].value;
-    if (inputs[5]) genData['استهلاك على الحمل (لتر/س)'] = inputs[5].value;
-    if (inputs[6]) genData['استهلاك بدون حمل (لتر/س)'] = inputs[6].value;
-    generators.push(genData);
-});
             createdAt: new Date().toISOString()
         };
         try {
             await apiCall('stations', 'insert', newStation);
-            alert('تم حفظ المحطة بنجاح');
+            alert('?? ??? ?????? ?????');
             loadPage('listStations');
         } catch (err) {
-            alert('خطأ: ' + err.message);
+            alert('???: ' + err.message);
         }
     };
 }
 
-// ==================== قائمة المحطات ====================
+// ==================== ????? ??????? ====================
 async function loadListStations(container) {
     const stations = await apiCall('stations', 'select');
     if (stations.length === 0) {
-        container.innerHTML = '<div class="alert alert-info">لا توجد محطات مسجلة</div>';
+        container.innerHTML = '<div class="alert alert-info">?? ???? ????? ?????</div>';
         return;
     }
-    let html = `<div class="search-bar"><input type="text" id="searchInput" class="form-control" placeholder="بحث..."></div>
-                <div class="table-responsive"><table class="table table-bordered"><thead>运转<th>الكود</th><th>الاسم</th><th>النوع</th><th>المصب</th><th></th> </thead><tbody id="stationsTable">`;
+    let html = `<div class="search-bar"><input type="text" id="searchInput" class="form-control" placeholder="???..."></div>
+                <div class="table-responsive"><table class="table table-bordered"><thead>??<th>?????</th><th>?????</th><th>?????</th><th>?????</th><th></th> </thead><tbody id="stationsTable">`;
     stations.forEach(s => {
-        html += `运转
+        html += `??
             <td class="text-center">${s.code} </td>
             <td class="text-center">${s.name} </td>
             <td class="text-center">${s.type} </td>
             <td class="text-center">${s.outfall || '-'} </td>
             <td class="text-center">
-                ${canEdit() ? '<button class="btn btn-sm btn-warning" onclick="editStation('+s.id+')">✏️ تعديل</button>' : ''}
-                ${canDelete() ? '<button class="btn btn-sm btn-danger" onclick="deleteStationNow('+s.id+')">🗑️ حذف</button>' : ''}
-                <button class="btn btn-sm btn-info" onclick="viewStation('+s.id+')">عرض</button>
+                ${canEdit() ? '<button class="btn btn-sm btn-warning" onclick="editStation('+s.id+')">?? ?????</button>' : ''}
+                ${canDelete() ? '<button class="btn btn-sm btn-danger" onclick="deleteStationNow('+s.id+')">??? ???</button>' : ''}
+                <button class="btn btn-sm btn-info" onclick="viewStation('+s.id+')">???</button>
              </td>
           </tr>`;
     });
@@ -385,57 +341,57 @@ async function loadListStations(container) {
 
     window.editStation = (id) => loadEditStation(document.getElementById('pageContent'), id);
     window.deleteStationNow = async (id) => {
-        if (confirm('هل تريد حذف هذه المحطة وجميع بياناتها؟')) {
+        if (confirm('?? ???? ??? ??? ?????? ????? ?????????')) {
             try {
                 await apiCall('stations', 'delete', null, id);
-                alert('تم حذف المحطة');
+                alert('?? ??? ??????');
                 loadPage('listStations');
-            } catch (err) { alert('خطأ: ' + err.message); }
+            } catch (err) { alert('???: ' + err.message); }
         }
     };
     window.viewStation = (id) => {
         const station = stations.find(s => s.id === id);
         container.innerHTML = `<div class="form-card"><h4>${station.name} (${station.code})</h4><pre>${JSON.stringify(station, null, 2)}</pre>
-                               <button class="btn btn-secondary" onclick="loadPage('listStations')">رجوع</button></div>`;
+                               <button class="btn btn-secondary" onclick="loadPage('listStations')">????</button></div>`;
     };
 }
 
-// ==================== تعديل المحطة ====================
+// ==================== ????? ?????? ====================
 async function loadEditStation(container, stationId) {
     const stations = await apiCall('stations', 'select');
     const station = stations.find(s => s.id == stationId);
     if (!station) return;
 
-    let outfallOptions = '<option value="">بدون</option>';
+    let outfallOptions = '<option value="">????</option>';
     stations.forEach(s => { outfallOptions += `<option value="${s.name}" ${station.outfall == s.name ? 'selected' : ''}>${s.name}</option>`; });
 
     container.innerHTML = `
         <div class="form-card">
-            <h4>✏️ تعديل المحطة: ${station.name}</h4>
+            <h4>?? ????? ??????: ${station.name}</h4>
             <form id="editStationForm">
                 <div class="row">
-                    <div class="col-md-6 mb-3"><label>اسم المحطة</label><input type="text" id="stationName" class="form-control" value="${station.name}" required></div>
-                    <div class="col-md-6 mb-3"><label>كود المحطة</label><input type="text" id="stationCode" class="form-control" value="${station.code}" required></div>
-                    <div class="col-md-4 mb-3"><label>النوع</label><select id="stationType" class="form-control">
-                        <option ${station.type == 'رئيسية' ? 'selected' : ''}>رئيسية</option>
-                        <option ${station.type == 'فرعية' ? 'selected' : ''}>فرعية</option>
-                        <option ${station.type == 'معالجة' ? 'selected' : ''}>معالجة</option>
+                    <div class="col-md-6 mb-3"><label>??? ??????</label><input type="text" id="stationName" class="form-control" value="${station.name}" required></div>
+                    <div class="col-md-6 mb-3"><label>??? ??????</label><input type="text" id="stationCode" class="form-control" value="${station.code}" required></div>
+                    <div class="col-md-4 mb-3"><label>?????</label><select id="stationType" class="form-control">
+                        <option ${station.type == '??????' ? 'selected' : ''}>??????</option>
+                        <option ${station.type == '?????' ? 'selected' : ''}>?????</option>
+                        <option ${station.type == '??????' ? 'selected' : ''}>??????</option>
                     </select></div>
-                    <div class="col-md-4 mb-3"><label>المصب</label><select id="outfall" class="form-control">${outfallOptions}</select></div>
-                    <div class="col-md-4 mb-3"><label>القدرة (m³/h)</label><input type="number" id="capacity" class="form-control" value="${station.capacity || ''}"></div>
-                    <div class="col-md-12 mb-3"><label>الموقع الجغرافي</label><input type="text" id="location" class="form-control" value="${station.location || ''}"></div>
+                    <div class="col-md-4 mb-3"><label>?????</label><select id="outfall" class="form-control">${outfallOptions}</select></div>
+                    <div class="col-md-4 mb-3"><label>?????? (m³/h)</label><input type="number" id="capacity" class="form-control" value="${station.capacity || ''}"></div>
+                    <div class="col-md-12 mb-3"><label>?????? ????????</label><input type="text" id="location" class="form-control" value="${station.location || ''}"></div>
                 </div>
-                <div class="mt-3"><h5>مصادر التغذية</h5><div id="powerSourcesEdit"></div><button type="button" class="btn btn-sm btn-success mt-2" onclick="addEditPowerSource()">+ إضافة مصدر</button></div>
-                <div class="mt-3"><h5>الوحدات الرئيسية (طلمبات)</h5><div id="mainPumpsEdit"></div><button type="button" class="btn btn-sm btn-success mt-2" onclick="addEditMainPump()">+ إضافة طلمبة</button></div>
-                <div class="mt-3"><h5>طلمبات نزح</h5><div id="drainPumpsEdit"></div><button type="button" class="btn btn-sm btn-success mt-2" onclick="addEditDrainPump()">+ إضافة طلمبة نزح</button></div>
-                <div class="mt-3"><h5>أوناش</h5><div id="winchesEdit"></div><button type="button" class="btn btn-sm btn-success mt-2" onclick="addEditWinch()">+ إضافة ونش</button></div>
-                <div class="mt-3"><h5>لوحات كهربائية</h5><div id="panelsEdit"></div><button type="button" class="btn btn-sm btn-success mt-2" onclick="addEditPanel()">+ إضافة لوحة</button></div>
-                <div class="mt-3"><h5>مباني</h5><div id="buildingsEdit"></div><button type="button" class="btn btn-sm btn-success mt-2" onclick="addEditBuilding()">+ إضافة مبنى</button></div>
-                <div class="mt-3"><h5>طلمبات حبس جلندات</h5><div id="sealPumpsEdit"></div><button type="button" class="btn btn-sm btn-success mt-2" onclick="addEditSealPump()">+ إضافة طلمبة حبس جلندات</button></div>
-                <div class="mt-3"><h5>مراوح تهوية</h5><div id="fansEdit"></div><button type="button" class="btn btn-sm btn-success mt-2" onclick="addEditFan()">+ إضافة مروحة</button></div>
+                <div class="mt-3"><h5>????? ???????</h5><div id="powerSourcesEdit"></div><button type="button" class="btn btn-sm btn-success mt-2" onclick="addEditPowerSource()">+ ????? ????</button></div>
+                <div class="mt-3"><h5>??????? ???????? (??????)</h5><div id="mainPumpsEdit"></div><button type="button" class="btn btn-sm btn-success mt-2" onclick="addEditMainPump()">+ ????? ?????</button></div>
+                <div class="mt-3"><h5>?????? ???</h5><div id="drainPumpsEdit"></div><button type="button" class="btn btn-sm btn-success mt-2" onclick="addEditDrainPump()">+ ????? ????? ???</button></div>
+                <div class="mt-3"><h5>?????</h5><div id="winchesEdit"></div><button type="button" class="btn btn-sm btn-success mt-2" onclick="addEditWinch()">+ ????? ???</button></div>
+                <div class="mt-3"><h5>????? ????????</h5><div id="panelsEdit"></div><button type="button" class="btn btn-sm btn-success mt-2" onclick="addEditPanel()">+ ????? ????</button></div>
+                <div class="mt-3"><h5>?????</h5><div id="buildingsEdit"></div><button type="button" class="btn btn-sm btn-success mt-2" onclick="addEditBuilding()">+ ????? ????</button></div>
+                <div class="mt-3"><h5>?????? ??? ??????</h5><div id="sealPumpsEdit"></div><button type="button" class="btn btn-sm btn-success mt-2" onclick="addEditSealPump()">+ ????? ????? ??? ??????</button></div>
+                <div class="mt-3"><h5>????? ?????</h5><div id="fansEdit"></div><button type="button" class="btn btn-sm btn-success mt-2" onclick="addEditFan()">+ ????? ?????</button></div>
                 <div class="mt-4">
-                    <button type="submit" class="btn btn-primary">💾 حفظ التعديلات</button>
-                    <button type="button" class="btn btn-secondary" onclick="loadPage('listStations')">رجوع</button>
+                    <button type="submit" class="btn btn-primary">?? ??? ?????????</button>
+                    <button type="button" class="btn btn-secondary" onclick="loadPage('listStations')">????</button>
                 </div>
             </form>
         </div>
@@ -456,7 +412,7 @@ async function loadEditStation(container, stationId) {
                 const removeBtn = document.createElement('button');
                 removeBtn.type = 'button';
                 removeBtn.className = 'btn btn-sm btn-danger mt-2';
-                removeBtn.innerHTML = 'حذف';
+                removeBtn.innerHTML = '???';
                 removeBtn.onclick = () => div.remove();
                 div.appendChild(removeBtn);
                 container.appendChild(div);
@@ -503,38 +459,38 @@ async function loadEditStation(container, stationId) {
         };
         try {
             await apiCall('stations', 'update', updatedStation, stationId);
-            alert('تم حفظ التعديلات');
+            alert('?? ??? ?????????');
             loadPage('listStations');
         } catch (err) {
-            alert('خطأ: ' + err.message);
+            alert('???: ' + err.message);
         }
     };
 }
-// ==================== الموارد البشرية ====================
+// ==================== ??????? ??????? ====================
 async function loadAddEmployee(container) {
     if (!canAdd()) {
-        container.innerHTML = '<div class="alert alert-danger">ليس لديك صلاحية لإضافة عاملين</div>';
+        container.innerHTML = '<div class="alert alert-danger">??? ???? ?????? ?????? ??????</div>';
         return;
     }
     const stations = await apiCall('stations', 'select');
-    let stationOptions = '<option value="">اختر محطة</option>';
+    let stationOptions = '<option value="">???? ????</option>';
     stations.forEach(s => { stationOptions += `<option value="${s.id}">${s.name}</option>`; });
 
     container.innerHTML = `
         <div class="form-card">
-            <h4>➕ إضافة عامل جديد</h4>
+            <h4>? ????? ???? ????</h4>
             <form id="empForm">
                 <div class="row">
-                    <div class="col-md-3 mb-3"><label>الكود</label><input type="text" id="empCode" class="form-control" required></div>
-                    <div class="col-md-3 mb-3"><label>الاسم</label><input type="text" id="empName" class="form-control" required></div>
-                    <div class="col-md-3 mb-3"><label>المحطة</label><select id="empStation" class="form-control">${stationOptions}</select></div>
-                    <div class="col-md-3 mb-3"><label>الوظيفة</label><select id="empRole" class="form-control"><option>مدير محطة</option><option>مهندس</option><option>فني</option><option>عامل</option></select></div>
-                    <div class="col-md-3 mb-3"><label>الوردية</label><select id="empShift" class="form-control"><option>أولى</option><option>ثانية</option><option>ثالثة</option></select></div>
-                    <div class="col-md-3 mb-3"><label>التليفون</label><input type="text" id="empPhone" class="form-control"></div>
-                    <div class="col-md-3 mb-3"><label>الحالة</label><select id="empStatus" class="form-control"><option>يعمل</option><option>إجازة</option></select></div>
+                    <div class="col-md-3 mb-3"><label>?????</label><input type="text" id="empCode" class="form-control" required></div>
+                    <div class="col-md-3 mb-3"><label>?????</label><input type="text" id="empName" class="form-control" required></div>
+                    <div class="col-md-3 mb-3"><label>??????</label><select id="empStation" class="form-control">${stationOptions}</select></div>
+                    <div class="col-md-3 mb-3"><label>???????</label><select id="empRole" class="form-control"><option>???? ????</option><option>?????</option><option>???</option><option>????</option></select></div>
+                    <div class="col-md-3 mb-3"><label>???????</label><select id="empShift" class="form-control"><option>????</option><option>?????</option><option>?????</option></select></div>
+                    <div class="col-md-3 mb-3"><label>????????</label><input type="text" id="empPhone" class="form-control"></div>
+                    <div class="col-md-3 mb-3"><label>??????</label><select id="empStatus" class="form-control"><option>????</option><option>?????</option></select></div>
                 </div>
-                <button type="submit" class="btn btn-primary">حفظ</button>
-                <button type="button" class="btn btn-info" onclick="loadPage('listEmployees')">عرض الكل</button>
+                <button type="submit" class="btn btn-primary">???</button>
+                <button type="button" class="btn btn-info" onclick="loadPage('listEmployees')">??? ????</button>
             </form>
         </div>
     `;
@@ -553,10 +509,10 @@ async function loadAddEmployee(container) {
         };
         try {
             await apiCall('employees', 'insert', newEmployee);
-            alert('تم حفظ العامل');
+            alert('?? ??? ??????');
             loadPage('listEmployees');
         } catch (err) {
-            alert('خطأ: ' + err.message);
+            alert('???: ' + err.message);
         }
     };
 }
@@ -568,13 +524,13 @@ async function loadListEmployees(container) {
     stations.forEach(s => stationMap[s.id] = s.name);
 
     if (employees.length === 0) {
-        container.innerHTML = '<div class="alert alert-info">لا توجد عاملين</div>';
+        container.innerHTML = '<div class="alert alert-info">?? ???? ??????</div>';
         return;
     }
-    let html = `<div class="search-bar"><input type="text" id="searchEmpInput" class="form-control" placeholder="بحث..."></div>
-                <div class="table-responsive"><table class="table table-bordered"><thead>运转<th>الكود</th><th>الاسم</th><th>المحطة</th><th>الوظيفة</th><th>الوردية</th><th>التليفون</th><th>الحالة</th><th></th> </thead><tbody id="empTable">`;
+    let html = `<div class="search-bar"><input type="text" id="searchEmpInput" class="form-control" placeholder="???..."></div>
+                <div class="table-responsive"><table class="table table-bordered"><thead>??<th>?????</th><th>?????</th><th>??????</th><th>???????</th><th>???????</th><th>????????</th><th>??????</th><th></th> </thead><tbody id="empTable">`;
     employees.forEach(e => {
-        html += `运转
+        html += `??
             <td class="text-center">${e.code}  </td>
             <td class="text-center">${e.name}  </td>
             <td class="text-center">${stationMap[e.stationId] || '-'}  </td>
@@ -583,8 +539,8 @@ async function loadListEmployees(container) {
             <td class="text-center">${e.phone || '-'}  </td>
             <td class="text-center">${e.status}  </td>
             <td class="text-center">
-                ${canEdit() ? '<button class="btn btn-sm btn-warning" onclick="editEmployee('+e.id+')">✏️ تعديل</button>' : ''}
-                ${canDelete() ? '<button class="btn btn-sm btn-danger" onclick="deleteEmployeeNow('+e.id+')">🗑️ حذف</button>' : ''}
+                ${canEdit() ? '<button class="btn btn-sm btn-warning" onclick="editEmployee('+e.id+')">?? ?????</button>' : ''}
+                ${canDelete() ? '<button class="btn btn-sm btn-danger" onclick="deleteEmployeeNow('+e.id+')">??? ???</button>' : ''}
               </td>
            </tr>`;
     });
@@ -600,12 +556,12 @@ async function loadListEmployees(container) {
 
     window.editEmployee = (id) => loadEditEmployee(document.getElementById('pageContent'), id);
     window.deleteEmployeeNow = async (id) => {
-        if (confirm('هل تريد حذف هذا العامل؟')) {
+        if (confirm('?? ???? ??? ??? ???????')) {
             try {
                 await apiCall('employees', 'delete', null, id);
-                alert('تم حذف العامل');
+                alert('?? ??? ??????');
                 loadPage('listEmployees');
-            } catch (err) { alert('خطأ: ' + err.message); }
+            } catch (err) { alert('???: ' + err.message); }
         }
     };
 }
@@ -616,36 +572,36 @@ async function loadEditEmployee(container, employeeId) {
     if (!employee) return;
 
     const stations = await apiCall('stations', 'select');
-    let stationOptions = '<option value="">اختر محطة</option>';
+    let stationOptions = '<option value="">???? ????</option>';
     stations.forEach(s => { stationOptions += `<option value="${s.id}" ${employee.stationId == s.id ? 'selected' : ''}>${s.name}</option>`; });
 
     container.innerHTML = `
         <div class="form-card">
-            <h4>✏️ تعديل بيانات العامل</h4>
+            <h4>?? ????? ?????? ??????</h4>
             <form id="editEmpForm">
                 <div class="row">
-                    <div class="col-md-3 mb-3"><label>الكود</label><input type="text" id="empCode" class="form-control" value="${employee.code}" required></div>
-                    <div class="col-md-3 mb-3"><label>الاسم</label><input type="text" id="empName" class="form-control" value="${employee.name}" required></div>
-                    <div class="col-md-3 mb-3"><label>المحطة</label><select id="empStation" class="form-control">${stationOptions}</select></div>
-                    <div class="col-md-3 mb-3"><label>الوظيفة</label><select id="empRole" class="form-control">
-                        <option ${employee.role == 'مدير محطة' ? 'selected' : ''}>مدير محطة</option>
-                        <option ${employee.role == 'مهندس' ? 'selected' : ''}>مهندس</option>
-                        <option ${employee.role == 'فني' ? 'selected' : ''}>فني</option>
-                        <option ${employee.role == 'عامل' ? 'selected' : ''}>عامل</option>
+                    <div class="col-md-3 mb-3"><label>?????</label><input type="text" id="empCode" class="form-control" value="${employee.code}" required></div>
+                    <div class="col-md-3 mb-3"><label>?????</label><input type="text" id="empName" class="form-control" value="${employee.name}" required></div>
+                    <div class="col-md-3 mb-3"><label>??????</label><select id="empStation" class="form-control">${stationOptions}</select></div>
+                    <div class="col-md-3 mb-3"><label>???????</label><select id="empRole" class="form-control">
+                        <option ${employee.role == '???? ????' ? 'selected' : ''}>???? ????</option>
+                        <option ${employee.role == '?????' ? 'selected' : ''}>?????</option>
+                        <option ${employee.role == '???' ? 'selected' : ''}>???</option>
+                        <option ${employee.role == '????' ? 'selected' : ''}>????</option>
                     </select></div>
-                    <div class="col-md-3 mb-3"><label>الوردية</label><select id="empShift" class="form-control">
-                        <option ${employee.shift == 'أولى' ? 'selected' : ''}>أولى</option>
-                        <option ${employee.shift == 'ثانية' ? 'selected' : ''}>ثانية</option>
-                        <option ${employee.shift == 'ثالثة' ? 'selected' : ''}>ثالثة</option>
+                    <div class="col-md-3 mb-3"><label>???????</label><select id="empShift" class="form-control">
+                        <option ${employee.shift == '????' ? 'selected' : ''}>????</option>
+                        <option ${employee.shift == '?????' ? 'selected' : ''}>?????</option>
+                        <option ${employee.shift == '?????' ? 'selected' : ''}>?????</option>
                     </select></div>
-                    <div class="col-md-3 mb-3"><label>التليفون</label><input type="text" id="empPhone" class="form-control" value="${employee.phone || ''}"></div>
-                    <div class="col-md-3 mb-3"><label>الحالة</label><select id="empStatus" class="form-control">
-                        <option ${employee.status == 'يعمل' ? 'selected' : ''}>يعمل</option>
-                        <option ${employee.status == 'إجازة' ? 'selected' : ''}>إجازة</option>
+                    <div class="col-md-3 mb-3"><label>????????</label><input type="text" id="empPhone" class="form-control" value="${employee.phone || ''}"></div>
+                    <div class="col-md-3 mb-3"><label>??????</label><select id="empStatus" class="form-control">
+                        <option ${employee.status == '????' ? 'selected' : ''}>????</option>
+                        <option ${employee.status == '?????' ? 'selected' : ''}>?????</option>
                     </select></div>
                 </div>
-                <button type="submit" class="btn btn-primary">💾 حفظ التعديل</button>
-                <button type="button" class="btn btn-secondary" onclick="loadPage('listEmployees')">رجوع</button>
+                <button type="submit" class="btn btn-primary">?? ??? ???????</button>
+                <button type="button" class="btn btn-secondary" onclick="loadPage('listEmployees')">????</button>
             </form>
         </div>
     `;
@@ -663,40 +619,40 @@ async function loadEditEmployee(container, employeeId) {
         };
         try {
             await apiCall('employees', 'update', updatedEmployee, employeeId);
-            alert('تم حفظ التعديل');
+            alert('?? ??? ???????');
             loadPage('listEmployees');
-        } catch (err) { alert('خطأ: ' + err.message); }
+        } catch (err) { alert('???: ' + err.message); }
     };
 }
-// ==================== الصيانة ====================
+// ==================== ??????? ====================
 async function loadAddFault(container) {
     if (!canAdd()) {
-        container.innerHTML = '<div class="alert alert-danger">ليس لديك صلاحية لإضافة أعطال</div>';
+        container.innerHTML = '<div class="alert alert-danger">??? ???? ?????? ?????? ?????</div>';
         return;
     }
     const stations = await apiCall('stations', 'select');
     const employees = await apiCall('employees', 'select');
-    let stationOptions = '<option value="">اختر محطة</option>';
+    let stationOptions = '<option value="">???? ????</option>';
     stations.forEach(s => { stationOptions += `<option value="${s.id}">${s.name}</option>`; });
-    let empOptions = '<option value="">اختر مبلغ</option>';
+    let empOptions = '<option value="">???? ????</option>';
     employees.forEach(e => { empOptions += `<option value="${e.id}">${e.name}</option>`; });
 
     container.innerHTML = `
         <div class="form-card">
-            <h4>⚠️ بلاغ عطل جديد</h4>
+            <h4>?? ???? ??? ????</h4>
             <form id="faultForm">
                 <div class="row">
-                    <div class="col-md-6 mb-3"><label>المحطة</label><select id="faultStation" class="form-control" required>${stationOptions}</select></div>
-                    <div class="col-md-6 mb-3"><label>كود المحطة</label><input type="text" id="stationCode" class="form-control" readonly></div>
-                    <div class="col-md-6 mb-3"><label>الأصل المعطل</label><select id="faultAsset" class="form-control"><option value="">اختر الأصل</option></select></div>
-                    <div class="col-md-6 mb-3"><label>نوع العطل</label><select id="faultType" class="form-control"><option>كهرباء</option><option>ميكانيكا</option></select></div>
-                    <div class="col-md-6 mb-3"><label>التاريخ</label><input type="date" id="faultDate" class="form-control" required></div>
-                    <div class="col-md-6 mb-3"><label>المبلغ</label><select id="faultReporter" class="form-control">${empOptions}</select></div>
-                    <div class="col-12 mb-3"><label>وصف العطل</label><textarea id="faultDesc" class="form-control" rows="3" required></textarea></div>
-                    <div class="col-12 mb-3"><label>إجراءات الإصلاح</label><textarea id="faultActions" class="form-control" rows="2"></textarea></div>
-                    <div class="col-12 mb-3"><label>قطع الغيار</label><input type="text" id="faultParts" class="form-control"></div>
+                    <div class="col-md-6 mb-3"><label>??????</label><select id="faultStation" class="form-control" required>${stationOptions}</select></div>
+                    <div class="col-md-6 mb-3"><label>??? ??????</label><input type="text" id="stationCode" class="form-control" readonly></div>
+                    <div class="col-md-6 mb-3"><label>????? ??????</label><select id="faultAsset" class="form-control"><option value="">???? ?????</option></select></div>
+                    <div class="col-md-6 mb-3"><label>??? ?????</label><select id="faultType" class="form-control"><option>??????</option><option>????????</option></select></div>
+                    <div class="col-md-6 mb-3"><label>???????</label><input type="date" id="faultDate" class="form-control" required></div>
+                    <div class="col-md-6 mb-3"><label>??????</label><select id="faultReporter" class="form-control">${empOptions}</select></div>
+                    <div class="col-12 mb-3"><label>??? ?????</label><textarea id="faultDesc" class="form-control" rows="3" required></textarea></div>
+                    <div class="col-12 mb-3"><label>??????? ???????</label><textarea id="faultActions" class="form-control" rows="2"></textarea></div>
+                    <div class="col-12 mb-3"><label>??? ??????</label><input type="text" id="faultParts" class="form-control"></div>
                 </div>
-                <button type="submit" class="btn btn-primary">حفظ البلاغ</button>
+                <button type="submit" class="btn btn-primary">??? ??????</button>
             </form>
         </div>
     `;
@@ -707,14 +663,14 @@ async function loadAddFault(container) {
         if (station) {
             document.getElementById('stationCode').value = station.code;
             const assets = [];
-            if (station.mainPumps) station.mainPumps.forEach((p, i) => assets.push({ id: `pump_${i}`, name: p['رقم/اسم الطلمبة'] || `طلمبة رئيسية ${i+1}` }));
-            if (station.drainPumps) station.drainPumps.forEach((p, i) => assets.push({ id: `drain_${i}`, name: p['رقم/اسم الطلمبة'] || `طلمبة نزح ${i+1}` }));
-            if (station.winches) station.winches.forEach((w, i) => assets.push({ id: `winch_${i}`, name: w['رقم/اسم الونش'] || `ونش ${i+1}` }));
-            if (station.panels) station.panels.forEach((p, i) => assets.push({ id: `panel_${i}`, name: p['رقم/اسم اللوحة'] || `لوحة ${i+1}` }));
-            if (station.fans) station.fans.forEach((f, i) => assets.push({ id: `fan_${i}`, name: f['رقم/اسم المروحة'] || `مروحة ${i+1}` }));
-            if (station.sealPumps) station.sealPumps.forEach((s, i) => assets.push({ id: `seal_${i}`, name: s['رقم/اسم الطلمبة'] || `طلمبة حبس جلندات ${i+1}` }));
+            if (station.mainPumps) station.mainPumps.forEach((p, i) => assets.push({ id: `pump_${i}`, name: p['???/??? ???????'] || `????? ?????? ${i+1}` }));
+            if (station.drainPumps) station.drainPumps.forEach((p, i) => assets.push({ id: `drain_${i}`, name: p['???/??? ???????'] || `????? ??? ${i+1}` }));
+            if (station.winches) station.winches.forEach((w, i) => assets.push({ id: `winch_${i}`, name: w['???/??? ?????'] || `??? ${i+1}` }));
+            if (station.panels) station.panels.forEach((p, i) => assets.push({ id: `panel_${i}`, name: p['???/??? ??????'] || `???? ${i+1}` }));
+            if (station.fans) station.fans.forEach((f, i) => assets.push({ id: `fan_${i}`, name: f['???/??? ???????'] || `????? ${i+1}` }));
+            if (station.sealPumps) station.sealPumps.forEach((s, i) => assets.push({ id: `seal_${i}`, name: s['???/??? ???????'] || `????? ??? ?????? ${i+1}` }));
             const assetSelect = document.getElementById('faultAsset');
-            assetSelect.innerHTML = '<option value="">اختر الأصل</option>' + assets.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
+            assetSelect.innerHTML = '<option value="">???? ?????</option>' + assets.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
         }
     });
 
@@ -737,9 +693,9 @@ async function loadAddFault(container) {
         };
         try {
             await apiCall('faults', 'insert', newFault);
-            alert('تم حفظ البلاغ');
+            alert('?? ??? ??????');
             loadPage('listFaults');
-        } catch (err) { alert('خطأ: ' + err.message); }
+        } catch (err) { alert('???: ' + err.message); }
     };
 }
 
@@ -749,15 +705,15 @@ async function loadListFaults(container) {
     const stationMap = {};
     stations.forEach(s => stationMap[s.id] = s.name);
 
-    let stationFilter = '<option value="">كل المحطات</option>' + stations.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+    let stationFilter = '<option value="">?? ???????</option>' + stations.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
 
     const html = `
         <div class="search-bar">
             <div class="row">
-                <div class="col-md-4"><label>المحطة</label><select id="filterStation" class="form-control">${stationFilter}</select></div>
-                <div class="col-md-4"><label>من تاريخ</label><input type="date" id="filterDateFrom" class="form-control"></div>
-                <div class="col-md-4"><label>إلى تاريخ</label><input type="date" id="filterDateTo" class="form-control"></div>
-                <div class="col-md-12 mt-2"><button class="btn btn-primary" onclick="filterFaults()">تصفية</button></div>
+                <div class="col-md-4"><label>??????</label><select id="filterStation" class="form-control">${stationFilter}</select></div>
+                <div class="col-md-4"><label>?? ?????</label><input type="date" id="filterDateFrom" class="form-control"></div>
+                <div class="col-md-4"><label>??? ?????</label><input type="date" id="filterDateTo" class="form-control"></div>
+                <div class="col-md-12 mt-2"><button class="btn btn-primary" onclick="filterFaults()">?????</button></div>
             </div>
         </div>
         <div id="faultsListContainer"></div>
@@ -780,20 +736,20 @@ async function loadListFaults(container) {
     function displayFaultsList(list) {
         const containerDiv = document.getElementById('faultsListContainer');
         if (list.length === 0) {
-            containerDiv.innerHTML = '<div class="alert alert-info">لا توجد بلاغات</div>';
+            containerDiv.innerHTML = '<div class="alert alert-info">?? ???? ??????</div>';
             return;
         }
-        let html = '<div class="table-responsive"><table class="table table-bordered"><thead>运转<th>المحطة</th><th>الأصل</th><th>النوع</th><th>التاريخ</th><th>الحالة</th><th></th> </thead><tbody>';
+        let html = '<div class="table-responsive"><table class="table table-bordered"><thead>??<th>??????</th><th>?????</th><th>?????</th><th>???????</th><th>??????</th><th></th> </thead><tbody>';
         list.forEach(f => {
-            html += `运转
+            html += `??
                 <td class="text-center">${f.stationName || stationMap[f.stationId]} </td>
                 <td class="text-center">${f.assetName || '-'} </td>
                 <td class="text-center">${f.type} </td>
                 <td class="text-center">${f.date} </td>
-                <td class="text-center">${f.status === 'open' ? '<span class="badge bg-danger">مفتوح</span>' : '<span class="badge bg-success">مغلق</span>'} </td>
+                <td class="text-center">${f.status === 'open' ? '<span class="badge bg-danger">?????</span>' : '<span class="badge bg-success">????</span>'} </td>
                 <td class="text-center">
-                    ${canEdit() ? '<button class="btn btn-sm btn-warning" onclick="editFault('+f.id+')">✏️ تعديل</button>' : ''}
-                    <button class="btn btn-sm btn-info" onclick="viewFaultDetail('+f.id+')">عرض</button>
+                    ${canEdit() ? '<button class="btn btn-sm btn-warning" onclick="editFault('+f.id+')">?? ?????</button>' : ''}
+                    <button class="btn btn-sm btn-info" onclick="viewFaultDetail('+f.id+')">???</button>
                   </td>
                </tr>`;
         });
@@ -806,17 +762,17 @@ async function loadListFaults(container) {
         const fault = currentFaults.find(f => f.id === id);
         const details = `
             <div class="form-card">
-                <h4>تفاصيل البلاغ</h4>
-                <p><strong>المحطة:</strong> ${fault.stationName || stationMap[fault.stationId]}</p>
-                <p><strong>الأصل:</strong> ${fault.assetName || '-'}</p>
-                <p><strong>النوع:</strong> ${fault.type}</p>
-                <p><strong>التاريخ:</strong> ${fault.date}</p>
-                <p><strong>الوصف:</strong> ${fault.description}</p>
-                <p><strong>إجراءات الإصلاح:</strong> ${fault.actions || '-'}</p>
-                <p><strong>قطع الغيار:</strong> ${fault.parts || '-'}</p>
-                <p><strong>الحالة:</strong> ${fault.status === 'open' ? 'مفتوح' : 'مغلق'}</p>
-                ${fault.status === 'open' ? '<button class="btn btn-success" onclick="closeFaultNow('+fault.id+')">إقفال البلاغ</button>' : ''}
-                <button class="btn btn-secondary" onclick="loadPage(\'listFaults\')">رجوع</button>
+                <h4>?????? ??????</h4>
+                <p><strong>??????:</strong> ${fault.stationName || stationMap[fault.stationId]}</p>
+                <p><strong>?????:</strong> ${fault.assetName || '-'}</p>
+                <p><strong>?????:</strong> ${fault.type}</p>
+                <p><strong>???????:</strong> ${fault.date}</p>
+                <p><strong>?????:</strong> ${fault.description}</p>
+                <p><strong>??????? ???????:</strong> ${fault.actions || '-'}</p>
+                <p><strong>??? ??????:</strong> ${fault.parts || '-'}</p>
+                <p><strong>??????:</strong> ${fault.status === 'open' ? '?????' : '????'}</p>
+                ${fault.status === 'open' ? '<button class="btn btn-success" onclick="closeFaultNow('+fault.id+')">????? ??????</button>' : ''}
+                <button class="btn btn-secondary" onclick="loadPage(\'listFaults\')">????</button>
             </div>
         `;
         document.getElementById('pageContent').innerHTML = details;
@@ -824,9 +780,9 @@ async function loadListFaults(container) {
     window.closeFaultNow = async (id) => {
         try {
             await apiCall('faults', 'update', { status: 'closed' }, id);
-            alert('تم إقفال البلاغ');
+            alert('?? ????? ??????');
             loadPage('listFaults');
-        } catch (err) { alert('خطأ: ' + err.message); }
+        } catch (err) { alert('???: ' + err.message); }
     };
 
     displayFaultsList(currentFaults);
@@ -838,28 +794,28 @@ async function loadEditFault(container, faultId) {
     if (!fault) return;
 
     const stations = await apiCall('stations', 'select');
-    let stationOptions = '<option value="">اختر محطة</option>';
+    let stationOptions = '<option value="">???? ????</option>';
     stations.forEach(s => { stationOptions += `<option value="${s.id}" ${fault.stationId == s.id ? 'selected' : ''}>${s.name}</option>`; });
 
     container.innerHTML = `
         <div class="form-card">
-            <h4>✏️ تعديل البلاغ</h4>
+            <h4>?? ????? ??????</h4>
             <form id="editFaultForm">
                 <div class="row">
-                    <div class="col-md-6 mb-3"><label>المحطة</label><select id="faultStation" class="form-control">${stationOptions}</select></div>
-                    <div class="col-md-6 mb-3"><label>الأصل المعطل</label><input type="text" id="faultAsset" class="form-control" value="${fault.assetName || ''}"></div>
-                    <div class="col-md-6 mb-3"><label>نوع العطل</label><select id="faultType" class="form-control">
-                        <option ${fault.type == 'كهرباء' ? 'selected' : ''}>كهرباء</option>
-                        <option ${fault.type == 'ميكانيكا' ? 'selected' : ''}>ميكانيكا</option>
+                    <div class="col-md-6 mb-3"><label>??????</label><select id="faultStation" class="form-control">${stationOptions}</select></div>
+                    <div class="col-md-6 mb-3"><label>????? ??????</label><input type="text" id="faultAsset" class="form-control" value="${fault.assetName || ''}"></div>
+                    <div class="col-md-6 mb-3"><label>??? ?????</label><select id="faultType" class="form-control">
+                        <option ${fault.type == '??????' ? 'selected' : ''}>??????</option>
+                        <option ${fault.type == '????????' ? 'selected' : ''}>????????</option>
                     </select></div>
-                    <div class="col-md-6 mb-3"><label>التاريخ</label><input type="date" id="faultDate" class="form-control" value="${fault.date}"></div>
-                    <div class="col-12 mb-3"><label>وصف العطل</label><textarea id="faultDesc" class="form-control" rows="3">${fault.description || ''}</textarea></div>
-                    <div class="col-12 mb-3"><label>إجراءات الإصلاح</label><textarea id="faultActions" class="form-control" rows="2">${fault.actions || ''}</textarea></div>
-                    <div class="col-12 mb-3"><label>قطع الغيار</label><input type="text" id="faultParts" class="form-control" value="${fault.parts || ''}"></div>
+                    <div class="col-md-6 mb-3"><label>???????</label><input type="date" id="faultDate" class="form-control" value="${fault.date}"></div>
+                    <div class="col-12 mb-3"><label>??? ?????</label><textarea id="faultDesc" class="form-control" rows="3">${fault.description || ''}</textarea></div>
+                    <div class="col-12 mb-3"><label>??????? ???????</label><textarea id="faultActions" class="form-control" rows="2">${fault.actions || ''}</textarea></div>
+                    <div class="col-12 mb-3"><label>??? ??????</label><input type="text" id="faultParts" class="form-control" value="${fault.parts || ''}"></div>
                 </div>
-                <button type="submit" class="btn btn-primary">💾 حفظ التعديل</button>
-                <button type="button" class="btn btn-danger" onclick="deleteFaultNow(${fault.id})">🗑️ حذف البلاغ</button>
-                <button type="button" class="btn btn-secondary" onclick="loadPage('listFaults')">رجوع</button>
+                <button type="submit" class="btn btn-primary">?? ??? ???????</button>
+                <button type="button" class="btn btn-danger" onclick="deleteFaultNow(${fault.id})">??? ??? ??????</button>
+                <button type="button" class="btn btn-secondary" onclick="loadPage('listFaults')">????</button>
             </form>
         </div>
     `;
@@ -878,21 +834,21 @@ async function loadEditFault(container, faultId) {
         };
         try {
             await apiCall('faults', 'update', updatedFault, faultId);
-            alert('تم حفظ التعديل');
+            alert('?? ??? ???????');
             loadPage('listFaults');
-        } catch (err) { alert('خطأ: ' + err.message); }
+        } catch (err) { alert('???: ' + err.message); }
     };
     window.deleteFaultNow = async (id) => {
-        if (confirm('هل تريد حذف هذا البلاغ؟')) {
+        if (confirm('?? ???? ??? ??? ???????')) {
             try {
                 await apiCall('faults', 'delete', null, id);
-                alert('تم حذف البلاغ');
+                alert('?? ??? ??????');
                 loadPage('listFaults');
-            } catch (err) { alert('خطأ: ' + err.message); }
+            } catch (err) { alert('???: ' + err.message); }
         }
     };
 }
-// ==================== التكاليف ====================
+// ==================== ???????? ====================
 async function loadTariffs(container) {
     let tariffs = { electricity: 1.2, water: 3.5 };
     try {
@@ -902,11 +858,11 @@ async function loadTariffs(container) {
 
     container.innerHTML = `
         <div class="form-card">
-            <h4>💰 تعريفات</h4>
+            <h4>?? ???????</h4>
             <form id="tariffsForm">
-                <div class="mb-3"><label>تعريفة الكهرباء (جنيه/كيلو وات)</label><input type="number" step="0.01" id="elecTariff" class="form-control" value="${tariffs.electricity}"></div>
-                <div class="mb-3"><label>تعريفة المياه (جنيه/متر مكعب)</label><input type="number" step="0.01" id="waterTariff" class="form-control" value="${tariffs.water}"></div>
-                <button type="submit" class="btn btn-primary">حفظ</button>
+                <div class="mb-3"><label>?????? ???????? (????/???? ???)</label><input type="number" step="0.01" id="elecTariff" class="form-control" value="${tariffs.electricity}"></div>
+                <div class="mb-3"><label>?????? ?????? (????/??? ????)</label><input type="number" step="0.01" id="waterTariff" class="form-control" value="${tariffs.water}"></div>
+                <button type="submit" class="btn btn-primary">???</button>
             </form>
         </div>
     `;
@@ -924,12 +880,12 @@ async function loadTariffs(container) {
             } else {
                 await apiCall('tariffs', 'insert', { id: 1, ...newTariffs });
             }
-            alert('تم حفظ التعريفات');
-        } catch (err) { alert('خطأ: ' + err.message); }
+            alert('?? ??? ?????????');
+        } catch (err) { alert('???: ' + err.message); }
     };
 }
 
-// ==================== التقرير الشهري ====================
+// ==================== ??????? ?????? ====================
 async function loadMonthlyCosts(container) {
     const stations = await apiCall('stations', 'select');
     let tariffs = { electricity: 1.2, water: 3.5 };
@@ -939,46 +895,46 @@ async function loadMonthlyCosts(container) {
     } catch (e) {}
     const monthlyCosts = await apiCall('monthly_costs', 'select');
 
-    let stationOptions = '<option value="">اختر محطة</option>';
+    let stationOptions = '<option value="">???? ????</option>';
     stations.forEach(s => { stationOptions += `<option value="${s.id}">${s.name}</option>`; });
 
     container.innerHTML = `
         <div class="form-card">
-            <h4>📊 التقرير الشهري</h4>
+            <h4>?? ??????? ??????</h4>
             <form id="monthlyForm">
                 <div class="row">
-                    <div class="col-md-4 mb-3"><label>المحطة</label><select id="monthStation" class="form-control" required>${stationOptions}</select></div>
-                    <div class="col-md-4 mb-3"><label>كود المحطة</label><input type="text" id="monthStationCode" class="form-control" readonly></div>
-                    <div class="col-md-4 mb-3"><label>شهر المحاسبة</label><input type="month" id="monthPeriod" class="form-control" required></div>
+                    <div class="col-md-4 mb-3"><label>??????</label><select id="monthStation" class="form-control" required>${stationOptions}</select></div>
+                    <div class="col-md-4 mb-3"><label>??? ??????</label><input type="text" id="monthStationCode" class="form-control" readonly></div>
+                    <div class="col-md-4 mb-3"><label>??? ????????</label><input type="month" id="monthPeriod" class="form-control" required></div>
                 </div>
                 <div class="mt-4 p-3 border rounded">
-                    <h5>💧 كمية المياه المرفوعة</h5>
+                    <h5>?? ???? ?????? ????????</h5>
                     <div class="row">
-                        <div class="col-md-4"><label>ساعات التشغيل</label><input type="number" id="operatingHours" class="form-control" step="0.5"></div>
-                        <div class="col-md-4"><label>اختر وحدة رئيسية</label><select id="pumpForFlow" class="form-control"></select></div>
-                        <div class="col-md-4"><label>المياه المرفوعة (m³)</label><input type="text" id="waterPumped" class="form-control" readonly style="background:#e9ecef"></div>
+                        <div class="col-md-4"><label>????? ???????</label><input type="number" id="operatingHours" class="form-control" step="0.5"></div>
+                        <div class="col-md-4"><label>???? ???? ??????</label><select id="pumpForFlow" class="form-control"></select></div>
+                        <div class="col-md-4"><label>?????? ???????? (m³)</label><input type="text" id="waterPumped" class="form-control" readonly style="background:#e9ecef"></div>
                     </div>
                 </div>
                 <div class="mt-4 p-3 border rounded" id="transformersSection">
-                    <h5>⚡ المحولات</h5>
+                    <h5>? ????????</h5>
                     <div id="transformersInputs"></div>
                 </div>
                 <div class="mt-4 p-3 border rounded" id="generatorsSection">
-                    <h5>🛢️ المولدات</h5>
+                    <h5>??? ????????</h5>
                     <div id="generatorsInputs"></div>
                 </div>
                 <div class="mt-4 p-3 border rounded">
-                    <h5>💧 عداد المياه</h5>
+                    <h5>?? ???? ??????</h5>
                     <div class="row">
-                        <div class="col-md-4"><label>القراءة الحالية</label><input type="number" id="currentWater" class="form-control" step="0.1"></div>
-                        <div class="col-md-4"><label>القراءة السابقة</label><input type="number" id="prevWater" class="form-control" step="0.1"></div>
-                        <div class="col-md-4"><label>الاستهلاك</label><input type="text" id="waterConsumed" class="form-control" readonly style="background:#e9ecef"></div>
-                        <div class="col-md-4"><label>التعريفة</label><input type="text" id="waterTariff" class="form-control" value="${tariffs.water}" readonly></div>
-                        <div class="col-md-4"><label>قيمة الاستهلاك</label><input type="text" id="waterCost" class="form-control" readonly style="background:#e9ecef"></div>
+                        <div class="col-md-4"><label>??????? ???????</label><input type="number" id="currentWater" class="form-control" step="0.1"></div>
+                        <div class="col-md-4"><label>??????? ???????</label><input type="number" id="prevWater" class="form-control" step="0.1"></div>
+                        <div class="col-md-4"><label>?????????</label><input type="text" id="waterConsumed" class="form-control" readonly style="background:#e9ecef"></div>
+                        <div class="col-md-4"><label>????????</label><input type="text" id="waterTariff" class="form-control" value="${tariffs.water}" readonly></div>
+                        <div class="col-md-4"><label>???? ?????????</label><input type="text" id="waterCost" class="form-control" readonly style="background:#e9ecef"></div>
                     </div>
                 </div>
-                <button type="submit" class="btn btn-primary mt-3">💾 حفظ التقرير</button>
-                <button type="button" class="btn btn-info mt-3" onclick="showPreviousReports()">📋 التقارير السابقة</button>
+                <button type="submit" class="btn btn-primary mt-3">?? ??? ???????</button>
+                <button type="button" class="btn btn-info mt-3" onclick="showPreviousReports()">?? ???????? ???????</button>
             </form>
         </div>
         <div id="previousReportsList" class="mt-4" style="display:none"></div>
@@ -986,22 +942,22 @@ async function loadMonthlyCosts(container) {
 
     window.showPreviousReports = () => {
         const stationId = document.getElementById('monthStation').value;
-        if (!stationId) { alert('اختر محطة أولاً'); return; }
+        if (!stationId) { alert('???? ???? ?????'); return; }
         const reports = monthlyCosts.filter(r => r.stationId == stationId).sort((a,b) => b.month.localeCompare(a.month));
         const listDiv = document.getElementById('previousReportsList');
         if (reports.length === 0) {
-            listDiv.innerHTML = '<div class="alert alert-info">لا توجد تقارير سابقة</div>';
+            listDiv.innerHTML = '<div class="alert alert-info">?? ???? ?????? ?????</div>';
         } else {
-            let html = '<div class="form-card"><h5>التقارير السابقة</h5><table class="table"><thead>运转<th>الشهر</th><th>المياه المرفوعة</th><th>كهرباء</th><th>سولار</th><th></th> </thead><tbody>';
+            let html = '<div class="form-card"><h5>???????? ???????</h5><table class="table"><thead>??<th>?????</th><th>?????? ????????</th><th>??????</th><th>?????</th><th></th> </thead><tbody>';
             reports.forEach(r => {
-                html += `运转
+                html += `??
                     <td class="text-center">${r.month} </td>
                     <td class="text-center">${r.waterPumped || 0} m³ </td>
-                    <td class="text-center">${r.totalElecCost || 0} ج </td>
-                    <td class="text-center">${r.totalDieselBalance || 0} لتر </td>
+                    <td class="text-center">${r.totalElecCost || 0} ? </td>
+                    <td class="text-center">${r.totalDieselBalance || 0} ??? </td>
                     <td class="text-center">
-                        <button class="btn btn-sm btn-warning" onclick="editMonthlyReport(${r.id})">تعديل</button>
-                        <button class="btn btn-sm btn-danger" onclick="deleteMonthlyReport(${r.id})">حذف</button>
+                        <button class="btn btn-sm btn-warning" onclick="editMonthlyReport(${r.id})">?????</button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteMonthlyReport(${r.id})">???</button>
                       </td>
                    </tr>`;
             });
@@ -1017,30 +973,30 @@ async function loadMonthlyCosts(container) {
         if (station) {
             document.getElementById('monthStationCode').value = station.code;
             const pumpsSelect = document.getElementById('pumpForFlow');
-            pumpsSelect.innerHTML = '<option value="">اختر وحدة</option>';
+            pumpsSelect.innerHTML = '<option value="">???? ????</option>';
             if (station.mainPumps) {
                 station.mainPumps.forEach((p, idx) => {
-                    const flow = p['التصرف m³/h'] || 0;
-                    pumpsSelect.innerHTML += `<option value="${flow}">${p['رقم/اسم الطلمبة'] || 'طلمبة '+(idx+1)} (${flow} m³/h)</option>`;
+                    const flow = p['?????? m³/h'] || 0;
+                    pumpsSelect.innerHTML += `<option value="${flow}">${p['???/??? ???????'] || '????? '+(idx+1)} (${flow} m³/h)</option>`;
                 });
             }
             
             const transformersDiv = document.getElementById('transformersInputs');
             if (station.powerSources) {
-                const transformers = station.powerSources.filter(ps => ps['النوع'] === 'محول');
+                const transformers = station.powerSources.filter(ps => ps['?????'] === '????');
                 if (transformers.length) {
                     let html = '';
                     transformers.forEach((t, idx) => {
-                        const name = t['رقم/اسم المصدر'] || `محول ${idx+1}`;
+                        const name = t['???/??? ??????'] || `???? ${idx+1}`;
                         const lastReport = monthlyCosts.filter(r => r.stationId == stationId).sort((a,b)=>b.month.localeCompare(a.month))[0];
                         const prevReading = (lastReport && lastReport.transformers && lastReport.transformers[idx]) ? lastReport.transformers[idx].current : 0;
                         html += `<div class="border p-2 mb-2">
                             <strong>${name}</strong>
                             <div class="row mt-2">
-                                <div class="col-md-4"><label>القراءة الحالية</label><input type="number" class="form-control transformer-current" data-idx="${idx}"></div>
-                                <div class="col-md-4"><label>القراءة السابقة</label><input type="number" class="form-control transformer-prev" value="${prevReading}"></div>
-                                <div class="col-md-2"><label>الفرق</label><input type="text" class="form-control transformer-diff" readonly></div>
-                                <div class="col-md-2"><label>التكلفة</label><input type="text" class="form-control transformer-cost" readonly></div>
+                                <div class="col-md-4"><label>??????? ???????</label><input type="number" class="form-control transformer-current" data-idx="${idx}"></div>
+                                <div class="col-md-4"><label>??????? ???????</label><input type="number" class="form-control transformer-prev" value="${prevReading}"></div>
+                                <div class="col-md-2"><label>?????</label><input type="text" class="form-control transformer-diff" readonly></div>
+                                <div class="col-md-2"><label>???????</label><input type="text" class="form-control transformer-cost" readonly></div>
                             </div>
                         </div>`;
                     });
@@ -1056,31 +1012,31 @@ async function loadMonthlyCosts(container) {
                             div.querySelector('.transformer-cost').value = cost.toFixed(2);
                         });
                     });
-                } else transformersDiv.innerHTML = '<div class="alert alert-warning">لا توجد محولات</div>';
+                } else transformersDiv.innerHTML = '<div class="alert alert-warning">?? ???? ??????</div>';
             }
             
             const generatorsDiv = document.getElementById('generatorsInputs');
             if (station.powerSources) {
-                const generators = station.powerSources.filter(ps => ps['النوع'] === 'مولد');
+                const generators = station.powerSources.filter(ps => ps['?????'] === '????');
                 if (generators.length) {
                     let html = '';
                     generators.forEach((g, idx) => {
-                        const name = g['رقم/اسم المصدر'] || `مولد ${idx+1}`;
-                        const loadRate = g['معدل الاستهلاك على الحمل (لتر/س)'] || 10;
-                        const idleRate = g['معدل الاستهلاك بدون حمل (لتر/س)'] || 5;
+                        const name = g['???/??? ??????'] || `???? ${idx+1}`;
+                        const loadRate = g['???? ????????? ??? ????? (???/?)'] || 10;
+                        const idleRate = g['???? ????????? ???? ??? (???/?)'] || 5;
                         const lastReport = monthlyCosts.filter(r => r.stationId == stationId).sort((a,b)=>b.month.localeCompare(a.month))[0];
                         const prevBalance = (lastReport && lastReport.generators && lastReport.generators[idx]) ? lastReport.generators[idx].balance : 0;
                         html += `<div class="border p-2 mb-2">
                             <strong>${name}</strong>
                             <div class="row mt-2">
-                                <div class="col-md-3"><label>سولار مضاف</label><input type="number" class="form-control gen-added" data-idx="${idx}"></div>
-                                <div class="col-md-3"><label>رصيد سابق</label><input type="number" class="form-control gen-prev" value="${prevBalance}"></div>
-                                <div class="col-md-3"><label>ساعات على حمل</label><input type="number" class="form-control gen-load-hours" step="0.5"></div>
-                                <div class="col-md-3"><label>ساعات بدون حمل</label><input type="number" class="form-control gen-idle-hours" step="0.5"></div>
-                                <div class="col-md-3"><label>معدل حمل</label><input type="text" class="form-control" value="${loadRate}" readonly></div>
-                                <div class="col-md-3"><label>معدل بدون حمل</label><input type="text" class="form-control" value="${idleRate}" readonly></div>
-                                <div class="col-md-3"><label>الاستهلاك</label><input type="text" class="form-control gen-consumed" readonly></div>
-                                <div class="col-md-3"><label>الرصيد المتبقي</label><input type="text" class="form-control gen-balance" readonly></div>
+                                <div class="col-md-3"><label>????? ????</label><input type="number" class="form-control gen-added" data-idx="${idx}"></div>
+                                <div class="col-md-3"><label>???? ????</label><input type="number" class="form-control gen-prev" value="${prevBalance}"></div>
+                                <div class="col-md-3"><label>????? ??? ???</label><input type="number" class="form-control gen-load-hours" step="0.5"></div>
+                                <div class="col-md-3"><label>????? ???? ???</label><input type="number" class="form-control gen-idle-hours" step="0.5"></div>
+                                <div class="col-md-3"><label>???? ???</label><input type="text" class="form-control" value="${loadRate}" readonly></div>
+                                <div class="col-md-3"><label>???? ???? ???</label><input type="text" class="form-control" value="${idleRate}" readonly></div>
+                                <div class="col-md-3"><label>?????????</label><input type="text" class="form-control gen-consumed" readonly></div>
+                                <div class="col-md-3"><label>?????? ???????</label><input type="text" class="form-control gen-balance" readonly></div>
                             </div>
                         </div>`;
                     });
@@ -1100,7 +1056,7 @@ async function loadMonthlyCosts(container) {
                             div.querySelector('.gen-balance').value = balance.toFixed(2);
                         });
                     });
-                } else generatorsDiv.innerHTML = '<div class="alert alert-warning">لا توجد مولدات</div>';
+                } else generatorsDiv.innerHTML = '<div class="alert alert-warning">?? ???? ??????</div>';
             }
         }
     });
@@ -1129,7 +1085,7 @@ async function loadMonthlyCosts(container) {
         const stationId = document.getElementById('monthStation').value;
         const station = stations.find(s => s.id == stationId);
         const month = document.getElementById('monthPeriod').value;
-        if (!stationId || !month) { alert('اختر المحطة والشهر'); return; }
+        if (!stationId || !month) { alert('???? ?????? ??????'); return; }
 
         const operatingHours = parseFloat(document.getElementById('operatingHours').value) || 0;
         const pumpFlow = parseFloat(document.getElementById('pumpForFlow').value) || 0;
@@ -1182,16 +1138,16 @@ async function loadMonthlyCosts(container) {
         const existingReport = monthlyCosts.find(r => r.stationId == stationId && r.month == month);
         try {
             if (existingReport) {
-                if (confirm('يوجد تقرير لهذا الشهر. هل تريد تحديثه؟')) {
+                if (confirm('???? ????? ???? ?????. ?? ???? ???????')) {
                     await apiCall('monthly_costs', 'update', report, existingReport.id);
-                    alert('تم تحديث التقرير');
+                    alert('?? ????? ???????');
                 } else return;
             } else {
                 await apiCall('monthly_costs', 'insert', report);
-                alert('تم حفظ التقرير');
+                alert('?? ??? ???????');
             }
             loadPage('home');
-        } catch (err) { alert('خطأ: ' + err.message); }
+        } catch (err) { alert('???: ' + err.message); }
     };
 
     window.editMonthlyReport = async (id) => {
@@ -1231,33 +1187,33 @@ async function loadMonthlyCosts(container) {
         document.getElementById('previousReportsList').style.display = 'none';
     };
     window.deleteMonthlyReport = async (id) => {
-        if (confirm('هل تريد حذف هذا التقرير؟')) {
+        if (confirm('?? ???? ??? ??? ????????')) {
             try {
                 await apiCall('monthly_costs', 'delete', null, id);
-                alert('تم حذف التقرير');
+                alert('?? ??? ???????');
                 showPreviousReports();
-            } catch (err) { alert('خطأ: ' + err.message); }
+            } catch (err) { alert('???: ' + err.message); }
         }
     };
 }
-// ==================== تقرير المتابعة الدورية ====================
+// ==================== ????? ???????? ??????? ====================
 async function loadReportDaily(container) {
     const stations = await apiCall('stations', 'select');
     const dailyReports = await apiCall('daily_reports', 'select');
-    let stationOptions = '<option value="">اختر محطة</option>';
+    let stationOptions = '<option value="">???? ????</option>';
     stations.forEach(s => { stationOptions += `<option value="${s.id}">${s.name}</option>`; });
 
     container.innerHTML = `
         <div class="form-card">
-            <h4>📝 تقرير المتابعة الدورية</h4>
+            <h4>?? ????? ???????? ???????</h4>
             <div class="row">
-                <div class="col-md-4"><label>المحطة</label><select id="dailyStation" class="form-control">${stationOptions}</select></div>
-                <div class="col-md-4"><label>التاريخ</label><input type="date" id="dailyDate" class="form-control"></div>
-                <div class="col-md-4"><label>المتابع</label><input type="text" id="dailyInspector" class="form-control"></div>
+                <div class="col-md-4"><label>??????</label><select id="dailyStation" class="form-control">${stationOptions}</select></div>
+                <div class="col-md-4"><label>???????</label><input type="date" id="dailyDate" class="form-control"></div>
+                <div class="col-md-4"><label>???????</label><input type="text" id="dailyInspector" class="form-control"></div>
             </div>
             <div id="assetsStatus" class="mt-3"></div>
-            <button class="btn btn-primary mt-3" onclick="saveDailyReport()">💾 حفظ</button>
-            <button class="btn btn-info mt-3" onclick="showDailyReportsList()">📋 قائمة التقارير</button>
+            <button class="btn btn-primary mt-3" onclick="saveDailyReport()">?? ???</button>
+            <button class="btn btn-info mt-3" onclick="showDailyReportsList()">?? ????? ????????</button>
         </div>
         <div id="dailyReportsList" class="mt-4" style="display:none"></div>
     `;
@@ -1266,23 +1222,23 @@ async function loadReportDaily(container) {
         const stationId = this.value;
         const station = stations.find(s => s.id == stationId);
         if (!station) return;
-        let html = '<h5>حالة الأصول</h5>';
+        let html = '<h5>???? ??????</h5>';
         const allAssets = [];
-        if (station.mainPumps) station.mainPumps.forEach((p,i) => allAssets.push({ name: p['رقم/اسم الطلمبة'] || `طلمبة رئيسية ${i+1}`, type: 'main', idx: i }));
-        if (station.drainPumps) station.drainPumps.forEach((p,i) => allAssets.push({ name: p['رقم/اسم الطلمبة'] || `طلمبة نزح ${i+1}`, type: 'drain', idx: i }));
-        if (station.winches) station.winches.forEach((w,i) => allAssets.push({ name: w['رقم/اسم الونش'] || `ونش ${i+1}`, type: 'winch', idx: i }));
-        if (station.panels) station.panels.forEach((p,i) => allAssets.push({ name: p['رقم/اسم اللوحة'] || `لوحة ${i+1}`, type: 'panel', idx: i }));
-        if (station.fans) station.fans.forEach((f,i) => allAssets.push({ name: f['رقم/اسم المروحة'] || `مروحة ${i+1}`, type: 'fan', idx: i }));
-        if (station.sealPumps) station.sealPumps.forEach((s,i) => allAssets.push({ name: s['رقم/اسم الطلمبة'] || `حبس جلندات ${i+1}`, type: 'seal', idx: i }));
-        if (station.buildings) station.buildings.forEach((b,i) => allAssets.push({ name: b['رقم/اسم المبنى'] || `مبنى ${i+1}`, type: 'building', idx: i }));
+        if (station.mainPumps) station.mainPumps.forEach((p,i) => allAssets.push({ name: p['???/??? ???????'] || `????? ?????? ${i+1}`, type: 'main', idx: i }));
+        if (station.drainPumps) station.drainPumps.forEach((p,i) => allAssets.push({ name: p['???/??? ???????'] || `????? ??? ${i+1}`, type: 'drain', idx: i }));
+        if (station.winches) station.winches.forEach((w,i) => allAssets.push({ name: w['???/??? ?????'] || `??? ${i+1}`, type: 'winch', idx: i }));
+        if (station.panels) station.panels.forEach((p,i) => allAssets.push({ name: p['???/??? ??????'] || `???? ${i+1}`, type: 'panel', idx: i }));
+        if (station.fans) station.fans.forEach((f,i) => allAssets.push({ name: f['???/??? ???????'] || `????? ${i+1}`, type: 'fan', idx: i }));
+        if (station.sealPumps) station.sealPumps.forEach((s,i) => allAssets.push({ name: s['???/??? ???????'] || `??? ?????? ${i+1}`, type: 'seal', idx: i }));
+        if (station.buildings) station.buildings.forEach((b,i) => allAssets.push({ name: b['???/??? ??????'] || `???? ${i+1}`, type: 'building', idx: i }));
 
         allAssets.forEach(asset => {
             html += `<div class="border p-2 mb-2">
                 <strong>${asset.name}</strong>
                 <div class="row mt-2">
-                    <div class="col-md-4"><label><input type="radio" name="status_${asset.type}_${asset.idx}" value="يعمل"> يعمل</label> <label><input type="radio" name="status_${asset.type}_${asset.idx}" value="لا يعمل"> لا يعمل</label></div>
-                    <div class="col-md-4"><input type="text" class="form-control" placeholder="ملاحظات" id="notes_${asset.type}_${asset.idx}"></div>
-                    <div class="col-md-4"><input type="text" class="form-control" placeholder="سبب التوقف" id="reason_${asset.type}_${asset.idx}"></div>
+                    <div class="col-md-4"><label><input type="radio" name="status_${asset.type}_${asset.idx}" value="????"> ????</label> <label><input type="radio" name="status_${asset.type}_${asset.idx}" value="?? ????"> ?? ????</label></div>
+                    <div class="col-md-4"><input type="text" class="form-control" placeholder="???????" id="notes_${asset.type}_${asset.idx}"></div>
+                    <div class="col-md-4"><input type="text" class="form-control" placeholder="??? ??????" id="reason_${asset.type}_${asset.idx}"></div>
                 </div>
             </div>`;
         });
@@ -1293,14 +1249,14 @@ async function loadReportDaily(container) {
         const stationId = document.getElementById('dailyStation').value;
         const date = document.getElementById('dailyDate').value;
         const inspector = document.getElementById('dailyInspector').value;
-        if (!stationId || !date) { alert('اختر المحطة والتاريخ'); return; }
+        if (!stationId || !date) { alert('???? ?????? ????????'); return; }
         const assets = [];
         document.querySelectorAll('#assetsStatus .border').forEach(div => {
             const name = div.querySelector('strong').innerText;
             const statusRadio = div.querySelector('input[type="radio"]:checked');
             const status = statusRadio ? statusRadio.value : '';
-            const notes = div.querySelector('input[placeholder="ملاحظات"]')?.value || '';
-            const reason = div.querySelector('input[placeholder="سبب التوقف"]')?.value || '';
+            const notes = div.querySelector('input[placeholder="???????"]')?.value || '';
+            const reason = div.querySelector('input[placeholder="??? ??????"]')?.value || '';
             assets.push({ name, status, notes, reason });
         });
         const newReport = {
@@ -1313,31 +1269,31 @@ async function loadReportDaily(container) {
         };
         try {
             await apiCall('daily_reports', 'insert', newReport);
-            alert('تم حفظ التقرير');
+            alert('?? ??? ???????');
             loadPage('home');
-        } catch (err) { alert('خطأ: ' + err.message); }
+        } catch (err) { alert('???: ' + err.message); }
     };
 
     window.showDailyReportsList = () => {
         const stationId = document.getElementById('dailyStation').value;
         const reports = dailyReports.filter(r => !stationId || r.stationId == stationId).sort((a,b)=>b.date.localeCompare(a.date));
         const listDiv = document.getElementById('dailyReportsList');
-        if (reports.length === 0) listDiv.innerHTML = '<div class="alert alert-info">لا توجد تقارير</div>';
+        if (reports.length === 0) listDiv.innerHTML = '<div class="alert alert-info">?? ???? ??????</div>';
         else {
-            let html = '<div class="form-card"><h5>قائمة التقارير</h5><table class="table"><thead>运转<th>المحطة</th><th>التاريخ</th><th>المتابع</th><th></th> </thead><tbody>';
+            let html = '<div class="form-card"><h5>????? ????????</h5><table class="table"><thead>??<th>??????</th><th>???????</th><th>???????</th><th></th> </thead><tbody>';
             reports.forEach(r => {
-                html += `运转
+                html += `??
                     <td class="text-center">${r.stationName} </td>
                     <td class="text-center">${r.date} </td>
                     <td class="text-center">${r.inspector || '-'} </td>
                     <td class="text-center">
-                        <button class="btn btn-sm btn-warning" onclick="editDailyReport(${r.id})">تعديل</button>
-                        <button class="btn btn-sm btn-danger" onclick="deleteDailyReport(${r.id})">حذف</button>
-                        <button class="btn btn-sm btn-info" onclick="printDailyReport(${r.id})">طباعة</button>
-                       ，
+                        <button class="btn btn-sm btn-warning" onclick="editDailyReport(${r.id})">?????</button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteDailyReport(${r.id})">???</button>
+                        <button class="btn btn-sm btn-info" onclick="printDailyReport(${r.id})">?????</button>
+                       ,
 
-                    ，
-                ，
+                    ,
+                ,
 `;
             });
             html += '</tbody> </div>';
@@ -1357,23 +1313,23 @@ async function loadReportDaily(container) {
             report.assets.forEach((asset, idx) => {
                 const radios = document.querySelectorAll(`input[type="radio"][value="${asset.status}"]`);
                 if (radios[idx]) radios[idx].checked = true;
-                const notesInputs = document.querySelectorAll('input[placeholder="ملاحظات"]');
+                const notesInputs = document.querySelectorAll('input[placeholder="???????"]');
                 if (notesInputs[idx]) notesInputs[idx].value = asset.notes;
-                const reasonInputs = document.querySelectorAll('input[placeholder="سبب التوقف"]');
+                const reasonInputs = document.querySelectorAll('input[placeholder="??? ??????"]');
                 if (reasonInputs[idx]) reasonInputs[idx].value = asset.reason;
             });
         }, 200);
         document.getElementById('dailyReportsList').style.display = 'none';
-        alert('عدل البيانات ثم احفظ التقرير مرة أخرى');
+        alert('??? ???????? ?? ???? ??????? ??? ????');
     };
 
     window.deleteDailyReport = async (id) => {
-        if (confirm('هل تريد حذف هذا التقرير؟')) {
+        if (confirm('?? ???? ??? ??? ????????')) {
             try {
                 await apiCall('daily_reports', 'delete', null, id);
-                alert('تم حذف التقرير');
+                alert('?? ??? ???????');
                 showDailyReportsList();
-            } catch (err) { alert('خطأ: ' + err.message); }
+            } catch (err) { alert('???: ' + err.message); }
         }
     };
 
@@ -1381,11 +1337,11 @@ async function loadReportDaily(container) {
         const report = dailyReports.find(r => r.id == id);
         if (report) {
             const win = window.open('', '_blank');
-            win.document.write(`<html dir="rtl"><head><title>تقرير ${report.stationName} - ${report.date}</title>
+            win.document.write(`<html dir="rtl"><head><title>????? ${report.stationName} - ${report.date}</title>
             <style>body{font-family:Tahoma;padding:20px} table{border-collapse:collapse;width:100%} th,td{border:1px solid #ddd;padding:8px}</style></head>
-            <body><h2>تقرير المتابعة الدورية</h2><p><strong>المحطة:</strong> ${report.stationName}</p>
-            <p><strong>التاريخ:</strong> ${report.date}</p><p><strong>المتابع:</strong> ${report.inspector || '-'}</p>
-             <thead> <th>الأصل</th><th>الحالة</th><th>ملاحظات</th><th>سبب التوقف</th> </thead><tbody>
+            <body><h2>????? ???????? ???????</h2><p><strong>??????:</strong> ${report.stationName}</p>
+            <p><strong>???????:</strong> ${report.date}</p><p><strong>???????:</strong> ${report.inspector || '-'}</p>
+             <thead> <th>?????</th><th>??????</th><th>???????</th><th>??? ??????</th> </thead><tbody>
             ${report.assets.map(a => `  <td>${a.name}</td><td>${a.status}</td><td>${a.notes}</td><td>${a.reason}</td> `).join('')}
             </tbody> </body></html>`);
             win.document.close();
@@ -1394,21 +1350,21 @@ async function loadReportDaily(container) {
     };
 }
 
-// ==================== دوال التقارير الأخرى ====================
+// ==================== ???? ???????? ?????? ====================
 async function loadReportFaults(container) {
     const stations = await apiCall('stations', 'select');
     const faults = await apiCall('faults', 'select');
-    let stationOptions = '<option value="">كل المحطات</option>' + stations.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+    let stationOptions = '<option value="">?? ???????</option>' + stations.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
     container.innerHTML = `
         <div class="form-card">
-            <h4>🐛 تقرير الأعطال</h4>
+            <h4>?? ????? ???????</h4>
             <div class="row">
-                <div class="col-md-4"><label>المحطة</label><select id="faultReportStation" class="form-control">${stationOptions}</select></div>
-                <div class="col-md-4"><label>من تاريخ</label><input type="date" id="faultFrom" class="form-control"></div>
-                <div class="col-md-4"><label>إلى تاريخ</label><input type="date" id="faultTo" class="form-control"></div>
+                <div class="col-md-4"><label>??????</label><select id="faultReportStation" class="form-control">${stationOptions}</select></div>
+                <div class="col-md-4"><label>?? ?????</label><input type="date" id="faultFrom" class="form-control"></div>
+                <div class="col-md-4"><label>??? ?????</label><input type="date" id="faultTo" class="form-control"></div>
             </div>
-            <button class="btn btn-primary mt-3" onclick="showFaultsReport()">عرض</button>
-            <button class="btn btn-secondary mt-3" onclick="printFaultsReport()">طباعة</button>
+            <button class="btn btn-primary mt-3" onclick="showFaultsReport()">???</button>
+            <button class="btn btn-secondary mt-3" onclick="printFaultsReport()">?????</button>
             <div id="faultsReportResult" class="mt-4"></div>
         </div>
     `;
@@ -1421,11 +1377,11 @@ async function loadReportFaults(container) {
         if (from) filtered = filtered.filter(f => f.date >= from);
         if (to) filtered = filtered.filter(f => f.date <= to);
         const resultDiv = document.getElementById('faultsReportResult');
-        if (filtered.length === 0) { resultDiv.innerHTML = '<div class="alert alert-info">لا توجد أعطال</div>'; return; }
-        let html = '<div class="table-responsive"><table class="table"><thead> <th>المحطة</th><th>الأصل</th><th>النوع</th><th>التاريخ</th><th>الوصف</th><th>الإجراء</th><th>الحالة</th> </thead><tbody>';
+        if (filtered.length === 0) { resultDiv.innerHTML = '<div class="alert alert-info">?? ???? ?????</div>'; return; }
+        let html = '<div class="table-responsive"><table class="table"><thead> <th>??????</th><th>?????</th><th>?????</th><th>???????</th><th>?????</th><th>???????</th><th>??????</th> </thead><tbody>';
         filtered.forEach(f => {
             const station = stations.find(s => s.id == f.stationId);
-            html += `   <td>${station?.name || f.stationName || '-'}</td><td>${f.assetName || '-'}</td><td>${f.type}</td><td>${f.date}</td><td>${f.description}</td><td>${f.actions || '-'}</td><td>${f.status === 'open' ? 'مفتوح' : 'مغلق'}</td> `;
+            html += `   <td>${station?.name || f.stationName || '-'}</td><td>${f.assetName || '-'}</td><td>${f.type}</td><td>${f.date}</td><td>${f.description}</td><td>${f.actions || '-'}</td><td>${f.status === 'open' ? '?????' : '????'}</td> `;
         });
         html += '</tbody> </div>';
         resultDiv.innerHTML = html;
@@ -1438,20 +1394,20 @@ async function loadReportStation(container) {
     const dailyReports = await apiCall('daily_reports', 'select');
     const faults = await apiCall('faults', 'select');
     const openFaults = faults.filter(f => f.status === 'open');
-    let stationOptions = '<option value="">اختر محطة</option>' + stations.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+    let stationOptions = '<option value="">???? ????</option>' + stations.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
     container.innerHTML = `
         <div class="form-card">
-            <h4>🏭 تقرير متابعة محطة</h4>
+            <h4>?? ????? ?????? ????</h4>
             <div class="row"><div class="col-md-6"><select id="stationReportSelect" class="form-control">${stationOptions}</select></div>
-            <div class="col-md-6"><button class="btn btn-primary" onclick="showStationFullReport()">عرض</button></div></div>
+            <div class="col-md-6"><button class="btn btn-primary" onclick="showStationFullReport()">???</button></div></div>
             <div id="stationFullReport" class="mt-4"></div>
-            <button id="printStationBtn" class="btn btn-secondary mt-3" style="display:none" onclick="printStationReport()">طباعة</button>
+            <button id="printStationBtn" class="btn btn-secondary mt-3" style="display:none" onclick="printStationReport()">?????</button>
         </div>
     `;
     window.showStationFullReport = () => {
         const stationId = document.getElementById('stationReportSelect').value;
         const station = stations.find(s => s.id == stationId);
-        if (!station) { alert('اختر محطة'); return; }
+        if (!station) { alert('???? ????'); return; }
         const lastDaily = dailyReports.filter(r => r.stationId == stationId).sort((a,b)=>b.date.localeCompare(a.date))[0];
         const dailyMap = {};
         if (lastDaily && lastDaily.assets) lastDaily.assets.forEach(a => { dailyMap[a.name] = { status: a.status, notes: a.notes, reason: a.reason }; });
@@ -1459,17 +1415,17 @@ async function loadReportStation(container) {
         const faultMap = {};
         stationOpenFaults.forEach(f => { faultMap[f.assetName] = { reason: f.description, date: f.date }; });
         const allAssets = [];
-        if (station.mainPumps) station.mainPumps.forEach((p,i) => allAssets.push(p['رقم/اسم الطلمبة'] || `طلمبة رئيسية ${i+1}`));
-        if (station.drainPumps) station.drainPumps.forEach((p,i) => allAssets.push(p['رقم/اسم الطلمبة'] || `طلمبة نزح ${i+1}`));
-        if (station.winches) station.winches.forEach((w,i) => allAssets.push(w['رقم/اسم الونش'] || `ونش ${i+1}`));
-        if (station.panels) station.panels.forEach((p,i) => allAssets.push(p['رقم/اسم اللوحة'] || `لوحة ${i+1}`));
-        if (station.fans) station.fans.forEach((f,i) => allAssets.push(f['رقم/اسم المروحة'] || `مروحة ${i+1}`));
-        if (station.sealPumps) station.sealPumps.forEach((s,i) => allAssets.push(s['رقم/اسم الطلمبة'] || `حبس جلندات ${i+1}`));
-        let html = `<h5>${station.name} (${station.code})</h5><table class="table table-bordered"><thead> <th>الأصل</th><th>الحالة</th><th>سبب التوقف</th><th>المصدر</th> </thead><tbody>`;
+        if (station.mainPumps) station.mainPumps.forEach((p,i) => allAssets.push(p['???/??? ???????'] || `????? ?????? ${i+1}`));
+        if (station.drainPumps) station.drainPumps.forEach((p,i) => allAssets.push(p['???/??? ???????'] || `????? ??? ${i+1}`));
+        if (station.winches) station.winches.forEach((w,i) => allAssets.push(w['???/??? ?????'] || `??? ${i+1}`));
+        if (station.panels) station.panels.forEach((p,i) => allAssets.push(p['???/??? ??????'] || `???? ${i+1}`));
+        if (station.fans) station.fans.forEach((f,i) => allAssets.push(f['???/??? ???????'] || `????? ${i+1}`));
+        if (station.sealPumps) station.sealPumps.forEach((s,i) => allAssets.push(s['???/??? ???????'] || `??? ?????? ${i+1}`));
+        let html = `<h5>${station.name} (${station.code})</h5><table class="table table-bordered"><thead> <th>?????</th><th>??????</th><th>??? ??????</th><th>??????</th> </thead><tbody>`;
         allAssets.forEach(name => {
             let status = '-', reason = '-', source = '';
-            if (faultMap[name]) { status = 'لا يعمل'; reason = faultMap[name].reason; source = `بلاغ عطل (${faultMap[name].date})`; }
-            else if (dailyMap[name]) { status = dailyMap[name].status; reason = dailyMap[name].reason; source = `تقرير متابعة (${lastDaily?.date})`; if(dailyMap[name].notes) source += ` - ملاحظات: ${dailyMap[name].notes}`; }
+            if (faultMap[name]) { status = '?? ????'; reason = faultMap[name].reason; source = `???? ??? (${faultMap[name].date})`; }
+            else if (dailyMap[name]) { status = dailyMap[name].status; reason = dailyMap[name].reason; source = `????? ?????? (${lastDaily?.date})`; if(dailyMap[name].notes) source += ` - ???????: ${dailyMap[name].notes}`; }
             html += `   <td>${name}</td><td>${status}</td><td>${reason}</td><td>${source}</td> `;
         });
         html += '</tbody> </div>';
@@ -1480,9 +1436,9 @@ async function loadReportStation(container) {
         const content = document.getElementById('stationFullReport').innerHTML;
         const stationName = document.getElementById('stationReportSelect').selectedOptions[0]?.text;
         const win = window.open('', '_blank');
-        win.document.write(`<html dir="rtl"><head><title>تقرير متابعة ${stationName}</title>
+        win.document.write(`<html dir="rtl"><head><title>????? ?????? ${stationName}</title>
         <style>body{font-family:Tahoma;padding:20px} table{border-collapse:collapse;width:100%} th,td{border:1px solid #ddd;padding:8px}</style></head>
-        <body><h2>تقرير متابعة محطة ${stationName}</h2>${content}</body></html>`);
+        <body><h2>????? ?????? ???? ${stationName}</h2>${content}</body></html>`);
         win.document.close();
         win.print();
     };
@@ -1493,40 +1449,40 @@ async function loadReportAsset(container) {
     const dailyReports = await apiCall('daily_reports', 'select');
     const faults = await apiCall('faults', 'select');
     const openFaults = faults.filter(f => f.status === 'open');
-    let stationOptions = '<option value="">اختر محطة</option>' + stations.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+    let stationOptions = '<option value="">???? ????</option>' + stations.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
     container.innerHTML = `
         <div class="form-card">
-            <h4>⚙️ تقرير متابعة أصل</h4>
+            <h4>?? ????? ?????? ???</h4>
             <div class="row">
-                <div class="col-md-4 mb-2"><label>المحطة</label><select id="assetReportStation" class="form-control">${stationOptions}</select></div>
-                <div class="col-md-4 mb-2"><label>اختر الأصل</label><select id="assetReportSelect" class="form-control"><option value="">اختر المحطة أولاً</option></select></div>
-                <div class="col-md-4 mb-2"><button class="btn btn-primary mt-4" onclick="showAssetFullReport()">عرض التقرير</button></div>
+                <div class="col-md-4 mb-2"><label>??????</label><select id="assetReportStation" class="form-control">${stationOptions}</select></div>
+                <div class="col-md-4 mb-2"><label>???? ?????</label><select id="assetReportSelect" class="form-control"><option value="">???? ?????? ?????</option></select></div>
+                <div class="col-md-4 mb-2"><button class="btn btn-primary mt-4" onclick="showAssetFullReport()">??? ???????</button></div>
             </div>
             <div id="assetFullReport" class="mt-4"></div>
-            <button id="printAssetBtn" class="btn btn-secondary mt-3" style="display:none" onclick="printAssetReport()">🖨️ طباعة</button>
+            <button id="printAssetBtn" class="btn btn-secondary mt-3" style="display:none" onclick="printAssetReport()">??? ?????</button>
         </div>
     `;
     document.getElementById('assetReportStation').addEventListener('change', function() {
         const stationId = this.value;
         const station = stations.find(s => s.id == stationId);
         const assetSelect = document.getElementById('assetReportSelect');
-        if (!station) { assetSelect.innerHTML = '<option value="">اختر المحطة أولاً</option>'; return; }
+        if (!station) { assetSelect.innerHTML = '<option value="">???? ?????? ?????</option>'; return; }
         const assets = [];
-        if (station.mainPumps) station.mainPumps.forEach((p,i) => assets.push({ id: `main_${i}`, name: p['رقم/اسم الطلمبة'] || `طلمبة رئيسية ${i+1}` }));
-        if (station.drainPumps) station.drainPumps.forEach((p,i) => assets.push({ id: `drain_${i}`, name: p['رقم/اسم الطلمبة'] || `طلمبة نزح ${i+1}` }));
-        if (station.winches) station.winches.forEach((w,i) => assets.push({ id: `winch_${i}`, name: w['رقم/اسم الونش'] || `ونش ${i+1}` }));
-        if (station.panels) station.panels.forEach((p,i) => assets.push({ id: `panel_${i}`, name: p['رقم/اسم اللوحة'] || `لوحة ${i+1}` }));
-        if (station.fans) station.fans.forEach((f,i) => assets.push({ id: `fan_${i}`, name: f['رقم/اسم المروحة'] || `مروحة ${i+1}` }));
-        if (station.sealPumps) station.sealPumps.forEach((s,i) => assets.push({ id: `seal_${i}`, name: s['رقم/اسم الطلمبة'] || `طلمبة حبس جلندات ${i+1}` }));
-        if (assets.length === 0) assetSelect.innerHTML = '<option value="">لا توجد أصول مسجلة</option>';
-        else assetSelect.innerHTML = '<option value="">اختر الأصل</option>' + assets.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
+        if (station.mainPumps) station.mainPumps.forEach((p,i) => assets.push({ id: `main_${i}`, name: p['???/??? ???????'] || `????? ?????? ${i+1}` }));
+        if (station.drainPumps) station.drainPumps.forEach((p,i) => assets.push({ id: `drain_${i}`, name: p['???/??? ???????'] || `????? ??? ${i+1}` }));
+        if (station.winches) station.winches.forEach((w,i) => assets.push({ id: `winch_${i}`, name: w['???/??? ?????'] || `??? ${i+1}` }));
+        if (station.panels) station.panels.forEach((p,i) => assets.push({ id: `panel_${i}`, name: p['???/??? ??????'] || `???? ${i+1}` }));
+        if (station.fans) station.fans.forEach((f,i) => assets.push({ id: `fan_${i}`, name: f['???/??? ???????'] || `????? ${i+1}` }));
+        if (station.sealPumps) station.sealPumps.forEach((s,i) => assets.push({ id: `seal_${i}`, name: s['???/??? ???????'] || `????? ??? ?????? ${i+1}` }));
+        if (assets.length === 0) assetSelect.innerHTML = '<option value="">?? ???? ???? ?????</option>';
+        else assetSelect.innerHTML = '<option value="">???? ?????</option>' + assets.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
     });
     window.showAssetFullReport = () => {
         const stationId = document.getElementById('assetReportStation').value;
         const assetId = document.getElementById('assetReportSelect').value;
         const assetName = document.getElementById('assetReportSelect').selectedOptions[0]?.text;
-        if (!stationId) { alert('اختر محطة أولاً'); return; }
-        if (!assetId) { alert('اختر الأصل أولاً'); return; }
+        if (!stationId) { alert('???? ???? ?????'); return; }
+        if (!assetId) { alert('???? ????? ?????'); return; }
         const station = stations.find(s => s.id == stationId);
         const lastDaily = dailyReports.filter(r => r.stationId == stationId).sort((a,b)=>b.date.localeCompare(a.date))[0];
         let assetStatus = '-', assetReason = '-', assetNotes = '', lastDate = '-';
@@ -1535,24 +1491,24 @@ async function loadReportAsset(container) {
             if (assetDaily) { assetStatus = assetDaily.status || '-'; assetReason = assetDaily.reason || '-'; assetNotes = assetDaily.notes || ''; lastDate = lastDaily.date; }
         }
         const assetFaults = openFaults.filter(f => f.stationId == stationId && f.assetName === assetName);
-        let html = `<h5 class="mb-3">تقرير متابعة الأصل: ${assetName}</h5>
-                    <p><strong>المحطة:</strong> ${station?.name} (${station?.code})</p>
+        let html = `<h5 class="mb-3">????? ?????? ?????: ${assetName}</h5>
+                    <p><strong>??????:</strong> ${station?.name} (${station?.code})</p>
                     <div class="table-responsive">
                         <table class="table table-bordered">
                             <thead class="table-primary">
-                                 <th>المصدر</th><th>الحالة</th><th>سبب التوقف</th><th>ملاحظات / تفاصيل</th>
+                                 <th>??????</th><th>??????</th><th>??? ??????</th><th>??????? / ??????</th>
                             </thead>
                             <tbody>
-                                 <td>آخر تقرير متابعة دورية<br><small class="text-muted">${lastDate}</small></td><td><span class="badge ${assetStatus === 'يعمل' ? 'bg-success' : (assetStatus === 'لا يعمل' ? 'bg-danger' : 'bg-secondary')}">${assetStatus || '-'}</span></td><td>${assetReason || '-'}</td><td>${assetNotes || '-'}</td>
+                                 <td>??? ????? ?????? ?????<br><small class="text-muted">${lastDate}</small></td><td><span class="badge ${assetStatus === '????' ? 'bg-success' : (assetStatus === '?? ????' ? 'bg-danger' : 'bg-secondary')}">${assetStatus || '-'}</span></td><td>${assetReason || '-'}</td><td>${assetNotes || '-'}</td>
                                  `;
         if (assetFaults.length) {
             assetFaults.forEach(f => {
                 html += `<tr style="background-color:#fff3cd">
-                             <td>بلاغ عطل مفتوح<br><small class="text-muted">${f.date}</small></td><td><span class="badge bg-danger">لا يعمل</span></td><td>${f.description || '-'}</td><td><strong>الإجراء:</strong> ${f.actions || '-'}<br><strong>قطع الغيار:</strong> ${f.parts || '-'}</td>
+                             <td>???? ??? ?????<br><small class="text-muted">${f.date}</small></td><td><span class="badge bg-danger">?? ????</span></td><td>${f.description || '-'}</td><td><strong>???????:</strong> ${f.actions || '-'}<br><strong>??? ??????:</strong> ${f.parts || '-'}</td>
                           </tr>`;
             });
         } else {
-            html += `<tr><td>بلاغات الأعطال</td><td colspan="3">لا توجد بلاغات مفتوحة لهذا الأصل</td></tr>`;
+            html += `<tr><td>?????? ???????</td><td colspan="3">?? ???? ?????? ?????? ???? ?????</td></tr>`;
         }
         html += `</tbody></table></div>`;
         document.getElementById('assetFullReport').innerHTML = html;
@@ -1560,11 +1516,11 @@ async function loadReportAsset(container) {
     };
     window.printAssetReport = () => {
         const content = document.getElementById('assetFullReport').innerHTML;
-        const assetName = document.getElementById('assetReportSelect').selectedOptions[0]?.text || 'الأصل';
+        const assetName = document.getElementById('assetReportSelect').selectedOptions[0]?.text || '?????';
         const win = window.open('', '_blank');
-        win.document.write(`<html dir="rtl"><head><title>تقرير متابعة أصل ${assetName}</title>
+        win.document.write(`<html dir="rtl"><head><title>????? ?????? ??? ${assetName}</title>
         <style>body{font-family:Tahoma;padding:20px;margin:0} table{border-collapse:collapse;width:100%;margin-bottom:20px} th,td{border:1px solid #ddd;padding:10px;text-align:right} th{background:#0d6efd;color:white}</style></head>
-        <body><h2>تقرير متابعة أصل: ${assetName}</h2>${content}</body></html>`);
+        <body><h2>????? ?????? ???: ${assetName}</h2>${content}</body></html>`);
         win.document.close();
         win.print();
     };
@@ -1574,17 +1530,17 @@ async function loadReportEmployees(container) {
     const employees = await apiCall('employees', 'select');
     const stationMap = {};
     stations.forEach(s => stationMap[s.id] = s.name);
-    let stationOptions = '<option value="">كل المحطات</option>' + stations.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+    let stationOptions = '<option value="">?? ???????</option>' + stations.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
     container.innerHTML = `
         <div class="form-card">
-            <h4>👥 تقرير العاملين</h4>
+            <h4>?? ????? ????????</h4>
             <div class="row">
-                <div class="col-md-4 mb-2"><label>المحطة</label><select id="empReportStationFilter" class="form-control">${stationOptions}</select></div>
-                <div class="col-md-4 mb-2"><label>الوظيفة</label><select id="empReportRoleFilter" class="form-control"><option value="">الكل</option><option>مدير محطة</option><option>مهندس</option><option>فني</option><option>عامل</option></select></div>
-                <div class="col-md-4 mb-2"><label>الحالة</label><select id="empReportStatusFilter" class="form-control"><option value="">الكل</option><option>يعمل</option><option>إجازة</option></select></div>
+                <div class="col-md-4 mb-2"><label>??????</label><select id="empReportStationFilter" class="form-control">${stationOptions}</select></div>
+                <div class="col-md-4 mb-2"><label>???????</label><select id="empReportRoleFilter" class="form-control"><option value="">????</option><option>???? ????</option><option>?????</option><option>???</option><option>????</option></select></div>
+                <div class="col-md-4 mb-2"><label>??????</label><select id="empReportStatusFilter" class="form-control"><option value="">????</option><option>????</option><option>?????</option></select></div>
             </div>
-            <button class="btn btn-primary mt-2" onclick="showEmployeesReport()">عرض</button>
-            <button class="btn btn-secondary mt-2" onclick="printEmployeesReport()">🖨️ طباعة</button>
+            <button class="btn btn-primary mt-2" onclick="showEmployeesReport()">???</button>
+            <button class="btn btn-secondary mt-2" onclick="printEmployeesReport()">??? ?????</button>
             <div id="employeesReportResult" class="mt-4"></div>
         </div>
     `;
@@ -1597,8 +1553,8 @@ async function loadReportEmployees(container) {
         if (role) filtered = filtered.filter(e => e.role == role);
         if (status) filtered = filtered.filter(e => e.status == status);
         const resultDiv = document.getElementById('employeesReportResult');
-        if (filtered.length === 0) { resultDiv.innerHTML = '<div class="alert alert-info">لا توجد بيانات مطابقة</div>'; return; }
-        let html = `<div class="table-responsive"><table class="table table-bordered"><thead> <th>الكود</th><th>الاسم</th><th>المحطة</th><th>الوظيفة</th><th>الوردية</th><th>التليفون</th><th>الحالة</th> </thead><tbody>`;
+        if (filtered.length === 0) { resultDiv.innerHTML = '<div class="alert alert-info">?? ???? ?????? ??????</div>'; return; }
+        let html = `<div class="table-responsive"><table class="table table-bordered"><thead> <th>?????</th><th>?????</th><th>??????</th><th>???????</th><th>???????</th><th>????????</th><th>??????</th> </thead><tbody>`;
         filtered.forEach(e => {
             html += `    <td class="text-center">${e.code}  <td class="text-center">${e.name}  <td class="text-center">${stationMap[e.stationId] || '-'}  <td class="text-center">${e.role}  <td class="text-center">${e.shift || '-'}  <td class="text-center">${e.phone || '-'}  <td class="text-center">${e.status}   `;
         });
@@ -1608,7 +1564,7 @@ async function loadReportEmployees(container) {
     window.printEmployeesReport = () => {
         const content = document.getElementById('employeesReportResult').innerHTML;
         const win = window.open('', '_blank');
-        win.document.write(`<html dir="rtl"><head><title>تقرير العاملين</title><style>body{font-family:Tahoma;padding:20px} table{border-collapse:collapse;width:100%} th,td{border:1px solid #ddd;padding:8px}</style></head><body><h2>تقرير العاملين</h2>${content}</body></html>`);
+        win.document.write(`<html dir="rtl"><head><title>????? ????????</title><style>body{font-family:Tahoma;padding:20px} table{border-collapse:collapse;width:100%} th,td{border:1px solid #ddd;padding:8px}</style></head><body><h2>????? ????????</h2>${content}</body></html>`);
         win.document.close();
         win.print();
     };
@@ -1618,17 +1574,17 @@ async function loadReportSpareParts(container) {
     const stations = await apiCall('stations', 'select');
     const faults = await apiCall('faults', 'select');
     const faultsWithParts = faults.filter(f => f.parts && f.parts.trim() !== '');
-    let stationOptions = '<option value="">كل المحطات</option>' + stations.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+    let stationOptions = '<option value="">?? ???????</option>' + stations.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
     container.innerHTML = `
         <div class="form-card">
-            <h4>🔧 تقرير قطع الغيار المستخدمة</h4>
+            <h4>?? ????? ??? ?????? ?????????</h4>
             <div class="row">
-                <div class="col-md-4 mb-2"><label>المحطة</label><select id="spareReportStation" class="form-control">${stationOptions}</select></div>
-                <div class="col-md-4 mb-2"><label>من تاريخ</label><input type="date" id="spareFromDate" class="form-control"></div>
-                <div class="col-md-4 mb-2"><label>إلى تاريخ</label><input type="date" id="spareToDate" class="form-control"></div>
+                <div class="col-md-4 mb-2"><label>??????</label><select id="spareReportStation" class="form-control">${stationOptions}</select></div>
+                <div class="col-md-4 mb-2"><label>?? ?????</label><input type="date" id="spareFromDate" class="form-control"></div>
+                <div class="col-md-4 mb-2"><label>??? ?????</label><input type="date" id="spareToDate" class="form-control"></div>
             </div>
-            <button class="btn btn-primary mt-2" onclick="showSparePartsReport()">عرض</button>
-            <button class="btn btn-secondary mt-2" onclick="printSparePartsReport()">🖨️ طباعة</button>
+            <button class="btn btn-primary mt-2" onclick="showSparePartsReport()">???</button>
+            <button class="btn btn-secondary mt-2" onclick="printSparePartsReport()">??? ?????</button>
             <div id="sparePartsReportResult" class="mt-4"></div>
         </div>
     `;
@@ -1641,8 +1597,8 @@ async function loadReportSpareParts(container) {
         if (fromDate) filtered = filtered.filter(f => f.date >= fromDate);
         if (toDate) filtered = filtered.filter(f => f.date <= toDate);
         const resultDiv = document.getElementById('sparePartsReportResult');
-        if (filtered.length === 0) { resultDiv.innerHTML = '<div class="alert alert-info">لا توجد قطع غيار مسجلة</div>'; return; }
-        let html = `<div class="table-responsive"><table class="table table-bordered"><thead> <th>التاريخ</th><th>المحطة</th><th>الأصل المعطل</th><th>قطع الغيار المستخدمة</th><th>نوع العطل</th> </thead><tbody>`;
+        if (filtered.length === 0) { resultDiv.innerHTML = '<div class="alert alert-info">?? ???? ??? ???? ?????</div>'; return; }
+        let html = `<div class="table-responsive"><table class="table table-bordered"><thead> <th>???????</th><th>??????</th><th>????? ??????</th><th>??? ?????? ?????????</th><th>??? ?????</th> </thead><tbody>`;
         filtered.forEach(f => {
             const station = stations.find(s => s.id == f.stationId);
             html += `    <td class="text-center">${f.date}  <td class="text-center">${station?.name || '-'}  <td class="text-center">${f.assetName || '-'}  <td class="text-center fw-bold text-primary">${f.parts}  <td class="text-center">${f.type}  `;
@@ -1653,7 +1609,7 @@ async function loadReportSpareParts(container) {
     window.printSparePartsReport = () => {
         const content = document.getElementById('sparePartsReportResult').innerHTML;
         const win = window.open('', '_blank');
-        win.document.write(`<html dir="rtl"><head><title>تقرير قطع الغيار</title><style>body{font-family:Tahoma;padding:20px} table{border-collapse:collapse;width:100%} th,td{border:1px solid #ddd;padding:8px}</style></head><body><h2>تقرير قطع الغيار المستخدمة</h2>${content}</body></html>`);
+        win.document.write(`<html dir="rtl"><head><title>????? ??? ??????</title><style>body{font-family:Tahoma;padding:20px} table{border-collapse:collapse;width:100%} th,td{border:1px solid #ddd;padding:8px}</style></head><body><h2>????? ??? ?????? ?????????</h2>${content}</body></html>`);
         win.document.close();
         win.print();
     };
@@ -1661,15 +1617,15 @@ async function loadReportSpareParts(container) {
 
 async function loadArchive(container) {
     const stations = await apiCall('stations', 'select');
-    let stationOptions = '<option value="">اختر محطة</option>';
+    let stationOptions = '<option value="">???? ????</option>';
     stations.forEach(s => { stationOptions += `<option value="${s.id}">${s.name}</option>`; });
     container.innerHTML = `
         <div class="form-card">
-            <h4>📁 أرشيف المستندات</h4>
+            <h4>?? ????? ?????????</h4>
             <div class="row">
-                <div class="col-md-4 mb-2"><label>المحطة</label><select id="archiveStationSelect" class="form-control">${stationOptions}</select></div>
+                <div class="col-md-4 mb-2"><label>??????</label><select id="archiveStationSelect" class="form-control">${stationOptions}</select></div>
                 <div class="col-md-4 mb-2"><input type="file" id="archiveFileInput" class="form-control" accept="image/*,application/pdf"></div>
-                <div class="col-md-4 mb-2"><button class="btn btn-primary" onclick="uploadArchiveFile()">📤 رفع ملف</button></div>
+                <div class="col-md-4 mb-2"><button class="btn btn-primary" onclick="uploadArchiveFile()">?? ??? ???</button></div>
             </div>
             <div id="archiveFilesContainer" class="mt-4 row"></div>
         </div>
@@ -1677,7 +1633,7 @@ async function loadArchive(container) {
     async function displayArchiveFiles() {
         const stationId = document.getElementById('archiveStationSelect').value;
         if (!stationId) {
-            document.getElementById('archiveFilesContainer').innerHTML = '<div class="alert alert-info">اختر محطة لعرض ملفاتها</div>';
+            document.getElementById('archiveFilesContainer').innerHTML = '<div class="alert alert-info">???? ???? ???? ???????</div>';
             return;
         }
         const archiveData = await apiCall('archive', 'select');
@@ -1685,7 +1641,7 @@ async function loadArchive(container) {
         const containerDiv = document.getElementById('archiveFilesContainer');
         containerDiv.innerHTML = '';
         if (files.length === 0) {
-            containerDiv.innerHTML = '<div class="alert alert-info">لا توجد ملفات مرفوعة لهذه المحطة</div>';
+            containerDiv.innerHTML = '<div class="alert alert-info">?? ???? ????? ?????? ???? ??????</div>';
             return;
         }
         files.forEach((file, idx) => {
@@ -1694,11 +1650,11 @@ async function loadArchive(container) {
             const isImage = file.type === 'image';
             col.innerHTML = `
                 <div class="card">
-                    ${isImage ? `<img src="${file.data}" class="card-img-top" alt="${file.name}" style="height:150px;object-fit:cover">` : `<div class="card-header bg-secondary text-white">📄 ${file.name}</div>`}
+                    ${isImage ? `<img src="${file.data}" class="card-img-top" alt="${file.name}" style="height:150px;object-fit:cover">` : `<div class="card-header bg-secondary text-white">?? ${file.name}</div>`}
                     <div class="card-body">
                         <p class="card-text"><small>${new Date(file.date).toLocaleString('ar-EG')}</small></p>
-                        <button class="btn btn-sm btn-info" onclick="viewArchiveFile('${stationId}', ${idx})">عرض</button>
-                        <button class="btn btn-sm btn-danger" onclick="deleteArchiveFile('${stationId}', ${idx})">حذف</button>
+                        <button class="btn btn-sm btn-info" onclick="viewArchiveFile('${stationId}', ${idx})">???</button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteArchiveFile('${stationId}', ${idx})">???</button>
                     </div>
                 </div>
             `;
@@ -1708,8 +1664,8 @@ async function loadArchive(container) {
     window.uploadArchiveFile = () => {
         const stationId = document.getElementById('archiveStationSelect').value;
         const fileInput = document.getElementById('archiveFileInput');
-        if (!stationId) { alert('اختر محطة أولاً'); return; }
-        if (!fileInput.files.length) { alert('اختر ملف أولاً'); return; }
+        if (!stationId) { alert('???? ???? ?????'); return; }
+        if (!fileInput.files.length) { alert('???? ??? ?????'); return; }
         const file = fileInput.files[0];
         const reader = new FileReader();
         reader.onload = async function(e) {
@@ -1723,10 +1679,10 @@ async function loadArchive(container) {
             };
             try {
                 await apiCall('archive', 'insert', newFile);
-                alert('تم رفع الملف بنجاح');
+                alert('?? ??? ????? ?????');
                 fileInput.value = '';
                 displayArchiveFiles();
-            } catch (err) { alert('خطأ: ' + err.message); }
+            } catch (err) { alert('???: ' + err.message); }
         };
         reader.readAsDataURL(file);
     };
@@ -1747,15 +1703,15 @@ async function loadArchive(container) {
         });
     };
     window.deleteArchiveFile = async (stationId, index) => {
-        if (confirm('هل تريد حذف هذا الملف؟')) {
+        if (confirm('?? ???? ??? ??? ??????')) {
             const archiveData = await apiCall('archive', 'select');
             const file = archiveData.find(f => f.stationId == stationId && f.id == index);
             if (file) {
                 try {
                     await apiCall('archive', 'delete', null, file.id);
-                    alert('تم حذف الملف');
+                    alert('?? ??? ?????');
                     displayArchiveFiles();
-                } catch (err) { alert('خطأ: ' + err.message); }
+                } catch (err) { alert('???: ' + err.message); }
             }
         }
     };
@@ -1767,27 +1723,27 @@ async function loadUsers(container) {
     const users = await apiCall('users', 'select');
     container.innerHTML = `
         <div class="form-card">
-            <h4>⚙️ إدارة المستخدمين والصلاحيات</h4>
+            <h4>?? ????? ?????????? ??????????</h4>
             <div id="userMessage" class="alert alert-info d-none"></div>
             <form id="userForm">
                 <div class="row">
-                    <div class="col-md-3 mb-2"><input type="text" id="userCode" class="form-control" placeholder="كود المستخدم" required></div>
-                    <div class="col-md-3 mb-2"><input type="text" id="userName" class="form-control" placeholder="الاسم" required></div>
-                    <div class="col-md-3 mb-2"><input type="password" id="userPass" class="form-control" placeholder="كلمة المرور" required></div>
+                    <div class="col-md-3 mb-2"><input type="text" id="userCode" class="form-control" placeholder="??? ????????" required></div>
+                    <div class="col-md-3 mb-2"><input type="text" id="userName" class="form-control" placeholder="?????" required></div>
+                    <div class="col-md-3 mb-2"><input type="password" id="userPass" class="form-control" placeholder="???? ??????" required></div>
                     <div class="col-md-3 mb-2"><select id="userRole" class="form-control">
-                        <option value="مدير">مدير (كل الصلاحيات)</option>
-                        <option value="مدير محدود">مدير محدود (صلاحيات محددة لكل المواقع)</option>
-                        <option value="مدير موقع">مدير موقع (صلاحيات محددة لموقع واحد)</option>
-                        <option value="عرض فقط">عرض فقط (لا يمكنه الإضافة أو التعديل أو الحذف)</option>
+                        <option value="????">???? (?? ?????????)</option>
+                        <option value="???? ?????">???? ????? (??????? ????? ??? ???????)</option>
+                        <option value="???? ????">???? ???? (??????? ????? ????? ????)</option>
+                        <option value="??? ???">??? ??? (?? ????? ??????? ?? ??????? ?? ?????)</option>
                     </select></div>
                 </div>
-                <button type="submit" class="btn btn-primary mt-2">➕ إضافة مستخدم</button>
+                <button type="submit" class="btn btn-primary mt-2">? ????? ??????</button>
             </form>
         </div>
         <div class="table-responsive mt-4">
             <table class="table table-bordered">
                 <thead>
-                     <th>الكود</th><th>الاسم</th><th>الصلاحية</th><th>تاريخ الإضافة</th><th></th>
+                     <th>?????</th><th>?????</th><th>????????</th><th>????? ???????</th><th></th>
                 </thead>
                 <tbody id="usersTableBody"></tbody>
              </div>
@@ -1814,21 +1770,21 @@ async function loadUsers(container) {
             const delCell = row.insertCell(4);
             const delBtn = document.createElement('button');
             delBtn.className = 'btn btn-sm btn-danger';
-            delBtn.innerHTML = '<i class="fas fa-trash"></i> حذف';
+            delBtn.innerHTML = '<i class="fas fa-trash"></i> ???';
             delBtn.onclick = async () => {
                 if (u.username === 'admin') {
-                    showMessage('لا يمكن حذف المستخدم admin', true);
+                    showMessage('?? ???? ??? ???????? admin', true);
                     return;
                 }
-                if (confirm(`حذف المستخدم ${u.name}؟`)) {
+                if (confirm(`??? ???????? ${u.name}?`)) {
                     try {
                         await apiCall('users', 'delete', null, u.id);
                         const index = users.findIndex(us => us.id === u.id);
                         if (index !== -1) users.splice(index, 1);
                         renderUsersTable();
-                        showMessage('تم حذف المستخدم بنجاح');
+                        showMessage('?? ??? ???????? ?????');
                     } catch (err) {
-                        showMessage('خطأ: ' + err.message, true);
+                        showMessage('???: ' + err.message, true);
                     }
                 }
             };
@@ -1844,12 +1800,12 @@ async function loadUsers(container) {
         const role = document.getElementById('userRole').value;
 
         if (!username || !name || !password) {
-            showMessage('جميع الحقول مطلوبة', true);
+            showMessage('???? ?????? ??????', true);
             return;
         }
 
         if (users.find(u => u.username === username)) {
-            showMessage('اسم المستخدم موجود مسبقاً', true);
+            showMessage('??? ???????? ????? ??????', true);
             return;
         }
 
@@ -1866,21 +1822,21 @@ async function loadUsers(container) {
             const result = await apiCall('users', 'insert', newUser);
             users.push(result);
             renderUsersTable();
-            showMessage('تم إضافة المستخدم بنجاح');
+            showMessage('?? ????? ???????? ?????');
             document.getElementById('userForm').reset();
         } catch (err) {
             console.error(err);
-            showMessage('فشل في إضافة المستخدم: ' + err.message, true);
+            showMessage('??? ?? ????? ????????: ' + err.message, true);
         }
     };
 
     renderUsersTable();
 }
-// ==================== الدالة الرئيسية ====================
+// ==================== ?????? ???????? ====================
 async function loadPage(page) {
     if (!checkAuth()) return;
 
-    // إغلاق القائمة الجانبية في الموبايل
+    // ????? ??????? ???????? ?? ????????
     const sidebar = document.getElementById('sidebar');
     if (sidebar && window.innerWidth <= 768) {
         sidebar.classList.remove('active');
@@ -1911,10 +1867,10 @@ async function loadPage(page) {
     else if (page === 'reportWaterConsumption') await loadReportWaterConsumption(container);
     else if (page === 'reportDiesel') await loadReportDiesel(container);
     else if (page === 'reportSparePartsAdvanced') await loadReportSparePartsAdvanced(container);
-    else container.innerHTML = '<div class="alert alert-danger">صفحة غير موجودة</div>';
+    else container.innerHTML = '<div class="alert alert-danger">???? ??? ??????</div>';
 }
 
-// ==================== دوال مساعدة للقائمة الجانبية ====================
+// ==================== ???? ?????? ??????? ???????? ====================
 function toggleSubMenu(menuId) {
     const menu = document.getElementById(menuId);
     if (menu) {
@@ -1922,7 +1878,7 @@ function toggleSubMenu(menuId) {
     }
 }
 
-// ==================== تصدير الدوال للاستخدام ====================
+// ==================== ????? ?????? ????????? ====================
 window.loadPage = loadPage;
 window.logout = logout;
 window.toggleSubMenu = toggleSubMenu;
@@ -1930,4 +1886,4 @@ window.canEdit = canEdit;
 window.canAdd = canAdd;
 window.canDelete = canDelete;
 
-console.log('✅ app.js loaded successfully');
+console.log('? app.js loaded successfully');
