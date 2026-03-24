@@ -81,12 +81,17 @@
 </div>
 
 <script>
-    // 1. إعدادات Supabase (ضع بياناتك هنا)
+<script>
+    // 1. إعدادات Supabase (بياناتك الخاصة)
     const SUPABASE_URL = 'https://pbzpumetrmirnsshjdoe.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_O9BKPIjk5xXvbGNjvsBXVw_9V_TIoUu';
-  //  const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-// قمنا بتغيير الاسم هنا لـ supabaseClient لتجنب التعارض
-window.supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // استخدام اسم متغير مختلف (mySupabase) لتجنب التعارض مع كلمة supabase المحجوزة للمكتبة
+    const mySupabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    
+    // جعل العميل متاحاً عالمياً لملف app.js إذا لزم الأمر
+    window.supabaseClient = mySupabase;
+
     const loginForm = document.getElementById('loginForm');
     const errorMsg = document.getElementById('errorMsg');
     const submitBtn = document.getElementById('submitBtn');
@@ -102,12 +107,12 @@ window.supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         btnLoader.classList.remove('d-none');
         submitBtn.disabled = true;
 
-        const username = document.getElementById('username').value;
-        const password = document.getElementById('password').value;
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value.trim();
 
         try {
-            // 2. الاستعلام من قاعدة البيانات
-            const { data, error } = await window.supabaseClient
+            // 2. الاستعلام من جدول users
+            const { data, error } = await mySupabase
                 .from('users')
                 .select('*')
                 .eq('username', username)
@@ -117,8 +122,8 @@ window.supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
             if (data && data.length > 0) {
                 const user = data[0];
- 
-                // 3. حفظ بيانات الجلسة
+                
+                // 3. حفظ بيانات الجلسة (تأكد أن dashboard.html يبحث عن نفس هذه المفاتيح)
                 sessionStorage.setItem('loggedUser', JSON.stringify(user));
                 sessionStorage.setItem('loginTime', Date.now());
 
@@ -126,11 +131,12 @@ window.supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
                 window.location.href = 'dashboard.html';
             } else {
                 // بيانات خاطئة
+                errorMsg.textContent = 'اسم المستخدم أو كلمة المرور غير صحيحة';
                 errorMsg.classList.remove('d-none');
             }
         } catch (err) {
             console.error('خطأ أثناء الدخول:', err);
-            errorMsg.textContent = 'حدث خطأ في الاتصال بالسيرفر';
+            errorMsg.textContent = 'حدث خطأ في الاتصال بقاعدة البيانات';
             errorMsg.classList.remove('d-none');
         } finally {
             // إعادة الزر لحالته الأصلية
