@@ -315,7 +315,7 @@ async function loadListStations(container) {
         return;
     }
     let html = `<div class="search-bar"><input type="text" id="searchInput" class="form-control" placeholder="بحث..."></div>
-                <div class="table-responsive"><table class="table table-bordered"><thead>运转<th>الكود</th><th>الاسم</th><th>النوع</th><th>المصب</th><th></th> </thead><tbody id="stationsTable">`;
+                <div class="table-responsive"><table class="table table-bordered"><thead>قائمة المحطات<th>الكود</th><th>الاسم</th><th>النوع</th><th>المصب</th><th></th> </thead><tbody id="stationsTable">`;
     stations.forEach(s => {
         html += `运转
             <td class="text-center">${s.code} </td>
