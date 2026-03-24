@@ -2301,5 +2301,14 @@ function loadReportSparePartsAdvanced(container) {
         win.print();
     };
 }
+// ==================== تصدير الدوال ====================
+window.loadPage = loadPage;
+window.logout = logout;
+window.toggleSubMenu = toggleSubMenu;
+window.canEdit = canEdit;
+window.canAdd = canAdd;
+window.canDelete = canDelete;
+
+console.log('✅ app.js loaded, loadPage is:', typeof loadPage);
 window.loadPage = loadPage;
 window.logout = logout;
