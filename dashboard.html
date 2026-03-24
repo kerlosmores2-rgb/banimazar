@@ -257,6 +257,12 @@
         console.error('loadPage غير معرفة');
         document.getElementById('pageContent').innerHTML = '<div class="alert alert-danger">خطأ: لم يتم تحميل النظام</div>';
     }
+     window.loadPage = loadPage;
+    window.logout = logout;
+    window.toggleSubMenu = toggleSubMenu;
+    
+    console.log('✅ app.js loaded');
+
 </script>
 </body>
 </html>
