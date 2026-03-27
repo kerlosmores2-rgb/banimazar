@@ -14,6 +14,7 @@ const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 console.log('Supabase initialized');
 
+
 // ==================== دوال مساعدة ====================
 let authToken = localStorage.getItem('authToken');
 let currentUser = null;
@@ -31,6 +32,15 @@ function clearAuthToken() {
     localStorage.removeItem('authToken');
     localStorage.removeItem('currentUser');
 }
+
+function getCurrentUser() {
+    return JSON.parse(localStorage.getItem('currentUser') || '{}');
+}
+
+function checkAuth() {
+    return !!authToken;
+}
+
 
 function getCurrentUser() {
     return JSON.parse(localStorage.getItem('currentUser') || '{}');
