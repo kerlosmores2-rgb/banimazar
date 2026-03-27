@@ -149,11 +149,12 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
     // ============================================
-    // إعدادات Supabase
+    // إعدادات Supabase - استخدام متغير مختلف لتجنب التعارض
     // ============================================
     const SUPABASE_URL = 'https://jvfbkoaeugkeoiccvnkq.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_n64Hnhuruc3Oeolj-Uwg9g_tu-otJlZ';
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    // استخدام supabaseClient بدلاً من supabase لتجنب التعارض مع api.js
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     // ============================================
     // المتغيرات العامة
@@ -189,7 +190,7 @@
     }
 
     async function loadStationsList() {
-        const { data, error } = await supabase.from('stations').select('id, station_name');
+        const { data, error } = await supabaseClient.from('stations').select('id, station_name');
         if (!error && data) stationsList = data;
         return stationsList;
     }
@@ -208,13 +209,13 @@
     }
 
     // ============================================
-    // دوال API للجداول
+    // دوال API للجداول (باستخدام supabaseClient)
     // ============================================
 
     // المحطات
     async function getStations() {
         try {
-            const { data, error } = await supabase.from('stations').select('*').order('station_name');
+            const { data, error } = await supabaseClient.from('stations').select('*').order('station_name');
             if (error) throw error;
             return { success: true, stations: data || [] };
         } catch (error) {
@@ -224,7 +225,7 @@
 
     async function getStationStats() {
         try {
-            const { data, error } = await supabase.from('stations').select('status, capacity');
+            const { data, error } = await supabaseClient.from('stations').select('status, capacity');
             if (error) throw error;
             const stats = {
                 totalStations: data?.length || 0,
@@ -250,7 +251,7 @@
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString()
             };
-            const { data: result, error } = await supabase.from('stations').insert([newStation]).select();
+            const { data: result, error } = await supabaseClient.from('stations').insert([newStation]).select();
             if (error) throw error;
             return { success: true, data: result[0], message: 'تم إضافة المحطة بنجاح' };
         } catch (error) {
@@ -269,7 +270,7 @@
                 notes: data.notes || null,
                 updated_at: new Date().toISOString()
             };
-            const { data: result, error } = await supabase.from('stations').update(updateData).eq('id', id).select();
+            const { data: result, error } = await supabaseClient.from('stations').update(updateData).eq('id', id).select();
             if (error) throw error;
             return { success: true, data: result[0], message: 'تم تحديث المحطة بنجاح' };
         } catch (error) {
@@ -279,7 +280,7 @@
 
     async function deleteStation(id) {
         try {
-            const { error } = await supabase.from('stations').delete().eq('id', id);
+            const { error } = await supabaseClient.from('stations').delete().eq('id', id);
             if (error) throw error;
             return { success: true, message: 'تم حذف المحطة بنجاح' };
         } catch (error) {
@@ -290,9 +291,13 @@
     // الموظفين
     async function getEmployees() {
         try {
-            const { data, error } = await supabase.from('employees').select('*').order('employee_name');
+            const { data, error } = await supabaseClient.from('employees').select('*').order('employee_name');
             if (error) throw error;
-            return { success: true, employees: data || [] };
+            const employeesWithStation = (data || []).map(emp => ({
+                ...emp,
+                station_name: getStationName(emp.station_id)
+            }));
+            return { success: true, employees: employeesWithStation };
         } catch (error) {
             return { success: false, employees: [] };
         }
@@ -314,7 +319,7 @@
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString()
             };
-            const { data: result, error } = await supabase.from('employees').insert([newEmployee]).select();
+            const { data: result, error } = await supabaseClient.from('employees').insert([newEmployee]).select();
             if (error) throw error;
             return { success: true, data: result[0], message: 'تم إضافة الموظف بنجاح' };
         } catch (error) {
@@ -337,7 +342,7 @@
                 notes: data.notes || null,
                 updated_at: new Date().toISOString()
             };
-            const { data: result, error } = await supabase.from('employees').update(updateData).eq('id', id).select();
+            const { data: result, error } = await supabaseClient.from('employees').update(updateData).eq('id', id).select();
             if (error) throw error;
             return { success: true, data: result[0], message: 'تم تحديث الموظف بنجاح' };
         } catch (error) {
@@ -347,7 +352,7 @@
 
     async function deleteEmployee(id) {
         try {
-            const { error } = await supabase.from('employees').delete().eq('id', id);
+            const { error } = await supabaseClient.from('employees').delete().eq('id', id);
             if (error) throw error;
             return { success: true, message: 'تم حذف الموظف بنجاح' };
         } catch (error) {
@@ -358,7 +363,7 @@
     // بلاغات الصيانة
     async function getMaintenanceReports() {
         try {
-            const { data, error } = await supabase.from('maintenance_reports').select('*').order('created_at', { ascending: false });
+            const { data, error } = await supabaseClient.from('maintenance_reports').select('*').order('created_at', { ascending: false });
             if (error) throw error;
             return { success: true, reports: data || [] };
         } catch (error) {
@@ -380,7 +385,7 @@
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString()
             };
-            const { data: result, error } = await supabase.from('maintenance_reports').insert([newReport]).select();
+            const { data: result, error } = await supabaseClient.from('maintenance_reports').insert([newReport]).select();
             if (error) throw error;
             return { success: true, data: result[0], message: 'تم إضافة البلاغ بنجاح' };
         } catch (error) {
@@ -400,7 +405,7 @@
                 completed_date: data.status === 'completed' ? new Date().toISOString().split('T')[0] : null,
                 updated_at: new Date().toISOString()
             };
-            const { data: result, error } = await supabase.from('maintenance_reports').update(updateData).eq('id', id).select();
+            const { data: result, error } = await supabaseClient.from('maintenance_reports').update(updateData).eq('id', id).select();
             if (error) throw error;
             return { success: true, data: result[0], message: 'تم تحديث البلاغ بنجاح' };
         } catch (error) {
@@ -410,7 +415,7 @@
 
     async function deleteMaintenanceReport(id) {
         try {
-            const { error } = await supabase.from('maintenance_reports').delete().eq('id', id);
+            const { error } = await supabaseClient.from('maintenance_reports').delete().eq('id', id);
             if (error) throw error;
             return { success: true, message: 'تم حذف البلاغ بنجاح' };
         } catch (error) {
@@ -421,7 +426,7 @@
     // عدادات الكهرباء
     async function getElectricityMeters() {
         try {
-            const { data, error } = await supabase.from('electricity_meters').select('*').order('reading_date', { ascending: false });
+            const { data, error } = await supabaseClient.from('electricity_meters').select('*').order('reading_date', { ascending: false });
             if (error) throw error;
             return { success: true, meters: data || [] };
         } catch (error) {
@@ -442,7 +447,7 @@
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString()
             };
-            const { data: result, error } = await supabase.from('electricity_meters').insert([newMeter]).select();
+            const { data: result, error } = await supabaseClient.from('electricity_meters').insert([newMeter]).select();
             if (error) throw error;
             return { success: true, data: result[0], message: 'تم إضافة القراءة بنجاح' };
         } catch (error) {
@@ -462,7 +467,7 @@
                 notes: data.notes || null,
                 updated_at: new Date().toISOString()
             };
-            const { data: result, error } = await supabase.from('electricity_meters').update(updateData).eq('id', id).select();
+            const { data: result, error } = await supabaseClient.from('electricity_meters').update(updateData).eq('id', id).select();
             if (error) throw error;
             return { success: true, data: result[0], message: 'تم تحديث القراءة بنجاح' };
         } catch (error) {
@@ -472,7 +477,7 @@
 
     async function deleteElectricityMeter(id) {
         try {
-            const { error } = await supabase.from('electricity_meters').delete().eq('id', id);
+            const { error } = await supabaseClient.from('electricity_meters').delete().eq('id', id);
             if (error) throw error;
             return { success: true, message: 'تم حذف القراءة بنجاح' };
         } catch (error) {
@@ -483,7 +488,7 @@
     // عدادات المياه
     async function getWaterMeters() {
         try {
-            const { data, error } = await supabase.from('water_meters').select('*').order('reading_date', { ascending: false });
+            const { data, error } = await supabaseClient.from('water_meters').select('*').order('reading_date', { ascending: false });
             if (error) throw error;
             return { success: true, meters: data || [] };
         } catch (error) {
@@ -504,7 +509,7 @@
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString()
             };
-            const { data: result, error } = await supabase.from('water_meters').insert([newMeter]).select();
+            const { data: result, error } = await supabaseClient.from('water_meters').insert([newMeter]).select();
             if (error) throw error;
             return { success: true, data: result[0], message: 'تم إضافة القراءة بنجاح' };
         } catch (error) {
@@ -524,7 +529,7 @@
                 notes: data.notes || null,
                 updated_at: new Date().toISOString()
             };
-            const { data: result, error } = await supabase.from('water_meters').update(updateData).eq('id', id).select();
+            const { data: result, error } = await supabaseClient.from('water_meters').update(updateData).eq('id', id).select();
             if (error) throw error;
             return { success: true, data: result[0], message: 'تم تحديث القراءة بنجاح' };
         } catch (error) {
@@ -534,7 +539,7 @@
 
     async function deleteWaterMeter(id) {
         try {
-            const { error } = await supabase.from('water_meters').delete().eq('id', id);
+            const { error } = await supabaseClient.from('water_meters').delete().eq('id', id);
             if (error) throw error;
             return { success: true, message: 'تم حذف القراءة بنجاح' };
         } catch (error) {
@@ -545,7 +550,7 @@
     // استهلاك السولار
     async function getDieselConsumption() {
         try {
-            const { data, error } = await supabase.from('diesel_consumption').select('*').order('consumption_date', { ascending: false });
+            const { data, error } = await supabaseClient.from('diesel_consumption').select('*').order('consumption_date', { ascending: false });
             if (error) throw error;
             return { success: true, consumption: data || [] };
         } catch (error) {
@@ -565,7 +570,7 @@
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString()
             };
-            const { data: result, error } = await supabase.from('diesel_consumption').insert([newRecord]).select();
+            const { data: result, error } = await supabaseClient.from('diesel_consumption').insert([newRecord]).select();
             if (error) throw error;
             return { success: true, data: result[0], message: 'تم إضافة الاستهلاك بنجاح' };
         } catch (error) {
@@ -584,7 +589,7 @@
                 notes: data.notes || null,
                 updated_at: new Date().toISOString()
             };
-            const { data: result, error } = await supabase.from('diesel_consumption').update(updateData).eq('id', id).select();
+            const { data: result, error } = await supabaseClient.from('diesel_consumption').update(updateData).eq('id', id).select();
             if (error) throw error;
             return { success: true, data: result[0], message: 'تم تحديث الاستهلاك بنجاح' };
         } catch (error) {
@@ -594,7 +599,7 @@
 
     async function deleteDieselConsumption(id) {
         try {
-            const { error } = await supabase.from('diesel_consumption').delete().eq('id', id);
+            const { error } = await supabaseClient.from('diesel_consumption').delete().eq('id', id);
             if (error) throw error;
             return { success: true, message: 'تم حذف الاستهلاك بنجاح' };
         } catch (error) {
@@ -605,7 +610,7 @@
     // لوحات معامل القدرة
     async function getPowerFactorPanels() {
         try {
-            const { data, error } = await supabase.from('power_factor_panels').select('*').order('panel_name');
+            const { data, error } = await supabaseClient.from('power_factor_panels').select('*').order('panel_name');
             if (error) throw error;
             return { success: true, panels: data || [] };
         } catch (error) {
@@ -626,7 +631,7 @@
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString()
             };
-            const { data: result, error } = await supabase.from('power_factor_panels').insert([newPanel]).select();
+            const { data: result, error } = await supabaseClient.from('power_factor_panels').insert([newPanel]).select();
             if (error) throw error;
             return { success: true, data: result[0], message: 'تم إضافة اللوحة بنجاح' };
         } catch (error) {
@@ -646,7 +651,7 @@
                 notes: data.notes || null,
                 updated_at: new Date().toISOString()
             };
-            const { data: result, error } = await supabase.from('power_factor_panels').update(updateData).eq('id', id).select();
+            const { data: result, error } = await supabaseClient.from('power_factor_panels').update(updateData).eq('id', id).select();
             if (error) throw error;
             return { success: true, data: result[0], message: 'تم تحديث اللوحة بنجاح' };
         } catch (error) {
@@ -656,7 +661,7 @@
 
     async function deletePowerFactorPanel(id) {
         try {
-            const { error } = await supabase.from('power_factor_panels').delete().eq('id', id);
+            const { error } = await supabaseClient.from('power_factor_panels').delete().eq('id', id);
             if (error) throw error;
             return { success: true, message: 'تم حذف اللوحة بنجاح' };
         } catch (error) {
@@ -667,7 +672,7 @@
     // المولدات
     async function getGenerators() {
         try {
-            const { data, error } = await supabase.from('generators').select('*').order('generator_name');
+            const { data, error } = await supabaseClient.from('generators').select('*').order('generator_name');
             if (error) throw error;
             return { success: true, generators: data || [] };
         } catch (error) {
@@ -689,7 +694,7 @@
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString()
             };
-            const { data: result, error } = await supabase.from('generators').insert([newGenerator]).select();
+            const { data: result, error } = await supabaseClient.from('generators').insert([newGenerator]).select();
             if (error) throw error;
             return { success: true, data: result[0], message: 'تم إضافة المولد بنجاح' };
         } catch (error) {
@@ -710,7 +715,7 @@
                 notes: data.notes || null,
                 updated_at: new Date().toISOString()
             };
-            const { data: result, error } = await supabase.from('generators').update(updateData).eq('id', id).select();
+            const { data: result, error } = await supabaseClient.from('generators').update(updateData).eq('id', id).select();
             if (error) throw error;
             return { success: true, data: result[0], message: 'تم تحديث المولد بنجاح' };
         } catch (error) {
@@ -720,7 +725,7 @@
 
     async function deleteGenerator(id) {
         try {
-            const { error } = await supabase.from('generators').delete().eq('id', id);
+            const { error } = await supabaseClient.from('generators').delete().eq('id', id);
             if (error) throw error;
             return { success: true, message: 'تم حذف المولد بنجاح' };
         } catch (error) {
@@ -731,7 +736,7 @@
     // المضخات
     async function getPumps() {
         try {
-            const { data, error } = await supabase.from('main_pumps').select('*').order('pump_number');
+            const { data, error } = await supabaseClient.from('main_pumps').select('*').order('pump_number');
             if (error) throw error;
             return { success: true, pumps: data || [] };
         } catch (error) {
@@ -752,7 +757,7 @@
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString()
             };
-            const { data: result, error } = await supabase.from('main_pumps').insert([newPump]).select();
+            const { data: result, error } = await supabaseClient.from('main_pumps').insert([newPump]).select();
             if (error) throw error;
             return { success: true, data: result[0], message: 'تم إضافة المضخة بنجاح' };
         } catch (error) {
@@ -772,7 +777,7 @@
                 notes: data.notes || null,
                 updated_at: new Date().toISOString()
             };
-            const { data: result, error } = await supabase.from('main_pumps').update(updateData).eq('id', id).select();
+            const { data: result, error } = await supabaseClient.from('main_pumps').update(updateData).eq('id', id).select();
             if (error) throw error;
             return { success: true, data: result[0], message: 'تم تحديث المضخة بنجاح' };
         } catch (error) {
@@ -782,7 +787,7 @@
 
     async function deletePump(id) {
         try {
-            const { error } = await supabase.from('main_pumps').delete().eq('id', id);
+            const { error } = await supabaseClient.from('main_pumps').delete().eq('id', id);
             if (error) throw error;
             return { success: true, message: 'تم حذف المضخة بنجاح' };
         } catch (error) {
@@ -1108,9 +1113,9 @@
                 </div>
                 <div class="table-responsive">
                     <table class="data-table">
-                        <thead><tr>`;
+                        <thead><th>`;
             config.columns.forEach(col => html += `<th>${col.label}</th>`);
-            html += `<th>الإجراءات</th></tr></thead><tbody>`;
+            html += `<th>الإجراءات</th> </thead><tbody>`;
 
             data.forEach(item => {
                 html += `<tr>`;
@@ -1147,6 +1152,10 @@
         const config = tableConfigs[tableName];
         if (!config || !config.fields) return;
 
+        // تحديث خيارات المحطات في النموذج
+        let fieldsHtml = config.fields;
+        fieldsHtml = fieldsHtml.replace(/id="station_id">.*?<\/select>/, `id="station_id">${getStationsOptions()}</select>`);
+
         const modalHtml = `
             <div id="dataModal" class="modal active">
                 <div class="modal-content">
@@ -1155,7 +1164,7 @@
                         <span class="modal-close" onclick="closeModal()">&times;</span>
                     </div>
                     <form id="modalForm">
-                        ${config.fields}
+                        ${fieldsHtml}
                         <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 15px;">
                             <button type="button" class="btn btn-secondary" onclick="closeModal()">إلغاء</button>
                             <button type="submit" class="btn btn-primary">حفظ</button>
@@ -1167,9 +1176,6 @@
         let modal = document.getElementById('dataModal');
         if (modal) modal.remove();
         document.body.insertAdjacentHTML('beforeend', modalHtml);
-
-        const stationSelect = document.getElementById('station_id');
-        if (stationSelect) stationSelect.innerHTML = getStationsOptions();
 
         document.getElementById('modalForm').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -1200,13 +1206,22 @@
         if (!item) { showToast('لم يتم العثور على العنصر', true); return; }
 
         let fieldsHtml = config.fields;
+        // تحديث خيارات المحطات
+        fieldsHtml = fieldsHtml.replace(/id="station_id">.*?<\/select>/, `id="station_id">${getStationsOptions(item.station_id)}</select>`);
+        
+        // تعبئة الحقول بالقيم الموجودة
         Object.keys(item).forEach(key => {
             if (item[key] !== null && item[key] !== undefined && typeof item[key] !== 'object') {
-                const regex = new RegExp(`id="${key}"(?:[^>]*)(?:value="[^"]*")?`, 'g');
+                const regex = new RegExp(`id="${key}"[^>]*>`, 'g');
                 if (fieldsHtml.match(regex)) {
-                    fieldsHtml = fieldsHtml.replace(regex, `id="${key}" value="${item[key]}"`);
-                } else {
-                    fieldsHtml = fieldsHtml.replace(`id="${key}"`, `id="${key}" value="${item[key]}"`);
+                    fieldsHtml = fieldsHtml.replace(regex, `id="${key}" value="${item[key]}">`);
+                }
+                // للـ select
+                const selectRegex = new RegExp(`id="${key}"[^>]*>.*?</select>`, 's');
+                if (fieldsHtml.match(selectRegex)) {
+                    fieldsHtml = fieldsHtml.replace(selectRegex, (match) => {
+                        return match.replace(`value="${item[key]}"`, `value="${item[key]}" selected`);
+                    });
                 }
             }
         });
@@ -1231,9 +1246,6 @@
         let modal = document.getElementById('dataModal');
         if (modal) modal.remove();
         document.body.insertAdjacentHTML('beforeend', modalHtml);
-
-        const stationSelect = document.getElementById('station_id');
-        if (stationSelect) stationSelect.innerHTML = getStationsOptions(item.station_id);
 
         document.getElementById('modalForm').addEventListener('submit', async (e) => {
             e.preventDefault();
