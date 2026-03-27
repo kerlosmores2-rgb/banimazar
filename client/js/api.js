@@ -6,7 +6,11 @@
 // ==================== إعدادات Supabase ====================
 const SUPABASE_URL = 'https://jvfbkoaeugkeoiccvnkq.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_n64Hnhuruc3Oeolj-Uwg9g_tu-otJlZ';
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+
+
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
 
 console.log('Supabase initialized');
 
