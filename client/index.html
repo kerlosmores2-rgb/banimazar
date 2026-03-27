@@ -398,58 +398,56 @@
             document.getElementById('rememberMe').checked = true;
         }
     }
-    loadSavedCredentials();
-
-    // معالجة تسجيل الدخول
-    document.getElementById('loginForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
+   // معالجة تسجيل الدخول
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value;
+    const rememberMe = document.getElementById('rememberMe').checked;
+    
+    if (!username || !password) {
+        showError('الرجاء إدخال الكود الوظيفي وكلمة المرور');
+        return;
+    }
+    
+    // إظهار حالة التحميل
+    const loginBtn = document.getElementById('loginBtn');
+    const originalText = loginBtn.innerHTML;
+    loginBtn.innerHTML = '<span class="loading"></span> جاري تسجيل الدخول...';
+    loginBtn.disabled = true;
+    
+    try {
+        // استخدام البريد الإلكتروني كاسم مستخدم (Supabase Auth يستخدم البريد)
+        // يمكن تعديل هذا حسب هيكل قاعدة البيانات
+        const result = await login(username, password);
         
-        const username = document.getElementById('username').value.trim();
-        const password = document.getElementById('password').value;
-        const rememberMe = document.getElementById('rememberMe').checked;
-        
-        if (!username || !password) {
-            showError('الرجاء إدخال الكود الوظيفي وكلمة المرور');
-            return;
-        }
-        
-        // إظهار حالة التحميل
-        const loginBtn = document.getElementById('loginBtn');
-        const originalText = loginBtn.innerHTML;
-        loginBtn.innerHTML = '<span class="loading"></span> جاري تسجيل الدخول...';
-        loginBtn.disabled = true;
-        
-        try {
-            const result = await login(username, password);
-            
-            if (result.success) {
-                // حفظ بيانات الدخول إذا تم اختيار تذكرني
-                if (rememberMe) {
-                    localStorage.setItem('saved_username', username);
-                    localStorage.setItem('saved_password', password);
-                    localStorage.setItem('remember_me', 'true');
-                } else {
-                    localStorage.removeItem('saved_username');
-                    localStorage.removeItem('saved_password');
-                    localStorage.setItem('remember_me', 'false');
-                }
-                
-                // التوجيه إلى لوحة التحكم
-                window.location.href = 'dashboard.html';
+        if (result.success) {
+            // حفظ بيانات الدخول إذا تم اختيار تذكرني
+            if (rememberMe) {
+                localStorage.setItem('saved_username', username);
+                localStorage.setItem('saved_password', password);
+                localStorage.setItem('remember_me', 'true');
             } else {
-                showError(result.message || 'اسم المستخدم أو كلمة المرور غير صحيحة');
-                loginBtn.innerHTML = originalText;
-                loginBtn.disabled = false;
+                localStorage.removeItem('saved_username');
+                localStorage.removeItem('saved_password');
+                localStorage.setItem('remember_me', 'false');
             }
-        } catch (error) {
-            console.error('Login error:', error);
-            showError('حدث خطأ في الاتصال بالخادم، الرجاء المحاولة لاحقاً');
+            
+            // التوجيه إلى لوحة التحكم
+            window.location.href = 'dashboard.html';
+        } else {
+            showError(result.message || 'اسم المستخدم أو كلمة المرور غير صحيحة');
             loginBtn.innerHTML = originalText;
             loginBtn.disabled = false;
         }
-    });
-    
-    function showError(message) {
+    } catch (error) {
+        console.error('Login error:', error);
+        showError('حدث خطأ في الاتصال بالخادم، الرجاء المحاولة لاحقاً');
+        loginBtn.innerHTML = originalText;
+        loginBtn.disabled = false;
+    }
+});    function showError(message) {
         const errorDiv = document.getElementById('errorMessage');
         const errorText = document.getElementById('errorText');
         errorText.textContent = message;
