@@ -1,19 +1,15 @@
 // ============================================
-// نظام إدارة محطات الصرف الصحي - نسخة Supabase
+// نظام إدارة محطات الصرف الصحي - نسخة SupabaseClient
 // النسخة الكاملة - جميع الوظائف
 // ============================================
-
 // ==================== إعدادات Supabase ====================
 const SUPABASE_URL = 'https://jvfbkoaeugkeoiccvnkq.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_n64Hnhuruc3Oeolj-Uwg9g_tu-otJlZ';
 
-
-
+// لاحظ هنا: نستخدم المكتبة الأصلية (supabase) لإنشاء العميل الخاص بك (supabaseClient)
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-
-console.log('Supabase initialized');
-
+console.log('✅ supabaseClient initialized');
 // ==================== دوال مساعدة ====================
 let authToken = localStorage.getItem('authToken');
 let currentUser = null;
@@ -44,13 +40,13 @@ function checkAuth() {
 async function login(username, password) {
     try {
         const email = username.includes('@') ? username : username + '@banimazar.com';
-        const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        const { data: authData, error: authError } = await supabaseClient.auth.signInWithPassword({
             email: email,
             password: password
         });
         if (authError) return { success: false, message: authError.message };
         
-        const { data: userData, error: userError } = await supabase
+        const { data: userData, error: userError } = await supabaseClient
             .from('users')
             .select('*')
             .eq('email', email)
@@ -71,7 +67,7 @@ async function login(username, password) {
 }
 
 function logout() {
-    supabase.auth.signOut();
+    supabaseClient.auth.signOut();
     clearAuthToken();
     window.location.href = 'index.html';
 }
@@ -79,7 +75,7 @@ function logout() {
 // ==================== دوال المحطات ====================
 async function getStations() {
     try {
-        const { data, error } = await supabase.from('stations').select('*').order('station_name');
+        const { data, error } = await supabaseClient.from('stations').select('*').order('station_name');
         if (error) throw error;
         return { success: true, stations: data || [] };
     } catch (error) {
@@ -89,7 +85,7 @@ async function getStations() {
 
 async function getStation(id) {
     try {
-        const { data, error } = await supabase.from('stations').select('*').eq('id', id).single();
+        const { data, error } = await supabaseClient.from('stations').select('*').eq('id', id).single();
         if (error) throw error;
         return { success: true, station: data };
     } catch (error) {
@@ -99,7 +95,7 @@ async function getStation(id) {
 
 async function getStationStats() {
     try {
-        const { data, error } = await supabase.from('stations').select('status, capacity, pump_count');
+        const { data, error } = await supabaseClient.from('stations').select('status, capacity, pump_count');
         if (error) throw error;
         const stats = {
             totalStations: data?.length || 0,
@@ -128,7 +124,7 @@ async function createStation(data) {
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
         };
-        const { data: result, error } = await supabase.from('stations').insert([newStation]).select();
+        const { data: result, error } = await supabaseClient.from('stations').insert([newStation]).select();
         if (error) throw error;
         return { success: true, station: result[0], message: 'تم إضافة المحطة بنجاح' };
     } catch (error) {
@@ -147,7 +143,7 @@ async function updateStation(id, data) {
             notes: data.notes || null,
             updated_at: new Date().toISOString()
         };
-        const { data: result, error } = await supabase.from('stations').update(updateData).eq('id', id).select();
+        const { data: result, error } = await supabaseClient.from('stations').update(updateData).eq('id', id).select();
         if (error) throw error;
         return { success: true, station: result[0], message: 'تم تحديث المحطة بنجاح' };
     } catch (error) {
@@ -157,7 +153,7 @@ async function updateStation(id, data) {
 
 async function deleteStation(id) {
     try {
-        const { error } = await supabase.from('stations').delete().eq('id', id);
+        const { error } = await supabaseClient.from('stations').delete().eq('id', id);
         if (error) throw error;
         return { success: true, message: 'تم حذف المحطة بنجاح' };
     } catch (error) {
@@ -168,7 +164,7 @@ async function deleteStation(id) {
 // ==================== دوال الموظفين ====================
 async function getEmployees(params = {}) {
     try {
-        let query = supabase.from('employees').select('*');
+        let query = supabaseClient.from('employees').select('*');
         if (params.station_id) query = query.eq('station_id', params.station_id);
         if (params.department) query = query.eq('department', params.department);
         if (params.status) query = query.eq('status', params.status);
@@ -189,7 +185,7 @@ async function getEmployees(params = {}) {
 
 async function getEmployee(id) {
     try {
-        const { data, error } = await supabase.from('employees').select('*').eq('id', id).single();
+        const { data, error } = await supabaseClient.from('employees').select('*').eq('id', id).single();
         if (error) throw error;
         return { success: true, employee: data };
     } catch (error) {
@@ -213,7 +209,7 @@ async function createEmployee(data) {
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
         };
-        const { data: result, error } = await supabase.from('employees').insert([newEmployee]).select();
+        const { data: result, error } = await supabaseClient.from('employees').insert([newEmployee]).select();
         if (error) throw error;
         return { success: true, employee: result[0], message: 'تم إضافة الموظف بنجاح' };
     } catch (error) {
@@ -236,7 +232,7 @@ async function updateEmployee(id, data) {
             notes: data.notes || null,
             updated_at: new Date().toISOString()
         };
-        const { data: result, error } = await supabase.from('employees').update(updateData).eq('id', id).select();
+        const { data: result, error } = await supabaseClient.from('employees').update(updateData).eq('id', id).select();
         if (error) throw error;
         return { success: true, employee: result[0], message: 'تم تحديث الموظف بنجاح' };
     } catch (error) {
@@ -246,7 +242,7 @@ async function updateEmployee(id, data) {
 
 async function deleteEmployee(id) {
     try {
-        const { error } = await supabase.from('employees').delete().eq('id', id);
+        const { error } = await supabaseClient.from('employees').delete().eq('id', id);
         if (error) throw error;
         return { success: true, message: 'تم حذف الموظف بنجاح' };
     } catch (error) {
@@ -343,7 +339,7 @@ async function getEmployeesReport(params = {}) { return getEmployees(params); }
 async function getEmployeesDetailedReport(params = {}) { return getEmployees(params); }
 
 // ==================== تصدير الدوال ====================
-window.supabase = supabase;
+window.supabaseClient = supabaseClient;
 window.login = login;
 window.logout = logout;
 window.getCurrentUser = getCurrentUser;
@@ -391,4 +387,4 @@ window.getPowerFactorPanels = getPowerFactorPanels;
 window.calculatePenalty = calculatePenalty;
 window.getPenaltyNotifications = getPenaltyNotifications;
 
-console.log('✅ Supabase API loaded successfully');
+console.log('✅ SupabaseClient API loaded successfully');
