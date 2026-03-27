@@ -8,12 +8,7 @@ const SUPABASE_URL = 'https://jvfbkoaeugkeoiccvnkq.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_n64Hnhuruc3Oeolj-Uwg9g_tu-otJlZ';
 const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-
-
-
-
 console.log('Supabase initialized');
-
 
 // ==================== دوال مساعدة ====================
 let authToken = localStorage.getItem('authToken');
@@ -32,15 +27,6 @@ function clearAuthToken() {
     localStorage.removeItem('authToken');
     localStorage.removeItem('currentUser');
 }
-
-function getCurrentUser() {
-    return JSON.parse(localStorage.getItem('currentUser') || '{}');
-}
-
-function checkAuth() {
-    return !!authToken;
-}
-
 
 function getCurrentUser() {
     return JSON.parse(localStorage.getItem('currentUser') || '{}');
@@ -400,17 +386,5 @@ window.generateMonthlyReport = generateMonthlyReport;
 window.getPowerFactorPanels = getPowerFactorPanels;
 window.calculatePenalty = calculatePenalty;
 window.getPenaltyNotifications = getPenaltyNotifications;
-
-window.getMonthlyReports = getMonthlyReports;
-window.generateMonthlyReport = generateMonthlyReport;
-
-window.getPowerFactorPanels = getPowerFactorPanels;
-window.calculatePenalty = calculatePenalty;
-window.getPenaltyNotifications = getPenaltyNotifications;
-
-window.login = login;
-window.logout = logout;
-window.getStations = getStations;
-window.getEmployees = getEmployees;
 
 console.log('✅ Supabase API loaded successfully');
