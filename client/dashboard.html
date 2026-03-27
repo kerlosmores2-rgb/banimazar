@@ -48,7 +48,6 @@
         .btn { padding: 8px 20px; border: none; border-radius: 25px; cursor: pointer; transition: 0.3s; display: inline-flex; align-items: center; gap: 8px; }
         .btn-primary { background: #00d4ff; color: #1a1a2e; }
         .btn-danger { background: #dc3545; color: white; }
-        .btn-warning { background: #ffc107; color: #1a1a2e; }
         .btn-sm { padding: 5px 12px; font-size: 0.75rem; }
         .data-table { width: 100%; border-collapse: collapse; margin-top: 20px; overflow-x: auto; display: block; }
         .data-table th, .data-table td { padding: 12px; text-align: right; border-bottom: 1px solid rgba(255,255,255,0.1); white-space: nowrap; }
@@ -210,7 +209,7 @@
             }
         }
 
-        // لوحة التحكم
+        // ==================== لوحة التحكم ====================
         async function loadDashboard() {
             try {
                 const statsRes = await getStationStats();
@@ -276,16 +275,94 @@
             stationsData.forEach((s, i) => {
                 const statusMap = { 'active':'status-active','maintenance':'status-maintenance','inactive':'status-inactive','emergency':'status-emergency' };
                 const statusText = { 'active':'نشطة','maintenance':'صيانة','inactive':'متوقفة','emergency':'طوارئ' };
-                html += `<tr><td>${i+1}</td><td>${s.station_name}</td><td>${s.station_code || '-'}</td><td>${s.location || '-'}</td><td>${s.capacity || 0} م³</td><td><span class="status-badge ${statusMap[s.status] || 'status-active'}">${statusText[s.status] || 'نشطة'}</span></td>
-                <td><button class="btn btn-sm btn-primary" onclick="editStation(${s.id})"><i class="fas fa-edit"></i> تعديل</button> <button class="btn btn-sm btn-danger" onclick="deleteStation(${s.id})"><i class="fas fa-trash"></i> حذف</button></td></tr>`;
+                html += `发展
+                    <td class="text-center">${i+1}</td>
+                    <td class="text-center">${s.station_name}</td>
+                    <td class="text-center">${s.station_code || '-'}</td>
+                    <td class="text-center">${s.location || '-'}</td>
+                    <td class="text-center">${s.capacity || 0} م³</td>
+                    <td class="text-center"><span class="status-badge ${statusMap[s.status] || 'status-active'}">${statusText[s.status] || 'نشطة'}</span></td>
+                    <td class="text-center">
+                        <button class="btn btn-sm btn-primary" onclick="editStation(${s.id})"><i class="fas fa-edit"></i> تعديل</button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteStation(${s.id})"><i class="fas fa-trash"></i> حذف</button>
+                    </td>
+                 </tr>`;
             });
             html += `</tbody></div>`;
             pageContent.innerHTML = html;
         }
         
-        window.openStationModal = () => { /* فتح مودال الإضافة */ alert('سيتم فتح نموذج إضافة محطة'); };
-        window.editStation = (id) => { alert(`تعديل المحطة رقم ${id}`); };
-        window.deleteStation = async (id) => { if(confirm('حذف المحطة؟')){ const res = await deleteStation(id); if(res.success) loadStationsPage(); else alert(res.message); } };
+        // مودال إضافة/تعديل محطة
+        function showStationForm(station = null) {
+            const modalHtml = `
+                <div id="stationModal" class="modal active">
+                    <div class="modal-content">
+                        <div class="modal-header"><h3>${station ? 'تعديل محطة' : 'إضافة محطة جديدة'}</h3><span class="modal-close" onclick="closeStationModal()">&times;</span></div>
+                        <form id="stationForm">
+                            <input type="hidden" id="stationId" value="${station ? station.id : ''}">
+                            <div class="form-group"><label>اسم المحطة *</label><input type="text" id="stationName" value="${station ? station.station_name : ''}" required></div>
+                            <div class="form-group"><label>كود المحطة</label><input type="text" id="stationCode" value="${station ? station.station_code || '' : ''}"></div>
+                            <div class="form-group"><label>الموقع</label><input type="text" id="stationLocation" value="${station ? station.location || '' : ''}"></div>
+                            <div class="form-group"><label>السعة (م³/يوم)</label><input type="number" id="stationCapacity" step="0.01" value="${station ? station.capacity || '' : ''}"></div>
+                            <div class="form-group"><label>الحالة</label><select id="stationStatus"><option value="active">نشطة</option><option value="maintenance">تحت الصيانة</option><option value="inactive">متوقفة</option><option value="emergency">طوارئ</option></select></div>
+                            <div class="form-group"><label>ملاحظات</label><textarea id="stationNotes" rows="2">${station ? station.notes || '' : ''}</textarea></div>
+                            <div style="display: flex; gap: 10px; justify-content: flex-end;"><button type="button" class="btn" onclick="closeStationModal()">إلغاء</button><button type="submit" class="btn btn-primary">حفظ</button></div>
+                        </form>
+                    </div>
+                </div>
+            `;
+            // إضافة المودال للصفحة
+            let modal = document.getElementById('stationModal');
+            if (modal) modal.remove();
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            
+            // تعيين القيمة المختارة للحالة
+            if (station && station.status) {
+                document.getElementById('stationStatus').value = station.status;
+            }
+            
+            // إغلاق المودال
+            window.closeStationModal = () => {
+                const m = document.getElementById('stationModal');
+                if (m) m.remove();
+            };
+            
+            // حفظ المحطة
+            document.getElementById('stationForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const id = document.getElementById('stationId').value;
+                const data = {
+                    station_name: document.getElementById('stationName').value,
+                    station_code: document.getElementById('stationCode').value,
+                    location: document.getElementById('stationLocation').value,
+                    capacity: parseFloat(document.getElementById('stationCapacity').value),
+                    status: document.getElementById('stationStatus').value,
+                    notes: document.getElementById('stationNotes').value
+                };
+                let res;
+                if (id) res = await updateStation(id, data);
+                else res = await createStation(data);
+                if (res.success) {
+                    closeStationModal();
+                    loadStationsPage();
+                } else {
+                    alert(res.message || 'حدث خطأ');
+                }
+            });
+        }
+        
+        window.openStationModal = () => showStationForm();
+        window.editStation = (id) => {
+            const station = stationsData.find(s => s.id == id);
+            if (station) showStationForm(station);
+        };
+        window.deleteStation = async (id) => {
+            if (confirm('هل تريد حذف هذه المحطة؟')) {
+                const res = await deleteStation(id);
+                if (res.success) loadStationsPage();
+                else alert(res.message || 'خطأ في الحذف');
+            }
+        };
 
         // ==================== الموظفين ====================
         let employeesData = [];
@@ -305,27 +382,552 @@
             let html = `<div style="margin-bottom:20px;"><button class="btn btn-primary" onclick="openEmployeeModal()"><i class="fas fa-plus"></i> إضافة موظف</button></div>
                 <div class="table-responsive"><table class="data-table"><thead>发展<th>#</th><th>الاسم</th><th>الكود</th><th>المحطة</th><th>القسم</th><th>الوظيفة</th><th>الهاتف</th><th>الحالة</th><th>الإجراءات</th> </thead><tbody>`;
             employeesData.forEach((e, i) => {
-                html += `<tr><td>${i+1}</td><td>${e.employee_name}</td><td>${e.employee_code || '-'}</td><td>${e.station_name || '-'}</td><td>${e.department || '-'}</td><td>${e.job_title || '-'}</td><td>${e.phone || '-'}</td>
-                <td><span class="status-badge ${e.status === 'active' ? 'status-active' : 'status-inactive'}">${e.status === 'active' ? 'نشط' : 'غير نشط'}</span></td>
-                <td><button class="btn btn-sm btn-primary" onclick="editEmployee(${e.id})">تعديل</button> <button class="btn btn-sm btn-danger" onclick="deleteEmployee(${e.id})">حذف</button></td></tr>`;
+                html += `发展
+                    <td class="text-center">${i+1}</td>
+                    <td class="text-center">${e.employee_name}</td>
+                    <td class="text-center">${e.employee_code || '-'}</td>
+                    <td class="text-center">${e.station_name || '-'}</td>
+                    <td class="text-center">${e.department || '-'}</td>
+                    <td class="text-center">${e.job_title || '-'}</td>
+                    <td class="text-center">${e.phone || '-'}</td>
+                    <td class="text-center"><span class="status-badge ${e.status === 'active' ? 'status-active' : 'status-inactive'}">${e.status === 'active' ? 'نشط' : 'غير نشط'}</span></td>
+                    <td class="text-center">
+                        <button class="btn btn-sm btn-primary" onclick="editEmployee(${e.id})">تعديل</button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteEmployee(${e.id})">حذف</button>
+                    </td>
+                 </tr>`;
             });
             html += `</tbody></div>`;
             pageContent.innerHTML = html;
         }
         
-        window.openEmployeeModal = () => { alert('سيتم فتح نموذج إضافة موظف'); };
-        window.editEmployee = (id) => { alert(`تعديل الموظف رقم ${id}`); };
-        window.deleteEmployee = async (id) => { if(confirm('حذف الموظف؟')){ const res = await deleteEmployee(id); if(res.success) loadEmployeesPage(); else alert(res.message); } };
+        // مودال إضافة/تعديل موظف
+        async function showEmployeeForm(employee = null) {
+            // جلب المحطات للقائمة المنسدلة
+            const stationsRes = await getStations();
+            const stations = stationsRes.success ? stationsRes.stations : [];
+            let stationsOptions = '<option value="">بدون محطة</option>';
+            stations.forEach(s => {
+                stationsOptions += `<option value="${s.id}" ${employee && employee.station_id == s.id ? 'selected' : ''}>${s.station_name}</option>`;
+            });
+            
+            const modalHtml = `
+                <div id="employeeModal" class="modal active">
+                    <div class="modal-content">
+                        <div class="modal-header"><h3>${employee ? 'تعديل موظف' : 'إضافة موظف جديد'}</h3><span class="modal-close" onclick="closeEmployeeModal()">&times;</span></div>
+                        <form id="employeeForm">
+                            <input type="hidden" id="employeeId" value="${employee ? employee.id : ''}">
+                            <div class="form-group"><label>اسم الموظف *</label><input type="text" id="empName" value="${employee ? employee.employee_name : ''}" required></div>
+                            <div class="form-group"><label>كود الموظف</label><input type="text" id="empCode" value="${employee ? employee.employee_code || '' : ''}"></div>
+                            <div class="form-group"><label>المحطة</label><select id="empStation">${stationsOptions}</select></div>
+                            <div class="form-group"><label>القسم</label><select id="empDept"><option value="كهرباء">كهرباء</option><option value="ميكانيكا">ميكانيكا</option><option value="إدارة">إدارة</option><option value="تشغيل">تشغيل</option><option value="أمن">أمن</option></select></div>
+                            <div class="form-group"><label>المسمى الوظيفي</label><input type="text" id="empJob" value="${employee ? employee.job_title || '' : ''}"></div>
+                            <div class="form-group"><label>رقم الهاتف</label><input type="tel" id="empPhone" value="${employee ? employee.phone || '' : ''}"></div>
+                            <div class="form-group"><label>البريد الإلكتروني</label><input type="email" id="empEmail" value="${employee ? employee.email || '' : ''}"></div>
+                            <div class="form-group"><label>تاريخ التعيين</label><input type="date" id="empHireDate" value="${employee ? employee.hire_date || '' : ''}"></div>
+                            <div class="form-group"><label>الحالة</label><select id="empStatus"><option value="active">نشط</option><option value="inactive">غير نشط</option><option value="on_leave">إجازة</option></select></div>
+                            <div class="form-group"><label>ملاحظات</label><textarea id="empNotes" rows="2">${employee ? employee.notes || '' : ''}</textarea></div>
+                            <div style="display: flex; gap: 10px; justify-content: flex-end;"><button type="button" class="btn" onclick="closeEmployeeModal()">إلغاء</button><button type="submit" class="btn btn-primary">حفظ</button></div>
+                        </form>
+                    </div>
+                </div>
+            `;
+            let modal = document.getElementById('employeeModal');
+            if (modal) modal.remove();
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            
+            if (employee && employee.department) document.getElementById('empDept').value = employee.department;
+            if (employee && employee.status) document.getElementById('empStatus').value = employee.status;
+            
+            window.closeEmployeeModal = () => {
+                const m = document.getElementById('employeeModal');
+                if (m) m.remove();
+            };
+            
+            document.getElementById('employeeForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const id = document.getElementById('employeeId').value;
+                const data = {
+                    employee_name: document.getElementById('empName').value,
+                    employee_code: document.getElementById('empCode').value,
+                    station_id: document.getElementById('empStation').value || null,
+                    department: document.getElementById('empDept').value,
+                    job_title: document.getElementById('empJob').value,
+                    phone: document.getElementById('empPhone').value,
+                    email: document.getElementById('empEmail').value,
+                    hire_date: document.getElementById('empHireDate').value,
+                    status: document.getElementById('empStatus').value,
+                    notes: document.getElementById('empNotes').value
+                };
+                let res;
+                if (id) res = await updateEmployee(id, data);
+                else res = await createEmployee(data);
+                if (res.success) {
+                    closeEmployeeModal();
+                    loadEmployeesPage();
+                } else {
+                    alert(res.message || 'حدث خطأ');
+                }
+            });
+        }
+        
+        window.openEmployeeModal = () => showEmployeeForm();
+        window.editEmployee = (id) => {
+            const employee = employeesData.find(e => e.id == id);
+            if (employee) showEmployeeForm(employee);
+        };
+        window.deleteEmployee = async (id) => {
+            if (confirm('هل تريد حذف هذا الموظف؟')) {
+                const res = await deleteEmployee(id);
+                if (res.success) loadEmployeesPage();
+                else alert(res.message || 'خطأ في الحذف');
+            }
+        };
 
-        // ==================== الصفحات الأخرى (مؤقتة) ====================
-        async function loadAssetsPage() { pageContent.innerHTML = '<div class="no-data">صفحة الأصول - جاري التطوير</div>'; }
-        async function loadMaintenancePage() { pageContent.innerHTML = '<div class="no-data">صفحة بلاغات الصيانة - جاري التطوير</div>'; }
-        async function loadInspectionPage() { pageContent.innerHTML = '<div class="no-data">صفحة تقارير المرور - جاري التطوير</div>'; }
-        async function loadReportsPage() { pageContent.innerHTML = '<div class="no-data">صفحة التقارير التشغيلية - جاري التطوير</div>'; }
-        async function loadPenaltyPage() { pageContent.innerHTML = '<div class="no-data">صفحة غرامات معامل القدرة - جاري التطوير</div>'; }
-        async function loadMetersPage() { pageContent.innerHTML = '<div class="no-data">صفحة عدادات الكهرباء والمياه - جاري التطوير</div>'; }
-        async function loadMonthlyReportsPage() { pageContent.innerHTML = '<div class="no-data">صفحة التقارير الشهرية - جاري التطوير</div>'; }
-        async function loadPowerFactorPanelsPage() { pageContent.innerHTML = '<div class="no-data">صفحة لوحات معامل القدرة - جاري التطوير</div>'; }
+        // ==================== الأصول ====================
+        async function loadAssetsPage() {
+            try {
+                const stationsRes = await getStations();
+                const stations = stationsRes.success ? stationsRes.stations : [];
+                if (!stations.length) {
+                    pageContent.innerHTML = '<div class="no-data">لا توجد محطات لعرض الأصول</div>';
+                    return;
+                }
+                
+                let html = `<div style="margin-bottom:20px;"><label>اختر المحطة:</label><select id="assetStationSelect" class="btn-outline" style="margin-right:10px;">`;
+                stations.forEach(s => { html += `<option value="${s.id}">${s.station_name}</option>`; });
+                html += `</select><button class="btn btn-primary" onclick="loadAssetsByStation()">عرض</button></div><div id="assetsDisplay"></div>`;
+                pageContent.innerHTML = html;
+                
+                window.loadAssetsByStation = async () => {
+                    const stationId = document.getElementById('assetStationSelect').value;
+                    const display = document.getElementById('assetsDisplay');
+                    display.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i><p>جاري التحميل...</p></div>';
+                    
+                    const [mainPumps, subPumps, generators, panels, mechanical, feeders, otherAssets, buildings] = await Promise.all([
+                        getMainPumps(stationId), getSubPumps(stationId), getGenerators(stationId), getPanels(stationId),
+                        getMechanical(stationId), getFeeders(stationId), getOtherAssets(stationId), getBuildings(stationId)
+                    ]);
+                    
+                    let assetsHtml = `<h3>الأصول</h3>`;
+                    
+                    assetsHtml += `<h4>المضخات الرئيسية (${mainPumps.pumps?.length || 0})</h4><div class="stations-grid">`;
+                    (mainPumps.pumps || []).forEach(p => { assetsHtml += `<div class="station-card"><h4>${p.pump_number || p.pump_name}</h4><div class="station-info">التصرف: ${p.flow_rate_m3h || 0} م³/ساعة</div><div class="station-info">الرفع: ${p.head_m || 0} م</div></div>`; });
+                    assetsHtml += `</div>`;
+                    
+                    assetsHtml += `<h4>المضخات الفرعية (${subPumps.pumps?.length || 0})</h4><div class="stations-grid">`;
+                    (subPumps.pumps || []).forEach(p => { assetsHtml += `<div class="station-card"><h4>${p.pump_number}</h4><div class="station-info">التصرف: ${p.flow_rate_m3h || 0} م³/ساعة</div></div>`; });
+                    assetsHtml += `</div>`;
+                    
+                    assetsHtml += `<h4>المولدات (${generators.generators?.length || 0})</h4><div class="stations-grid">`;
+                    (generators.generators || []).forEach(g => { assetsHtml += `<div class="station-card"><h4>${g.generator_name}</h4><div class="station-info">قدرة: ${g.rated_power_kva || 0} KVA</div></div>`; });
+                    assetsHtml += `</div>`;
+                    
+                    assetsHtml += `<h4>اللوحات الكهربائية (${panels.panels?.length || 0})</h4><div class="stations-grid">`;
+                    (panels.panels || []).forEach(p => { assetsHtml += `<div class="station-card"><h4>${p.panel_name}</h4><div class="station-info">النوع: ${p.panel_type || '-'}</div></div>`; });
+                    assetsHtml += `</div>`;
+                    
+                    assetsHtml += `<h4>المعدات الميكانيكية (${mechanical.equipment?.length || 0})</h4><div class="stations-grid">`;
+                    (mechanical.equipment || []).forEach(e => { assetsHtml += `<div class="station-card"><h4>${e.equipment_name}</h4><div class="station-info">النوع: ${e.equipment_type || '-'}</div></div>`; });
+                    assetsHtml += `</div>`;
+                    
+                    if ((mainPumps.pumps?.length || 0) + (subPumps.pumps?.length || 0) + (generators.generators?.length || 0) + (panels.panels?.length || 0) + (mechanical.equipment?.length || 0) === 0) {
+                        assetsHtml += '<div class="no-data">لا توجد أصول مسجلة في هذه المحطة</div>';
+                    }
+                    
+                    display.innerHTML = assetsHtml;
+                };
+                
+                // تحميل أول محطة تلقائياً
+                if (stations.length) loadAssetsByStation();
+                
+            } catch(e) {
+                pageContent.innerHTML = '<div class="no-data">خطأ في تحميل الأصول</div>';
+            }
+        }
+
+        // ==================== بلاغات الصيانة ====================
+        async function loadMaintenancePage() {
+            try {
+                const stationsRes = await getStations();
+                const stations = stationsRes.success ? stationsRes.stations : [];
+                if (!stations.length) {
+                    pageContent.innerHTML = '<div class="no-data">لا توجد محطات</div>';
+                    return;
+                }
+                
+                let html = `<div style="margin-bottom:20px;"><label>اختر المحطة:</label><select id="maintenanceStationSelect" class="btn-outline" style="margin-right:10px;">`;
+                stations.forEach(s => { html += `<option value="${s.id}">${s.station_name}</option>`; });
+                html += `</select><button class="btn btn-primary" onclick="loadMaintenanceReports()">عرض</button>
+                         <button class="btn btn-primary" style="margin-right:10px;" onclick="openMaintenanceReportForm()">إضافة بلاغ</button></div>
+                         <div id="maintenanceReportsDisplay"></div>`;
+                pageContent.innerHTML = html;
+                
+                window.loadMaintenanceReports = async () => {
+                    const stationId = document.getElementById('maintenanceStationSelect').value;
+                    const display = document.getElementById('maintenanceReportsDisplay');
+                    display.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i><p>جاري التحميل...</p></div>';
+                    
+                    const res = await getMaintenanceReports(stationId);
+                    const reports = res.reports || [];
+                    
+                    if (!reports.length) {
+                        display.innerHTML = '<div class="no-data">لا توجد بلاغات صيانة</div>';
+                        return;
+                    }
+                    
+                    let html = `<table class="data-table"><thead>发展<th>رقم البلاغ</th><th>التاريخ</th><th>الأصل</th><th>نوع العطل</th><th>الحالة</th><th>الإجراءات</th> </thead><tbody>`;
+                    reports.forEach(r => {
+                        const statusClass = r.status === 'completed' ? 'status-active' : r.status === 'in_progress' ? 'status-maintenance' : 'status-inactive';
+                        const statusText = r.status === 'completed' ? 'مغلق' : r.status === 'in_progress' ? 'قيد الإصلاح' : 'مفتوح';
+                        html += `发展
+                            <td class="text-center">${r.report_number || r.id}发展
+                            <td class="text-center">${r.report_date}发展
+                            <td class="text-center">${r.asset_name}发展
+                            <td class="text-center">${r.fault_type}发展
+                            <td class="text-center"><span class="status-badge ${statusClass}">${statusText}</span>发展
+                            <td class="text-center"><button class="btn btn-sm btn-primary" onclick="viewMaintenanceReport(${r.id})">عرض</button></td>
+                         </tr>`;
+                    });
+                    html += `</tbody></table>`;
+                    display.innerHTML = html;
+                };
+                
+                window.viewMaintenanceReport = (id) => {
+                    alert(`تفاصيل البلاغ رقم ${id}\nسيتم عرض التفاصيل قريباً`);
+                };
+                
+                window.openMaintenanceReportForm = () => {
+                    const stationsSelect = document.getElementById('maintenanceStationSelect');
+                    const stationId = stationsSelect.value;
+                    const stationName = stationsSelect.options[stationsSelect.selectedIndex]?.text || '';
+                    
+                    const formHtml = `
+                        <div id="reportFormModal" class="modal active">
+                            <div class="modal-content">
+                                <div class="modal-header"><h3>إضافة بلاغ صيانة</h3><span class="modal-close" onclick="closeReportForm()">&times;</span></div>
+                                <form id="reportForm">
+                                    <div class="form-group"><label>المحطة</label><input type="text" value="${stationName}" disabled></div>
+                                    <div class="form-group"><label>اسم الأصل المعطل *</label><input type="text" id="assetName" required></div>
+                                    <div class="form-group"><label>نوع العطل</label><select id="faultType"><option value="كهرباء">كهرباء</option><option value="ميكانيكا">ميكانيكا</option><option value="آخر">آخر</option></select></div>
+                                    <div class="form-group"><label>وصف العطل</label><textarea id="faultDescription" rows="3"></textarea></div>
+                                    <div style="display: flex; gap: 10px; justify-content: flex-end;"><button type="button" class="btn" onclick="closeReportForm()">إلغاء</button><button type="submit" class="btn btn-primary">حفظ البلاغ</button></div>
+                                </form>
+                            </div>
+                        </div>
+                    `;
+                    let modal = document.getElementById('reportFormModal');
+                    if (modal) modal.remove();
+                    document.body.insertAdjacentHTML('beforeend', formHtml);
+                    
+                    window.closeReportForm = () => {
+                        const m = document.getElementById('reportFormModal');
+                        if (m) m.remove();
+                    };
+                    
+                    document.getElementById('reportForm').addEventListener('submit', async (e) => {
+                        e.preventDefault();
+                        const data = {
+                            station_id: stationId,
+                            station_name: stationName,
+                            asset_name: document.getElementById('assetName').value,
+                            fault_type: document.getElementById('faultType').value,
+                            fault_description: document.getElementById('faultDescription').value,
+                            status: 'pending'
+                        };
+                        const res = await createMaintenanceReport(data);
+                        if (res.success) {
+                            closeReportForm();
+                            loadMaintenanceReports();
+                        } else {
+                            alert(res.message || 'حدث خطأ');
+                        }
+                    });
+                };
+                
+                if (stations.length) loadMaintenanceReports();
+                
+            } catch(e) {
+                pageContent.innerHTML = '<div class="no-data">خطأ في تحميل البلاغات</div>';
+            }
+        }
+
+        // ==================== تقارير المرور ====================
+        async function loadInspectionPage() {
+            try {
+                const stationsRes = await getStations();
+                const stations = stationsRes.success ? stationsRes.stations : [];
+                if (!stations.length) {
+                    pageContent.innerHTML = '<div class="no-data">لا توجد محطات</div>';
+                    return;
+                }
+                
+                let html = `<div style="margin-bottom:20px;"><label>اختر المحطة:</label><select id="inspectionStationSelect" class="btn-outline" style="margin-right:10px;">`;
+                stations.forEach(s => { html += `<option value="${s.id}">${s.station_name}</option>`; });
+                html += `</select><button class="btn btn-primary" onclick="loadInspectionReports()">عرض</button>
+                         <button class="btn btn-primary" style="margin-right:10px;" onclick="openInspectionReportForm()">إضافة تقرير</button></div>
+                         <div id="inspectionReportsDisplay"></div>`;
+                pageContent.innerHTML = html;
+                
+                window.loadInspectionReports = async () => {
+                    const stationId = document.getElementById('inspectionStationSelect').value;
+                    const display = document.getElementById('inspectionReportsDisplay');
+                    display.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i><p>جاري التحميل...</p></div>';
+                    
+                    const res = await getInspectionReports(stationId);
+                    const reports = res.reports || [];
+                    
+                    if (!reports.length) {
+                        display.innerHTML = '<div class="no-data">لا توجد تقارير مرور</div>';
+                        return;
+                    }
+                    
+                    let html = `<table class="data-table"><thead>发展<th>رقم التقرير</th><th>التاريخ</th><th>المتابع</th><th>الإجراءات</th> </thead><tbody>`;
+                    reports.forEach(r => {
+                        html += `发展
+                            <td class="text-center">${r.report_number || r.id}发展
+                            <td class="text-center">${r.inspection_date}发展
+                            <td class="text-center">${r.inspector_name || '-'}发展
+                            <td class="text-center"><button class="btn btn-sm btn-primary" onclick="viewInspectionReport(${r.id})">عرض</button></td>
+                         </tr>`;
+                    });
+                    html += `</tbody></table>`;
+                    display.innerHTML = html;
+                };
+                
+                window.viewInspectionReport = (id) => {
+                    alert(`تفاصيل تقرير المرور رقم ${id}\nسيتم عرض التفاصيل قريباً`);
+                };
+                
+                window.openInspectionReportForm = () => {
+                    const stationsSelect = document.getElementById('inspectionStationSelect');
+                    const stationId = stationsSelect.value;
+                    const stationName = stationsSelect.options[stationsSelect.selectedIndex]?.text || '';
+                    
+                    const formHtml = `
+                        <div id="inspectionFormModal" class="modal active">
+                            <div class="modal-content">
+                                <div class="modal-header"><h3>إضافة تقرير مرور</h3><span class="modal-close" onclick="closeInspectionForm()">&times;</span></div>
+                                <form id="inspectionForm">
+                                    <div class="form-group"><label>المحطة</label><input type="text" value="${stationName}" disabled></div>
+                                    <div class="form-group"><label>تاريخ المرور *</label><input type="date" id="inspectionDate" required></div>
+                                    <div class="form-group"><label>ملاحظات عامة</label><textarea id="overallNotes" rows="3"></textarea></div>
+                                    <div style="display: flex; gap: 10px; justify-content: flex-end;"><button type="button" class="btn" onclick="closeInspectionForm()">إلغاء</button><button type="submit" class="btn btn-primary">حفظ التقرير</button></div>
+                                </form>
+                            </div>
+                        </div>
+                    `;
+                    let modal = document.getElementById('inspectionFormModal');
+                    if (modal) modal.remove();
+                    document.body.insertAdjacentHTML('beforeend', formHtml);
+                    
+                    window.closeInspectionForm = () => {
+                        const m = document.getElementById('inspectionFormModal');
+                        if (m) m.remove();
+                    };
+                    
+                    document.getElementById('inspectionForm').addEventListener('submit', async (e) => {
+                        e.preventDefault();
+                        const data = {
+                            station_id: stationId,
+                            station_name: stationName,
+                            inspection_date: document.getElementById('inspectionDate').value,
+                            overall_notes: document.getElementById('overallNotes').value,
+                            inspector_name: user?.full_name || user?.username || 'مدير النظام'
+                        };
+                        const res = await createInspectionReport(data);
+                        if (res.success) {
+                            closeInspectionForm();
+                            loadInspectionReports();
+                        } else {
+                            alert(res.message || 'حدث خطأ');
+                        }
+                    });
+                };
+                
+                if (stations.length) loadInspectionReports();
+                
+            } catch(e) {
+                pageContent.innerHTML = '<div class="no-data">خطأ في تحميل التقارير</div>';
+            }
+        }
+
+        // ==================== التقارير التشغيلية ====================
+        async function loadReportsPage() {
+            pageContent.innerHTML = `
+                <div class="section-title"><h3>التقارير التشغيلية</h3></div>
+                <div class="stats-grid">
+                    <div class="stat-card" onclick="loadReportType('electricity')"><div class="stat-icon"><i class="fas fa-bolt"></i></div><div class="stat-value">كهرباء</div><div class="stat-label">تقرير استهلاك الكهرباء</div></div>
+                    <div class="stat-card" onclick="loadReportType('diesel')"><div class="stat-icon"><i class="fas fa-oil-can"></i></div><div class="stat-value">سولار</div><div class="stat-label">تقرير استهلاك السولار</div></div>
+                    <div class="stat-card" onclick="loadReportType('water')"><div class="stat-icon"><i class="fas fa-tint"></i></div><div class="stat-value">مياه</div><div class="stat-label">تقرير استهلاك المياه</div></div>
+                    <div class="stat-card" onclick="loadReportType('spare')"><div class="stat-icon"><i class="fas fa-cogs"></i></div><div class="stat-value">قطع غيار</div><div class="stat-label">تقرير قطع الغيار</div></div>
+                </div>
+                <div id="reportDisplay"></div>
+            `;
+            
+            window.loadReportType = async (type) => {
+                const display = document.getElementById('reportDisplay');
+                display.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i><p>جاري تحميل التقرير...</p></div>';
+                
+                let result;
+                if (type === 'electricity') result = await getElectricityConsumptionReport();
+                else if (type === 'diesel') result = await getDieselConsumptionReport();
+                else if (type === 'water') result = await getWaterConsumptionReport();
+                else if (type === 'spare') result = await getSparePartsReport();
+                
+                if (result.data && result.data.length) {
+                    let html = `<table class="data-table"><thead><tr>`;
+                    Object.keys(result.data[0]).forEach(key => html += `<th>${key}</th>`);
+                    html += `</tr></thead><tbody>`;
+                    result.data.forEach(row => {
+                        html += `<tr>`;
+                        Object.values(row).forEach(val => html += `<td class="text-center">${val || '-'}</td>`);
+                        html += `</tr>`;
+                    });
+                    html += `</tbody></table>`;
+                    display.innerHTML = html;
+                } else {
+                    display.innerHTML = '<div class="no-data">لا توجد بيانات للتقرير المحدد</div>';
+                }
+            };
+        }
+
+        // ==================== غرامات معامل القدرة ====================
+        async function loadPenaltyPage() {
+            pageContent.innerHTML = `
+                <div class="section-title"><h3>غرامات معامل القدرة</h3></div>
+                <div style="margin-bottom:20px;"><button class="btn btn-primary" onclick="calculatePenaltyNow()">حساب الغرامات</button></div>
+                <div id="penaltyDisplay"></div>
+            `;
+            
+            window.calculatePenaltyNow = async () => {
+                const display = document.getElementById('penaltyDisplay');
+                display.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i><p>جاري الحساب...</p></div>';
+                
+                const res = await calculatePenalty({ accounting_month: new Date().toISOString().slice(0, 7) + '-01' });
+                if (res.success) {
+                    display.innerHTML = `<div class="welcome-section"><h4>نتيجة الحساب</h4><p>${res.message}</p><p>قيمة الغرامة: ${res.penalty_amount || 0} ج.م</p></div>`;
+                } else {
+                    display.innerHTML = '<div class="no-data">حدث خطأ في حساب الغرامات</div>';
+                }
+            };
+        }
+
+        // ==================== عدادات الكهرباء والمياه ====================
+        async function loadMetersPage() {
+            pageContent.innerHTML = `
+                <div class="section-title"><h3>عدادات الكهرباء والمياه</h3></div>
+                <div class="stats-grid">
+                    <div class="stat-card" onclick="loadMeterType('electricity')"><div class="stat-icon"><i class="fas fa-bolt"></i></div><div class="stat-value">كهرباء</div><div class="stat-label">عدادات الكهرباء</div></div>
+                    <div class="stat-card" onclick="loadMeterType('water')"><div class="stat-icon"><i class="fas fa-tint"></i></div><div class="stat-value">مياه</div><div class="stat-label">عدادات المياه</div></div>
+                    <div class="stat-card" onclick="loadMeterType('diesel')"><div class="stat-icon"><i class="fas fa-oil-can"></i></div><div class="stat-value">سولار</div><div class="stat-label">استهلاك السولار</div></div>
+                </div>
+                <div id="meterDisplay"></div>
+            `;
+            
+            window.loadMeterType = async (type) => {
+                const display = document.getElementById('meterDisplay');
+                display.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i><p>جاري التحميل...</p></div>';
+                
+                let result;
+                if (type === 'electricity') result = await getElectricityMeters();
+                else if (type === 'water') result = await getWaterMeters();
+                else if (type === 'diesel') result = await getDieselConsumption();
+                
+                if (result.meters && result.meters.length) {
+                    let html = `<table class="data-table"><thead><tr>`;
+                    Object.keys(result.meters[0]).forEach(key => html += `<th>${key}</th>`);
+                    html += `</tr></thead><tbody>`;
+                    result.meters.forEach(row => {
+                        html += `<tr>`;
+                        Object.values(row).forEach(val => html += `<td class="text-center">${val || '-'}</td>`);
+                        html += `</tr>`;
+                    });
+                    html += `</tbody></table>`;
+                    display.innerHTML = html;
+                } else {
+                    display.innerHTML = '<div class="no-data">لا توجد قراءات مسجلة</div>';
+                }
+            };
+        }
+
+        // ==================== التقارير الشهرية ====================
+        async function loadMonthlyReportsPage() {
+            pageContent.innerHTML = `
+                <div class="section-title"><h3>التقارير الشهرية</h3></div>
+                <div style="margin-bottom:20px;">
+                    <input type="month" id="reportMonth" class="btn-outline">
+                    <button class="btn btn-primary" onclick="generateMonthlyReportNow()">إنشاء تقرير</button>
+                </div>
+                <div id="monthlyReportsDisplay"></div>
+            `;
+            
+            window.generateMonthlyReportNow = async () => {
+                const month = document.getElementById('reportMonth').value;
+                if (!month) { alert('الرجاء اختيار الشهر'); return; }
+                
+                const display = document.getElementById('monthlyReportsDisplay');
+                display.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i><p>جاري إنشاء التقرير...</p></div>';
+                
+                const res = await generateMonthlyReport({ accounting_month: month + '-01' });
+                if (res.success) {
+                    display.innerHTML = `<div class="welcome-section"><h4>تم إنشاء التقرير</h4><p>${res.message}</p><p>رقم التقرير: ${res.report_id}</p></div>`;
+                } else {
+                    display.innerHTML = '<div class="no-data">حدث خطأ في إنشاء التقرير</div>';
+                }
+            };
+        }
+
+        // ==================== لوحات معامل القدرة ====================
+        async function loadPowerFactorPanelsPage() {
+            try {
+                const stationsRes = await getStations();
+                const stations = stationsRes.success ? stationsRes.stations : [];
+                if (!stations.length) {
+                    pageContent.innerHTML = '<div class="no-data">لا توجد محطات</div>';
+                    return;
+                }
+                
+                let html = `<div style="margin-bottom:20px;"><label>اختر المحطة:</label><select id="pfStationSelect" class="btn-outline" style="margin-right:10px;">`;
+                stations.forEach(s => { html += `<option value="${s.id}">${s.station_name}</option>`; });
+                html += `</select><button class="btn btn-primary" onclick="loadPfPanels()">عرض</button></div><div id="pfPanelsDisplay"></div>`;
+                pageContent.innerHTML = html;
+                
+                window.loadPfPanels = async () => {
+                    const stationId = document.getElementById('pfStationSelect').value;
+                    const display = document.getElementById('pfPanelsDisplay');
+                    display.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i><p>جاري التحميل...</p></div>';
+                    
+                    const res = await getPowerFactorPanels(stationId);
+                    const panels = res.panels || [];
+                    
+                    if (!panels.length) {
+                        display.innerHTML = '<div class="no-data">لا توجد لوحات معامل قدرة مسجلة</div>';
+                        return;
+                    }
+                    
+                    let panelsHtml = `<table class="data-table"><thead>发展<th>اسم اللوحة</th><th>القدرة (KVAR)</th><th>معامل القدرة المستهدف</th><th>معامل القدرة الحالي</th><th>الحالة</th> </thead><tbody>`;
+                    panels.forEach(p => {
+                        const statusClass = p.status === 'active' ? 'status-active' : 'status-maintenance';
+                        const statusText = p.status === 'active' ? 'نشط' : 'صيانة';
+                        panelsHtml += `发展
+                            <td class="text-center">${p.panel_name}发展
+                            <td class="text-center">${p.rated_power_kvar || 0} KVAR发展
+                            <td class="text-center">${p.target_power_factor || 0.92}发展
+                            <td class="text-center">${p.current_power_factor || '-'}发展
+                            <td class="text-center"><span class="status-badge ${statusClass}">${statusText}</span>发展
+                         </tr>`;
+                    });
+                    panelsHtml += `</tbody></table>`;
+                    display.innerHTML = panelsHtml;
+                };
+                
+                if (stations.length) loadPfPanels();
+                
+            } catch(e) {
+                pageContent.innerHTML = '<div class="no-data">خطأ في تحميل البيانات</div>';
+            }
+        }
 
         // تشغيل الصفحة الرئيسية
         loadPage('dashboard');
