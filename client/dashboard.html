@@ -1726,33 +1726,42 @@
     }
 
     // ============================================
-    // تهيئة الصفحة
+    // تهيئة الصفحة (تم الإصلاح لضمان ترتيب التشغيل)
     // ============================================
     window.addEventListener('load', async () => {
-        // التحقق من تسجيل الدخول
+        // 1. تعريف المحرك فوراً ليكون متاحاً لكل الدوال
+        window.supabaseClient = supabaseClient;
+
+        // 2. التحقق من تسجيل الدخول
         if (typeof checkAuth === 'function' && !checkAuth()) {
             window.location.href = 'index.html';
             return;
         }
 
-        // عرض اسم المستخدم
+        // 3. عرض اسم المستخدم
         const user = (typeof getCurrentUser === 'function') ? getCurrentUser() : null;
         if (user && document.getElementById('userName')) {
             document.getElementById('userName').innerHTML = `مرحباً ${user.full_name || user.username || 'بك'}`;
         }
 
-        // تحميل قائمة المحطات
-        await loadStationsList();
+        // 4. تحميل قائمة المحطات
+        try {
+            await loadStationsList();
+        } catch (e) {
+            console.error("خطأ في تحميل القائمة:", e);
+        }
 
-        // إعداد القائمة الجانبية
+        // 5. إعداد القائمة الجانبية والأزرار
         const menuToggle = document.getElementById('menuToggle');
         const sidebar = document.getElementById('sidebar');
         const navItems = document.querySelectorAll('.nav-item');
         const logoutBtn = document.getElementById('logoutBtn');
 
-        menuToggle.addEventListener('click', () => {
-            sidebar.classList.toggle('open');
-        });
+        if (menuToggle && sidebar) {
+            menuToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('open');
+            });
+        }
 
         navItems.forEach(item => {
             const page = item.getAttribute('data-page');
@@ -1772,12 +1781,12 @@
             });
         }
 
-        window.supabaseClient = supabaseClient;
-    
-        // تشغيل لوحة التحكم
+        // 6. التشغيل النهائي - الآن سيعمل لأن supabaseClient جاهز
         loadPage('dashboard');
     });
-    
+</script>
+</body>
+</html>
 </script>
 </body>
 </html>
