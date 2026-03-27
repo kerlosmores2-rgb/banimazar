@@ -184,6 +184,14 @@
         div.style.display = 'block';
         setTimeout(() => div.style.display = 'none', 5000);
     }
+    <script src="https://kerlosmores2-rgb.github.io/banimazar/client/js/api.js"></script>
+<script>
+    console.log("فحص api.js:", typeof login);
+    if (typeof login === 'undefined') {
+        console.error("❌ api.js لم يتم تحميله!");
+    } else {
+        console.log("✅ api.js تم تحميله");
+    }
 </script>
 </body>
 </html>
