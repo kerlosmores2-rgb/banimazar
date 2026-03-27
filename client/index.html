@@ -369,7 +369,7 @@
 
 <!-- ===== scripts في نهاية body ===== -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
+<script src="js/api.js"></script>
 <script>
     // إنشاء نقاط مائية متحركة
     function createDrops() {
@@ -421,7 +421,6 @@
         loginBtn.disabled = true;
         
         try {
-            // التحقق من وجود دالة login
             if (typeof login === 'undefined') {
                 throw new Error('دالة login غير موجودة. تأكد من تحميل api.js');
             }
@@ -468,9 +467,6 @@
             document.getElementById('loginForm').dispatchEvent(new Event('submit'));
         }
     });
-    <script src="js/api.js">
-        </script>
-    
-
+</script>
 </body>
 </html>
