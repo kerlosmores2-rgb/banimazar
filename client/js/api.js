@@ -1167,4 +1167,12 @@ window.getAssetTrackingReport = getAssetTrackingReport;
 window.getEmployeesReport = getEmployeesReport;
 window.getEmployeesDetailedReport = getEmployeesDetailedReport;
 
+// ==================== تصدير الدوال ====================
+
+window.supabase = supabase;
+window.login = login;
+window.logout = logout;
+window.getStations = getStations;
+window.getEmployees = getEmployees;
+
 console.log('✅ Supabase API loaded successfully');
