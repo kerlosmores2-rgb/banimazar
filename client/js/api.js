@@ -1170,7 +1170,7 @@ window.getEmployeesDetailedReport = getEmployeesDetailedReport;
 
 // ==================== تصدير الدوال ====================
 
-window.supabase = supabase;
+
 window.login = login;
 window.logout = logout;
 window.getStations = getStations;
