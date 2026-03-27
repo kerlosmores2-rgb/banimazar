@@ -38,40 +38,24 @@ function checkAuth() {
 
 // ==================== دوال المصادقة ====================
 async function login(username, password) {
-    try {
-        const email = username.includes('@') ? username : username + '@banimazar.com';
-        const { data: authData, error: authError } = await supabaseClient.auth.signInWithPassword({
-            email: email,
-            password: password
-        });
-        if (authError) return { success: false, message: authError.message };
-        
-        const { data: userData, error: userError } = await supabaseClient
-            .from('users')
-            .select('*')
-            .eq('email', email)
-            .single();
-        
-        const user = userData || {
-            id: authData.user.id,
-            email: authData.user.email,
-            full_name: authData.user.email.split('@')[0],
-            role: 'viewer'
-        };
-        
-        setAuthToken(authData.session.access_token, user);
-        return { success: true, user: user };
-    } catch (error) {
-        return { success: false, message: 'حدث خطأ في الاتصال' };
+    const { data, error } = await supabaseClient
+        .from('users')
+        .select('*')
+        .eq('username', username.trim()) // إضافة trim لإزالة أي مسافات زائدة
+        .eq('password', password.trim())
+        .maybeSingle(); // هذه الدالة تحل مشاكل الـ Bad Request في حال عدم وجود بيانات
+
+    if (error) {
+        console.error("خطأ في السيرفر:", error.message);
+        return { success: false, message: error.message };
     }
-}
+    
+    if (!data) return { success: false, message: 'بيانات غير صحيحة' };
 
-function logout() {
-    supabaseClient.auth.signOut();
-    clearAuthToken();
-    window.location.href = 'index.html';
+    localStorage.setItem('currentUser', JSON.stringify(data));
+    localStorage.setItem('authToken', 'true');
+    return { success: true, user: data };
 }
-
 // ==================== دوال المحطات ====================
 async function getStations() {
     try {
