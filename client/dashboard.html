@@ -1725,77 +1725,32 @@
         }
     }
 // ============================================
-    // ============================================
-    // تهيئة الصفحة - النسخة المصلحة والمؤمنة نهائياً
+  // ============================================
+    // تهيئة الصفحة - النسخة المضمونة
     // ============================================
     window.addEventListener('load', async () => {
-        // 1. تعريف العميل فوراً
+        // 1. ربط العميل فوراً
         window.supabaseClient = supabaseClient;
 
-        // 2. التحقق من المصادقة (بشكل آمن)
-        const isAuthenticated = (typeof checkAuth === 'function') ? checkAuth() : true;
-        if (!isAuthenticated) {
-            window.location.href = 'index.html';
-            return;
+        // 2. الانتظار ثانية واحدة للتأكد من تحميل كل دوال api.js في الـ window
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        // 3. التحقق من وجود الدوال الأساسية
+        if (typeof window.getStations !== 'function') {
+            console.error("❌ الدوال غير معرفة في window");
+            // محاولة ربط يدوي إذا فشل الربط التلقائي
+            if (typeof getStations === 'function') window.getStations = getStations;
         }
 
-        // 3. عرض اسم المستخدم
-        const user = (typeof getCurrentUser === 'function') ? getCurrentUser() : null;
-        if (user && document.getElementById('userName')) {
-            document.getElementById('userName').innerHTML = `مرحباً ${user.full_name || user.username || 'بك'}`;
-        }
-
-        // 4. إعداد القائمة الجانبية
-        const menuToggle = document.getElementById('menuToggle');
-        const sidebar = document.getElementById('sidebar');
-        const navItems = document.querySelectorAll('.nav-item');
-        const logoutBtn = document.getElementById('logoutBtn');
-
-        if (menuToggle && sidebar) {
-            menuToggle.addEventListener('click', () => sidebar.classList.toggle('open'));
-        }
-
-        navItems.forEach(item => {
-            const page = item.getAttribute('data-page');
-            if (page && page !== 'logout') {
-                item.addEventListener('click', () => {
-                    if (window.innerWidth <= 768) sidebar.classList.remove('open');
-                    setActiveNav(page);
-                    loadPage(page);
-                });
-            }
-        });
-
-        if (logoutBtn) {
-            logoutBtn.addEventListener('click', () => {
-                if (typeof logout === 'function') logout();
-                window.location.href = 'index.html';
-            });
-        }
-
-        // 5. بدء تحميل البيانات (الترتيب الهندسي الصحيح)
+        // 4. تشغيل النظام
         try {
-            // تحميل قائمة المحطات (إذا كانت موجودة في الـ API)
-            if (typeof loadStationsList === 'function') {
-                await loadStationsList().catch(err => console.warn("قائمة المحطات غير جاهزة"));
-            }
-            
-            // تشغيل لوحة التحكم
             await loadPage('dashboard');
-            
         } catch (error) {
             console.error("Dashboard Load Error:", error);
-            const pageContent = document.getElementById('pageContent');
-            if (pageContent) {
-                pageContent.innerHTML = `
-                    <div class="no-data">
-                        <i class="fas fa-exclamation-triangle fa-2x"></i>
-                        <p>حدث خطأ في الاتصال بقاعدة البيانات. تأكد من إعدادات الـ API.</p>
-                        <button onclick="location.reload()" class="btn btn-primary" style="margin-top:10px">إعادة محاولة</button>
-                    </div>`;
-            }
+            document.getElementById('pageContent').innerHTML = `
+                <div class="no-data">
+                    <i class="fas fa-sync fa-spin"></i>
+                    <p>جاري تهيئة الاتصال بقاعدة البيانات... برجاء إعادة تحميل الصفحة</p>
+                </div>`;
         }
     });
-</script>
-</body>
-</html>
