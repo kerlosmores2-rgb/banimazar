@@ -28,7 +28,7 @@ const path = require('path');
 const app = express();
 
 // تحديد رقم المنفذ الذي سيعمل عليه السيرفر
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 
 // مفتاح سري لتوقيع الـ JWT (يفضل وضعه في متغيرات البيئة)
 const JWT_SECRET = 'your-secret-key-change-this-in-production';
