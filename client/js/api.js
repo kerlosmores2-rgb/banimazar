@@ -387,4 +387,16 @@ window.getPowerFactorPanels = getPowerFactorPanels;
 window.calculatePenalty = calculatePenalty;
 window.getPenaltyNotifications = getPenaltyNotifications;
 
+window.getMonthlyReports = getMonthlyReports;
+window.generateMonthlyReport = generateMonthlyReport;
+
+window.getPowerFactorPanels = getPowerFactorPanels;
+window.calculatePenalty = calculatePenalty;
+window.getPenaltyNotifications = getPenaltyNotifications;
+
+window.login = login;
+window.logout = logout;
+window.getStations = getStations;
+window.getEmployees = getEmployees;
+
 console.log('✅ Supabase API loaded successfully');
