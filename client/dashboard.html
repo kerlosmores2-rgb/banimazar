@@ -1600,31 +1600,33 @@
     };
 
     // ============================================
-    // لوحة التحكم الرئيسية
-    // ============================================
-    async function loadDashboard() {
+ async function loadDashboard() {
         const pageContent = document.getElementById('pageContent');
+        if (!pageContent) return;
+        
         pageContent.innerHTML = `<div class="loading-spinner"><i class="fas fa-spinner fa-spin fa-2x"></i><p>جاري تحميل البيانات...</p></div>`;
 
         try {
-            await loadStationsList();
-            const stationsRes = await safeApiCall(getStations);
-            const employeesRes = await safeApiCall(getEmployees);
-            const reportsRes = await safeApiCall(getMaintenanceReports);
-            const pfRes = await safeApiCall(getPowerFactorPanels);
-            
-            const stations = stationsRes.success ? (stationsRes.stations || []) : [];
-            const employees = employeesRes.success ? (employeesRes.employees || []) : [];
-            const reports = reportsRes.success ? (reportsRes.reports || []) : [];
-            const pfPanels = pfRes.success ? (pfRes.panels || []) : [];
+            // جلب البيانات مع تأمين ضد الأخطاء
+            const stationsRes = await safeApiCall(window.getStations).catch(() => ({ success: false }));
+            const employeesRes = await safeApiCall(window.getEmployees).catch(() => ({ success: false }));
+            const reportsRes = await safeApiCall(window.getMaintenanceReports).catch(() => ({ success: false }));
+            const pfRes = await safeApiCall(window.getPowerFactorPanels).catch(() => ({ success: false }));
 
-            const activeStations = stations.filter(s => s.status === 'active').length;
+            // استخراج المصفوفات بأمان
+            const stations = (stationsRes && stationsRes.success) ? (stationsRes.stations || []) : [];
+            const employees = (employeesRes && employeesRes.success) ? (employeesRes.employees || []) : [];
+            const reports = (reportsRes && reportsRes.success) ? (reportsRes.reports || []) : [];
+            const pfPanels = (pfRes && pfRes.success) ? (pfRes.panels || []) : [];
+
+            // الحسابات مع التأكد من القيم
+            const activeStations = stations.filter(s => s && s.status === 'active').length;
             const totalCapacity = stations.reduce((sum, s) => sum + (parseFloat(s.capacity) || 0), 0);
 
             let html = `
                 <div class="welcome-section">
                     <h2><i class="fas fa-hand-peace"></i> مرحباً بك في نظام إدارة محطات الصرف الصحي</h2>
-                    <p>نظام متكامل لإدارة وتشغيل وصيانة محطات الصرف الصحي بفرع بني مزار</p>
+                    <p>فرع بني مزار - نظام الإدارة الرقمي</p>
                 </div>
                 
                 <div class="stats-grid">
@@ -1648,58 +1650,35 @@
                         <div class="stat-value">${reports.length}</div>
                         <div class="stat-label">بلاغات الصيانة</div>
                     </div>
-                    <div class="stat-card" onclick="loadPage('power_factor_panels')">
-                        <div class="stat-icon"><i class="fas fa-charging-station"></i></div>
-                        <div class="stat-value">${pfPanels.length}</div>
-                        <div class="stat-label">لوحات معامل القدرة</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
-                        <div class="stat-value">${totalCapacity.toLocaleString()}</div>
-                        <div class="stat-label">السعة الكلية (م³/يوم)</div>
-                    </div>
                 </div>
             `;
 
+            // عرض المحطات الأخيرة
             if (stations.length > 0) {
-                html += `
-                    <div class="section-title">
-                        <h3><i class="fas fa-list"></i> أحدث المحطات</h3>
-                        <button class="btn-outline" onclick="loadPage('stations')">عرض الكل</button>
-                    </div>
-                    <div class="stations-grid">
-                `;
-                
+                html += `<div class="section-title"><h3><i class="fas fa-list"></i> أحدث المحطات</h3></div><div class="stations-grid">`;
                 stations.slice(0, 4).forEach(station => {
-                    const statusMap = {
-                        'active': { class: 'status-active', text: 'نشطة' },
-                        'maintenance': { class: 'status-maintenance', text: 'صيانة' },
-                        'inactive': { class: 'status-inactive', text: 'متوقفة' },
-                        'emergency': { class: 'status-emergency', text: 'طوارئ' }
-                    };
-                    const status = statusMap[station.status] || statusMap['active'];
-                    
                     html += `
-                        <div class="station-card" onclick="loadPage('stations')">
-                            <h4><i class="fas fa-water"></i> ${station.station_name}</h4>
-                            <div class="station-info"><i class="fas fa-code-branch"></i> الكود: ${station.station_code || '---'}</div>
-                            <div class="station-info"><i class="fas fa-tachometer-alt"></i> السعة: ${station.capacity || 0} م³/يوم</div>
-                            <span class="station-status ${status.class}">${status.text}</span>
-                        </div>
-                    `;
+                        <div class="station-card">
+                            <h4>${station.station_name || 'بدون اسم'}</h4>
+                            <div class="station-info">الكود: ${station.station_code || '---'}</div>
+                            <span class="station-status status-active">نشطة</span>
+                        </div>`;
                 });
                 html += `</div>`;
             } else {
-                html += `<div class="no-data"><i class="fas fa-database"></i> لا توجد محطات مسجلة</div>`;
+                html += `<div class="no-data">لا توجد بيانات مسجلة حتى الآن.</div>`;
             }
 
             pageContent.innerHTML = html;
         } catch (error) {
-            console.error('Dashboard Error:', error);
-            pageContent.innerHTML = `<div class="no-data">حدث خطأ في تحميل لوحة التحكم: ${error.message}</div>`;
+            console.error('Dashboard Render Error:', error);
+            pageContent.innerHTML = `<div class="no-data">حدث خطأ في عرض البيانات. برجاء التأكد من أسماء الحقول في سوبابيس.</div>`;
         }
     }
-
+    
+    
+    
+    
     // ============================================
     // دوال التنقل بين الصفحات
     // ============================================
