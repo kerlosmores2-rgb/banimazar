@@ -507,205 +507,164 @@
         </div>
     </div>
 </div>
-<script src="https://kerlosmores2-rgb.github.io/banimazar/client/js/api.js">
-    
-</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://kerlosmores2-rgb.github.io/banimazar/client/js/api.js"></script>
 
-    // التحقق من تسجيل الدخول
-    if (!authToken) {
-        window.location.href = 'index.html';
-    }
-
-    // عرض اسم المستخدم
-    if (currentUser) {
-        document.getElementById('userName').innerHTML = `مرحباً ${currentUser.full_name || currentUser.username}`;
-    }
-
-    const menuToggle = document.getElementById('menuToggle');
-    const sidebar = document.getElementById('sidebar');
-    const navItems = document.querySelectorAll('.nav-item');
-    const logoutBtn = document.getElementById('logoutBtn');
-    const pageContent = document.getElementById('pageContent');
-
-    menuToggle.addEventListener('click', () => {
-        sidebar.classList.toggle('open');
-    });
-
-    navItems.forEach(item => {
-        item.addEventListener('click', () => {
-            if (window.innerWidth <= 768) {
-                sidebar.classList.remove('open');
-            }
-        });
-    });
-
-    logoutBtn.addEventListener('click', () => {
-        logout();
-    });
-
-    function loadPage(page) {
-        pageContent.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin fa-2x"></i><p>جاري تحميل الصفحة...</p></div>';
+<script>
+    // 2. الانتظار حتى يتم تحميل الصفحة والـ API بالكامل
+    window.addEventListener('load', () => {
         
-        if (page === 'dashboard') {
-            loadDashboard();
-        } else if (page === 'stations') {
-            loadStationsPage();
-        } else if (page === 'assets') {
-            loadAssetsPage();
-        } else if (page === 'maintenance') {
-            loadMaintenancePage();
-        } else if (page === 'inspection') {
-            loadInspectionPage();
-        } else if (page === 'reports') {
-            loadReportsPage();
-        } else if (page === 'penalty') {
-            loadPenaltyPage();
-        } else if (page === 'employees') {
-            loadEmployeesPage();
+        // التحقق من تسجيل الدخول باستخدام الدوال الموجودة في api.js
+        if (typeof checkAuth === 'function' && !checkAuth()) {
+            window.location.href = 'index.html';
+            return;
         }
-    }
 
-    function setActiveNav(page) {
+        // عرض اسم المستخدم
+        const user = (typeof getCurrentUser === 'function') ? getCurrentUser() : null;
+        if (user && document.getElementById('userName')) {
+            document.getElementById('userName').innerHTML = `مرحباً ${user.full_name || user.username || 'بك'}`;
+        }
+
+        // إعداد المتغيرات لعناصر الواجهة
+        const menuToggle = document.getElementById('menuToggle');
+        const sidebar = document.getElementById('sidebar');
+        const navItems = document.querySelectorAll('.nav-item');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const pageContent = document.getElementById('pageContent');
+
+        // التحكم في القائمة الجانبية
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('open');
+        });
+
+        // تشغيل أزرار القائمة الجانبية
         navItems.forEach(item => {
-            const itemPage = item.getAttribute('data-page');
-            if (itemPage === page) {
-                item.classList.add('active');
-            } else if (itemPage !== 'logout') {
-                item.classList.remove('active');
+            const page = item.getAttribute('data-page');
+            if (page && page !== 'logout') {
+                item.addEventListener('click', () => {
+                    if (window.innerWidth <= 768) sidebar.classList.remove('open');
+                    setActiveNav(page);
+                    loadPage(page);
+                });
             }
         });
-    }
 
-    async function loadDashboard() {
-        try {
-            const stats = await getStationStats();
-            const stations = await getStations();
-            
-            let html = `
-                <div class="welcome-section">
-                    <h2><i class="fas fa-hand-peace"></i> مرحباً بك في نظام إدارة محطات الصرف الصحي</h2>
-                    <p>نظام متكامل لإدارة وتشغيل وصيانة محطات الصرف الصحي بفرع بني مزار</p>
-                </div>
-                
-                <div class="stats-grid">
-                    <div class="stat-card" onclick="loadPage('stations')">
-                        <div class="stat-icon"><i class="fas fa-building"></i></div>
-                        <div class="stat-value">${stats.stats?.totalStations || 0}</div>
-                        <div class="stat-label">إجمالي المحطات</div>
-                    </div>
-                    <div class="stat-card" onclick="loadPage('stations')">
-                        <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
-                        <div class="stat-value">${stats.stats?.activeStations || 0}</div>
-                        <div class="stat-label">محطات نشطة</div>
-                    </div>
-                    <div class="stat-card" onclick="loadPage('stations')">
-                        <div class="stat-icon"><i class="fas fa-tools"></i></div>
-                        <div class="stat-value">${stats.stats?.maintenanceStations || 0}</div>
-                        <div class="stat-label">تحت الصيانة</div>
-                    </div>
-                    <div class="stat-card" onclick="loadPage('reports')">
-                        <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
-                        <div class="stat-value">${(stats.stats?.totalCapacity || 0).toLocaleString()}</div>
-                        <div class="stat-label">السعة الكلية (م³/يوم)</div>
-                    </div>
-                </div>
-            `;
-            
-            if (stations.stations && stations.stations.length > 0) {
-                html += `
-                    <div class="section-title">
-                        <h3><i class="fas fa-list"></i> قائمة المحطات</h3>
-                        <button class="btn-outline" onclick="loadPage('stations')"><i class="fas fa-arrow-left"></i> عرض الكل</button>
-                    </div>
-                    <div class="stations-grid">
-                `;
-                
-                stations.stations.slice(0, 4).forEach(station => {
-                    let statusClass = '';
-                    let statusText = '';
-                    switch(station.status) {
-                        case 'active': statusClass = 'status-active'; statusText = 'نشطة'; break;
-                        case 'maintenance': statusClass = 'status-maintenance'; statusText = 'صيانة'; break;
-                        case 'inactive': statusClass = 'status-inactive'; statusText = 'متوقفة'; break;
-                        case 'emergency': statusClass = 'status-emergency'; statusText = 'طوارئ'; break;
-                        default: statusClass = 'status-active'; statusText = 'نشطة';
-                    }
-                    
-                    html += `
-                        <div class="station-card" onclick="loadPage('stations')">
-                            <h4><i class="fas fa-water"></i> ${station.station_name}</h4>
-                            <div class="station-info"><i class="fas fa-code-branch"></i> الكود: ${station.station_code || '---'}</div>
-                            <div class="station-info"><i class="fas fa-map-marker-alt"></i> الموقع: ${station.location || 'غير محدد'}</div>
-                            <div class="station-info"><i class="fas fa-tachometer-alt"></i> السعة: ${station.capacity || 0} م³/يوم</div>
-                            <span class="station-status ${statusClass}">${statusText}</span>
-                        </div>
-                    `;
-                });
-                html += `</div>`;
-            } else {
-                html += `<div class="no-data"><i class="fas fa-database"></i> لا توجد محطات مسجلة حتى الآن</div>`;
-            }
-            
-            html += `
-                <div class="section-title">
-                    <h3><i class="fas fa-chart-simple"></i> إحصائيات سريعة</h3>
-                </div>
-                <div class="quick-stats">
-                    <div class="quick-stat-item">
-                        <i class="fas fa-pump-water"></i>
-                        <div>${stats.stats?.totalPumps || 0}</div>
-                        <small>إجمالي المضخات</small>
-                    </div>
-                    <div class="quick-stat-item">
-                        <i class="fas fa-bolt"></i>
-                        <div>0</div>
-                        <small>استهلاك الكهرباء (kWh)</small>
-                    </div>
-                    <div class="quick-stat-item">
-                        <i class="fas fa-oil-can"></i>
-                        <div>0</div>
-                        <small>استهلاك السولار (لتر)</small>
-                    </div>
-                </div>
-            `;
-            
-            pageContent.innerHTML = html;
-            
-        } catch (error) {
-            console.error('Error loading dashboard:', error);
-            pageContent.innerHTML = `<div class="no-data"><i class="fas fa-exclamation-circle"></i> حدث خطأ في تحميل البيانات</div>`;
-        }
-    }
-
-    function loadStationsPage() { pageContent.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i><p>جاري تحميل صفحة المحطات...</p></div>'; }
-    function loadAssetsPage() { pageContent.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i><p>جاري تحميل صفحة الأصول...</p></div>'; }
-    function loadMaintenancePage() { pageContent.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i><p>جاري تحميل صفحة البلاغات...</p></div>'; }
-    function loadInspectionPage() { pageContent.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i><p>جاري تحميل صفحة تقارير المرور...</p></div>'; }
-    function loadReportsPage() { pageContent.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i><p>جاري تحميل صفحة التقارير...</p></div>'; }
-    function loadPenaltyPage() { pageContent.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i><p>جاري تحميل صفحة الغرامات...</p></div>'; }
-    function loadEmployeesPage() { pageContent.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i><p>جاري تحميل صفحة الموظفين...</p></div>'; }
-
-    window.loadPage = loadPage;
-    window.loadStationsPage = loadStationsPage;
-    window.loadAssetsPage = loadAssetsPage;
-    window.loadMaintenancePage = loadMaintenancePage;
-    window.loadInspectionPage = loadInspectionPage;
-    window.loadReportsPage = loadReportsPage;
-    window.loadPenaltyPage = loadPenaltyPage;
-    window.loadEmployeesPage = loadEmployeesPage;
-
-    navItems.forEach(item => {
-        const page = item.getAttribute('data-page');
-        if (page && page !== 'logout') {
-            item.addEventListener('click', () => {
-                setActiveNav(page);
-                loadPage(page);
+        // زر تسجيل الخروج
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', () => {
+                if (typeof logout === 'function') logout();
+                window.location.href = 'index.html';
             });
         }
+
+        // دالة تمييز الزر النشط
+        function setActiveNav(page) {
+            navItems.forEach(item => {
+                item.classList.toggle('active', item.getAttribute('data-page') === page);
+            });
+        }
+
+        // دالة تنقل الصفحات
+        async function loadPage(page) {
+            pageContent.innerHTML = `
+                <div class="loading-spinner">
+                    <i class="fas fa-spinner fa-spin fa-2x"></i>
+                    <p>جاري تحميل الصفحة...</p>
+                </div>`;
+            
+            switch(page) {
+                case 'dashboard': await loadDashboard(); break;
+                default:
+                    pageContent.innerHTML = `
+                        <div class="no-data">
+                            <i class="fas fa-info-circle"></i>
+                            <p>صفحة ${page} قيد التطوير حالياً</p>
+                        </div>`;
+            }
+        }
+
+        // دالة تحميل بيانات لوحة التحكم
+        async function loadDashboard() {
+            try {
+                // استدعاء البيانات من api.js
+                const statsRes = await getStationStats();
+                const stationsRes = await getStations();
+                
+                const stats = statsRes.success ? statsRes.stats : {};
+                const stations = stationsRes.success ? stationsRes.stations : [];
+                
+                let html = `
+                    <div class="welcome-section">
+                        <h2><i class="fas fa-hand-peace"></i> مرحباً بك في نظام إدارة محطات الصرف الصحي</h2>
+                        <p>نظام متكامل لإدارة وتشغيل وصيانة محطات الصرف الصحي بفرع بني مزار</p>
+                    </div>
+                    
+                    <div class="stats-grid">
+                        <div class="stat-card" onclick="loadPage('stations')">
+                            <div class="stat-icon"><i class="fas fa-building"></i></div>
+                            <div class="stat-value">${stats.totalStations || 0}</div>
+                            <div class="stat-label">إجمالي المحطات</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+                            <div class="stat-value">${stats.activeStations || 0}</div>
+                            <div class="stat-label">محطات نشطة</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fas fa-tools"></i></div>
+                            <div class="stat-value">${stats.maintenanceStations || 0}</div>
+                            <div class="stat-label">تحت الصيانة</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
+                            <div class="stat-value">${(stats.totalCapacity || 0).toLocaleString()}</div>
+                            <div class="stat-label">السعة الكلية (م³/يوم)</div>
+                        </div>
+                    </div>
+                `;
+                
+                if (stations && stations.length > 0) {
+                    html += `
+                        <div class="section-title">
+                            <h3><i class="fas fa-list"></i> قائمة المحطات</h3>
+                            <button class="btn-outline" onclick="loadPage('stations')">عرض الكل</button>
+                        </div>
+                        <div class="stations-grid">
+                    `;
+                    
+                    stations.slice(0, 4).forEach(station => {
+                        const statusMap = {
+                            'active': { class: 'status-active', text: 'نشطة' },
+                            'maintenance': { class: 'status-maintenance', text: 'صيانة' },
+                            'inactive': { class: 'status-inactive', text: 'متوقفة' },
+                            'emergency': { class: 'status-emergency', text: 'طوارئ' }
+                        };
+                        const status = statusMap[station.status] || statusMap['active'];
+                        
+                        html += `
+                            <div class="station-card">
+                                <h4><i class="fas fa-water"></i> ${station.station_name}</h4>
+                                <div class="station-info"><i class="fas fa-code-branch"></i> الكود: ${station.station_code || '---'}</div>
+                                <div class="station-info"><i class="fas fa-tachometer-alt"></i> السعة: ${station.capacity || 0} م³</div>
+                                <span class="station-status ${status.class}">${status.text}</span>
+                            </div>
+                        `;
+                    });
+                    html += `</div>`;
+                } else {
+                    html += `<div class="no-data"><i class="fas fa-database"></i> لا توجد بيانات محطات متاحة</div>`;
+                }
+                
+                pageContent.innerHTML = html;
+                
+            } catch (error) {
+                console.error('Dashboard Error:', error);
+                pageContent.innerHTML = `<div class="no-data">حدث خطأ أثناء جلب البيانات</div>`;
+            }
+        }
+
+        // تشغيل الصفحة الرئيسية عند البداية
+        loadPage('dashboard');
     });
-
-    loadPage('dashboard');
 </script>
-
-</body>
-</html>
