@@ -1,11 +1,6 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <!-- تحميل مكتبة Supabase -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-<!-- تحميل ملف api.js الخاص بالمشروع -->
-<script src=".js/api.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>نظام إدارة محطات الصرف الصحي - بني مزار</title>
@@ -366,9 +361,14 @@
         <div class="footer">
             <p>تم إعداد وتصميم هذا النظام بمعرفة</p>
             <p class="designer">فني / كيرلس موريس يعقوب</p>
+            <p class="manager-name">نائب مدير الفرع: مهندس / منصور رجب عبدالله</p>
+            <p class="director-name">مدير عام الفرع: مهندسة / زينب أحمد عبدالمنعم</p>
         </div>
     </div>
 </div>
+
+<!-- ===== scripts في نهاية body ===== -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://kerlosmores2-rgb.github.io/banimazar/client/js/api.js"></script>
 
 <script>
@@ -401,68 +401,69 @@
             document.getElementById('rememberMe').checked = true;
         }
     }
-   // معالجة تسجيل الدخول
-document.getElementById('loginForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    const username = document.getElementById('username').value.trim();
-    const password = document.getElementById('password').value;
-    const rememberMe = document.getElementById('rememberMe').checked;
-    
-    if (!username || !password) {
-        showError('الرجاء إدخال الكود الوظيفي وكلمة المرور');
-        return;
-    }
-    
-    // إظهار حالة التحميل
-    const loginBtn = document.getElementById('loginBtn');
-    const originalText = loginBtn.innerHTML;
-    loginBtn.innerHTML = '<span class="loading"></span> جاري تسجيل الدخول...';
-    loginBtn.disabled = true;
-    
-    try {
-        // استخدام البريد الإلكتروني كاسم مستخدم (Supabase Auth يستخدم البريد)
-        // يمكن تعديل هذا حسب هيكل قاعدة البيانات
-        const result = await login(username, password);
+    loadSavedCredentials();
+
+    // معالجة تسجيل الدخول
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
         
-        if (result.success) {
-            // حفظ بيانات الدخول إذا تم اختيار تذكرني
-            if (rememberMe) {
-                localStorage.setItem('saved_username', username);
-                localStorage.setItem('saved_password', password);
-                localStorage.setItem('remember_me', 'true');
-            } else {
-                localStorage.removeItem('saved_username');
-                localStorage.removeItem('saved_password');
-                localStorage.setItem('remember_me', 'false');
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
+        const rememberMe = document.getElementById('rememberMe').checked;
+        
+        if (!username || !password) {
+            showError('الرجاء إدخال الكود الوظيفي وكلمة المرور');
+            return;
+        }
+        
+        const loginBtn = document.getElementById('loginBtn');
+        const originalText = loginBtn.innerHTML;
+        loginBtn.innerHTML = '<span class="loading"></span> جاري تسجيل الدخول...';
+        loginBtn.disabled = true;
+        
+        try {
+            // التحقق من وجود دالة login
+            if (typeof login === 'undefined') {
+                throw new Error('دالة login غير موجودة. تأكد من تحميل api.js');
             }
             
-            // التوجيه إلى لوحة التحكم
-            window.location.href = 'dashboard.html';
-        } else {
-            showError(result.message || 'اسم المستخدم أو كلمة المرور غير صحيحة');
+            const result = await login(username, password);
+            
+            if (result.success) {
+                if (rememberMe) {
+                    localStorage.setItem('saved_username', username);
+                    localStorage.setItem('saved_password', password);
+                    localStorage.setItem('remember_me', 'true');
+                } else {
+                    localStorage.removeItem('saved_username');
+                    localStorage.removeItem('saved_password');
+                    localStorage.setItem('remember_me', 'false');
+                }
+                
+                window.location.href = 'dashboard.html';
+            } else {
+                showError(result.message || 'اسم المستخدم أو كلمة المرور غير صحيحة');
+                loginBtn.innerHTML = originalText;
+                loginBtn.disabled = false;
+            }
+        } catch (error) {
+            console.error('Login error:', error);
+            showError(error.message || 'حدث خطأ في الاتصال بالخادم، الرجاء المحاولة لاحقاً');
             loginBtn.innerHTML = originalText;
             loginBtn.disabled = false;
         }
-    } catch (error) {
-        console.error('Login error:', error);
-        showError('حدث خطأ في الاتصال بالخادم، الرجاء المحاولة لاحقاً');
-        loginBtn.innerHTML = originalText;
-        loginBtn.disabled = false;
-    }
-});    function showError(message) {
+    });
+    
+    function showError(message) {
         const errorDiv = document.getElementById('errorMessage');
         const errorText = document.getElementById('errorText');
         errorText.textContent = message;
         errorDiv.style.display = 'block';
-        
-        // إخفاء الخطأ بعد 5 ثوانٍ
         setTimeout(() => {
             errorDiv.style.display = 'none';
         }, 5000);
     }
     
-    // عند الضغط على Enter
     document.getElementById('password').addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
             document.getElementById('loginForm').dispatchEvent(new Event('submit'));
