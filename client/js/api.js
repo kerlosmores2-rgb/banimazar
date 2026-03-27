@@ -8,7 +8,7 @@
 // ⚠️ مهم: استبدل هذه القيم بمفاتيح مشروعك من Supabase Dashboard
 // المسار: Project Settings → API → Project URL & anon public key
 
-const SUPABASE_URL = 'https://pbzpumetrmirnsshjdoe.supabase.co  ';    //  برابط مشروعك
+const SUPABASE_URL = 'https://pbzpumetrmirnsshjdoe.supabase.co';    //  برابط مشروعك
 const SUPABASE_KEY = 'sb_publishable_O9BKPIjk5xXvbGNjvsBXVw_9V_TIoUu';                     //  بالمفتاح العام
 const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
