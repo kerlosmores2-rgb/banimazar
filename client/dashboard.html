@@ -24,7 +24,7 @@
             height: fit-content;
             border: 1px solid rgba(0, 212, 255, 0.3);
         }
-        .sidebar-logo { text-align: center; padding: 0 20px 20px 20px; border-bottom: 1px solid rgba(0,212,255,0.3); margin-bottom: 20px; }
+        .sidebar-logo { text-align: center; padding: 0 20px 20px; border-bottom: 1px solid rgba(0,212,255,0.3); margin-bottom: 20px; }
         .sidebar-logo i { font-size: 2.5rem; color: #00d4ff; background: rgba(0,212,255,0.15); padding: 12px; border-radius: 20px; }
         .sidebar-logo h3 { font-size: 1rem; margin-top: 10px; }
         .sidebar-logo p { font-size: 0.7rem; color: rgba(255,255,255,0.6); }
@@ -66,7 +66,6 @@
         .status-active { background: rgba(40,167,69,0.2); color: #28a745; }
         .status-maintenance { background: rgba(255,193,7,0.2); color: #ffc107; }
         .status-inactive { background: rgba(108,117,125,0.2); color: #adb5bd; }
-        .status-emergency { background: rgba(220,53,69,0.2); color: #dc3545; }
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 30px; }
         .stat-card { background: rgba(255,255,255,0.08); border-radius: 20px; padding: 20px; text-align: center; cursor: pointer; transition: 0.3s; border: 1px solid rgba(0,212,255,0.2); }
         .stat-card:hover { transform: translateY(-5px); background: rgba(0,212,255,0.15); }
@@ -83,8 +82,6 @@
         .section-title h3 { color: #00d4ff; font-size: 1.2rem; }
         .btn-outline { background: transparent; border: 1px solid #00d4ff; color: #00d4ff; padding: 6px 18px; border-radius: 25px; cursor: pointer; transition: 0.3s; }
         .btn-outline:hover { background: #00d4ff; color: #1a1a2e; }
-        .quick-stats { display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 25px; }
-        .quick-stat-item { background: rgba(0,212,255,0.1); border-radius: 15px; padding: 12px 20px; flex: 1; text-align: center; }
         .welcome-section { background: linear-gradient(135deg, rgba(0,212,255,0.12), rgba(0,100,150,0.1)); border-radius: 20px; padding: 20px; margin-bottom: 30px; border-right: 4px solid #00d4ff; }
         .copyright { text-align: center; padding: 20px; margin-top: 40px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 0.75rem; color: rgba(255,255,255,0.6); line-height: 1.8; }
         .copyright .designer { color: #00d4ff; font-weight: 500; }
@@ -118,7 +115,6 @@
             <div class="nav-item" data-page="meters"><i class="fas fa-chart-simple"></i> العدادات</div>
             <div class="nav-item" data-page="monthly-reports"><i class="fas fa-calendar-alt"></i> التقارير الشهرية</div>
             <div class="nav-item" data-page="pf-panels"><i class="fas fa-charging-station"></i> لوحات معامل القدرة</div>
-            <div class="nav-item" data-page="users"><i class="fas fa-user-shield"></i> المستخدمين</div>
             <div class="nav-item logout-item" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</div>
         </div>
 
@@ -138,189 +134,202 @@
     </div>
 </div>
 
-<!-- Modal إضافة/تعديل محطة -->
-<div id="stationModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header"><h3 id="stationModalTitle">إضافة محطة جديدة</h3><span class="modal-close" onclick="closeStationModal()">&times;</span></div>
-        <form id="stationForm">
-            <input type="hidden" id="stationId">
-            <div class="form-group"><label>اسم المحطة *</label><input type="text" id="stationName" required></div>
-            <div class="form-group"><label>كود المحطة</label><input type="text" id="stationCode"></div>
-            <div class="form-group"><label>الموقع</label><input type="text" id="stationLocation"></div>
-            <div class="form-group"><label>السعة (م³/يوم)</label><input type="number" id="stationCapacity" step="0.01"></div>
-            <div class="form-group"><label>الحالة</label><select id="stationStatus"><option value="active">نشطة</option><option value="maintenance">تحت الصيانة</option><option value="inactive">متوقفة</option><option value="emergency">طوارئ</option></select></div>
-            <div class="form-group"><label>ملاحظات</label><textarea id="stationNotes" rows="2"></textarea></div>
-            <div style="display: flex; gap: 10px; justify-content: flex-end;"><button type="button" class="btn" onclick="closeStationModal()">إلغاء</button><button type="submit" class="btn btn-primary">حفظ</button></div>
-        </form>
-    </div>
-</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://kerlosmores2-rgb.github.io/banimazar/client/js/api.js"></script>
 
-<!-- Modal إضافة/تعديل موظف -->
-<div id="employeeModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header"><h3 id="employeeModalTitle">إضافة موظف جديد</h3><span class="modal-close" onclick="closeEmployeeModal()">&times;</span></div>
-        <form id="employeeForm">
-            <input type="hidden" id="employeeId">
-            <div class="form-group"><label>اسم الموظف *</label><input type="text" id="empName" required></div>
-            <div class="form-group"><label>كود الموظف</label><input type="text" id="empCode"></div>
-            <div class="form-group"><label>المحطة</label><select id="empStation"></select></div>
-            <div class="form-group"><label>القسم</label><select id="empDept"><option value="كهرباء">كهرباء</option><option value="ميكانيكا">ميكانيكا</option><option value="إدارة">إدارة</option><option value="تشغيل">تشغيل</option><option value="أمن">أمن</option></select></div>
-            <div class="form-group"><label>المسمى الوظيفي</label><input type="text" id="empJob"></div>
-            <div class="form-group"><label>رقم الهاتف</label><input type="tel" id="empPhone"></div>
-            <div class="form-group"><label>البريد الإلكتروني</label><input type="email" id="empEmail"></div>
-            <div class="form-group"><label>تاريخ التعيين</label><input type="date" id="empHireDate"></div>
-            <div class="form-group"><label>الحالة</label><select id="empStatus"><option value="active">نشط</option><option value="inactive">غير نشط</option><option value="on_leave">إجازة</option></select></div>
-            <div class="form-group"><label>ملاحظات</label><textarea id="empNotes" rows="2"></textarea></div>
-            <div style="display: flex; gap: 10px; justify-content: flex-end;"><button type="button" class="btn" onclick="closeEmployeeModal()">إلغاء</button><button type="submit" class="btn btn-primary">حفظ</button></div>
-        </form>
-    </div>
-</div>
-
-<script src="js/api.js"></script>
 <script>
-    if (!authToken) window.location.href = 'index.html';
-    if (currentUser) document.getElementById('userName').innerText = currentUser.full_name || currentUser.username;
-
-    const menuToggle = document.getElementById('menuToggle');
-    const sidebar = document.getElementById('sidebar');
-    menuToggle?.addEventListener('click', () => sidebar.classList.toggle('open'));
-
-    document.querySelectorAll('.nav-item').forEach(item => {
-        item.addEventListener('click', () => {
-            const page = item.getAttribute('data-page');
-            if (page && page !== 'logout') loadPage(page);
-            if (item.id === 'logoutBtn') logout();
-            if (window.innerWidth <= 768) sidebar.classList.remove('open');
-        });
-    });
-
-    function setActiveNav(page) {
-        document.querySelectorAll('.nav-item').forEach(item => {
-            if (item.getAttribute('data-page') === page) item.classList.add('active');
-            else if (item.getAttribute('data-page') !== 'logout') item.classList.remove('active');
-        });
-    }
-
-    window.loadPage = async function(page) {
-        setActiveNav(page);
-        const container = document.getElementById('pageContent');
-        if (page === 'dashboard') await loadDashboard();
-        else if (page === 'stations') await loadStationsPage();
-        else if (page === 'employees') await loadEmployeesPage();
-        else if (page === 'assets') await loadAssetsPage();
-        else if (page === 'maintenance') await loadMaintenancePage();
-        else if (page === 'inspection') await loadInspectionPage();
-        else if (page === 'reports') await loadReportsPage();
-        else if (page === 'penalty') await loadPenaltyPage();
-        else if (page === 'meters') await loadMetersPage();
-        else if (page === 'monthly-reports') await loadMonthlyReportsPage();
-        else if (page === 'pf-panels') await loadPowerFactorPanelsPage();
-        else if (page === 'users') await loadUsersPage();
-        else container.innerHTML = '<div class="no-data">صفحة غير موجودة</div>';
-    };
-
-    // ==================== لوحة التحكم ====================
-    async function loadDashboard() {
-        const container = document.getElementById('pageContent');
-        container.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i><p>جاري التحميل...</p></div>';
-        try {
-            const stations = await getStations();
-            const employees = await getEmployees();
-            const totalStations = stations.success ? stations.stations.length : 0;
-            const totalEmployees = employees.success ? employees.employees.length : 0;
-            container.innerHTML = `
-                <div class="welcome-section"><h2><i class="fas fa-hand-peace"></i> مرحباً بك</h2><p>نظام إدارة محطات الصرف الصحي - بني مزار</p></div>
-                <div class="stats-grid">
-                    <div class="stat-card" onclick="loadPage('stations')"><div class="stat-icon"><i class="fas fa-building"></i></div><div class="stat-value">${totalStations}</div><div class="stat-label">إجمالي المحطات</div></div>
-                    <div class="stat-card" onclick="loadPage('employees')"><div class="stat-icon"><i class="fas fa-users"></i></div><div class="stat-value">${totalEmployees}</div><div class="stat-label">إجمالي الموظفين</div></div>
-                    <div class="stat-card" onclick="loadPage('reports')"><div class="stat-icon"><i class="fas fa-chart-line"></i></div><div class="stat-value">0</div><div class="stat-label">التقارير</div></div>
-                </div>
-                <div class="section-title"><h3><i class="fas fa-list"></i> أحدث المحطات</h3><button class="btn-outline" onclick="loadPage('stations')">عرض الكل</button></div>
-                <div class="stations-grid" id="latestStations"></div>
-            `;
-            const grid = document.getElementById('latestStations');
-            if (stations.success && stations.stations.length) {
-                stations.stations.slice(0, 4).forEach(s => {
-                    let statusClass = s.status === 'active' ? 'status-active' : s.status === 'maintenance' ? 'status-maintenance' : s.status === 'inactive' ? 'status-inactive' : 'status-emergency';
-                    let statusText = s.status === 'active' ? 'نشطة' : s.status === 'maintenance' ? 'صيانة' : s.status === 'inactive' ? 'متوقفة' : 'طوارئ';
-                    grid.innerHTML += `<div class="station-card" onclick="loadPage('stations')"><h4><i class="fas fa-water"></i> ${s.station_name}</h4><div class="station-info"><i class="fas fa-code-branch"></i> ${s.station_code || '---'}</div><div class="station-info"><i class="fas fa-map-marker-alt"></i> ${s.location || '---'}</div><div class="station-info"><i class="fas fa-tachometer-alt"></i> ${s.capacity || 0} م³/يوم</div><span class="status-badge ${statusClass}">${statusText}</span></div>`;
-                });
-            } else grid.innerHTML = '<div class="no-data">لا توجد محطات</div>';
-        } catch(e) { container.innerHTML = '<div class="no-data">خطأ في تحميل البيانات</div>'; }
-    }
-
-    // ==================== المحطات ====================
-    let stationsData = [];
-    async function loadStationsPage() {
-        const container = document.getElementById('pageContent');
-        container.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i><p>جاري تحميل المحطات...</p></div>';
-        try {
-            const result = await getStations();
-            if (result.success) stationsData = result.stations || [];
-            else stationsData = [];
-            renderStationsTable();
-        } catch(e) { container.innerHTML = '<div class="no-data">خطأ في تحميل البيانات</div>'; }
-    }
-    function renderStationsTable() {
-        const container = document.getElementById('pageContent');
-        if (!stationsData.length) { container.innerHTML = '<div class="no-data"><i class="fas fa-database"></i> لا توجد محطات مسجلة<button class="btn btn-primary" style="margin-top:15px;" onclick="openStationModal()">إضافة محطة</button></div>'; return; }
-        let html = `<div style="margin-bottom:20px;"><button class="btn btn-primary" onclick="openStationModal()"><i class="fas fa-plus"></i> إضافة محطة</button></div>
-            <div class="table-responsive"><table class="data-table"><thead>发展<th>#</th><th>اسم المحطة</th><th>الكود</th><th>الموقع</th><th>السعة</th><th>الحالة</th><th>الإجراءات</th> </thead><tbody>`;
-        stationsData.forEach((s, i) => {
-            let statusClass = s.status === 'active' ? 'status-active' : s.status === 'maintenance' ? 'status-maintenance' : s.status === 'inactive' ? 'status-inactive' : 'status-emergency';
-            let statusText = s.status === 'active' ? 'نشطة' : s.status === 'maintenance' ? 'صيانة' : s.status === 'inactive' ? 'متوقفة' : 'طوارئ';
-            html += `<tr><td>${i+1}</td><td>${s.station_name}</td><td>${s.station_code || '-'}</td><td>${s.location || '-'}</td><td>${s.capacity || 0} م³/يوم</td><td><span class="status-badge ${statusClass}">${statusText}</span></td><td><button class="btn btn-sm btn-primary" onclick="editStation(${s.id})"><i class="fas fa-edit"></i> تعديل</button> <button class="btn btn-sm btn-danger" onclick="deleteStation(${s.id})"><i class="fas fa-trash"></i> حذف</button></td></tr>`;
-        });
-        html += `</tbody></div>`;
-        container.innerHTML = html;
-    }
-    window.openStationModal = () => { document.getElementById('stationForm').reset(); document.getElementById('stationId').value = ''; document.getElementById('stationModalTitle').innerText = 'إضافة محطة جديدة'; document.getElementById('stationModal').classList.add('active'); };
-    window.closeStationModal = () => document.getElementById('stationModal').classList.remove('active');
-    window.editStation = async (id) => { const s = stationsData.find(x => x.id == id); if(s){ document.getElementById('stationId').value = s.id; document.getElementById('stationName').value = s.station_name; document.getElementById('stationCode').value = s.station_code || ''; document.getElementById('stationLocation').value = s.location || ''; document.getElementById('stationCapacity').value = s.capacity || ''; document.getElementById('stationStatus').value = s.status || 'active'; document.getElementById('stationNotes').value = s.notes || ''; document.getElementById('stationModalTitle').innerText = 'تعديل محطة'; document.getElementById('stationModal').classList.add('active'); } };
-    window.deleteStation = async (id) => { if(confirm('هل تريد حذف هذه المحطة؟')){ const res = await deleteStation(id); if(res.success) loadStationsPage(); else alert(res.message || 'خطأ في الحذف'); } };
-    document.getElementById('stationForm').addEventListener('submit', async (e) => { e.preventDefault(); const id = document.getElementById('stationId').value; const data = { station_name: document.getElementById('stationName').value, station_code: document.getElementById('stationCode').value, location: document.getElementById('stationLocation').value, capacity: parseFloat(document.getElementById('stationCapacity').value), status: document.getElementById('stationStatus').value, notes: document.getElementById('stationNotes').value }; let res; if(id) res = await updateStation(id, data); else res = await createStation(data); if(res.success){ closeStationModal(); loadStationsPage(); } else alert(res.message || 'حدث خطأ'); });
-
-    // ==================== الموظفين ====================
-    let employeesData = [];
-    async function loadEmployeesPage() {
-        const container = document.getElementById('pageContent');
-        container.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i><p>جاري تحميل الموظفين...</p></div>';
-        try {
-            const result = await getEmployees();
-            if (result.success) employeesData = result.employees || [];
-            else employeesData = [];
-            renderEmployeesTable();
-            await loadStationsForEmployeeSelect();
-        } catch(e) { container.innerHTML = '<div class="no-data">خطأ في تحميل البيانات</div>'; }
-    }
-    function renderEmployeesTable() {
-        const container = document.getElementById('pageContent');
-        if (!employeesData.length) { container.innerHTML = '<div class="no-data"><i class="fas fa-database"></i> لا توجد موظفين<button class="btn btn-primary" style="margin-top:15px;" onclick="openEmployeeModal()">إضافة موظف</button></div>'; return; }
-        let html = `<div style="margin-bottom:20px;"><button class="btn btn-primary" onclick="openEmployeeModal()"><i class="fas fa-plus"></i> إضافة موظف</button></div><div class="table-responsive"><table class="data-table"><thead><tr><th>#</th><th>الاسم</th><th>الكود</th><th>المحطة</th><th>القسم</th><th>الوظيفة</th><th>الهاتف</th><th>الحالة</th><th>الإجراءات</th></tr></thead><tbody>`;
-        employeesData.forEach((e, i) => {
-            let statusClass = e.status === 'active' ? 'status-active' : 'status-inactive';
-            let statusText = e.status === 'active' ? 'نشط' : e.status === 'inactive' ? 'غير نشط' : 'إجازة';
-            html += `<tr><td>${i+1}</td><td>${e.employee_name}</td><td>${e.employee_code || '-'}</td><td>${e.station_name || '-'}</td><td>${e.department || '-'}</td><td>${e.job_title || '-'}</td><td>${e.phone || '-'}</td><td><span class="status-badge ${statusClass}">${statusText}</span></td><td><button class="btn btn-sm btn-primary" onclick="editEmployee(${e.id})"><i class="fas fa-edit"></i> تعديل</button> <button class="btn btn-sm btn-danger" onclick="deleteEmployee(${e.id})"><i class="fas fa-trash"></i> حذف</button></td></tr>`;
-        });
-        html += `</tbody></div>`;
-        container.innerHTML = html;
-    }
-    async function loadStationsForEmployeeSelect() {
-        const res = await getStations();
-        const select = document.getElementById('empStation');
-        if(select){
-            select.innerHTML = '<option value="">بدون محطة</option>';
-            if(res.success) res.stations.forEach(s => select.innerHTML += `<option value="${s.id}">${s.station_name}</option>`);
+    // انتظار تحميل الصفحة والـ API بالكامل
+    window.addEventListener('load', () => {
+        
+        // التحقق من تسجيل الدخول
+        if (typeof checkAuth === 'function' && !checkAuth()) {
+            window.location.href = 'index.html';
+            return;
         }
-    }
-    window.openEmployeeModal = () => { document.getElementById('employeeForm').reset(); document.getElementById('employeeId').value = ''; document.getElementById('employeeModalTitle').innerText = 'إضافة موظف جديد'; document.getElementById('employeeModal').classList.add('active'); };
-    window.closeEmployeeModal = () => document.getElementById('employeeModal').classList.remove('active');
-    window.editEmployee = async (id) => { const e = employeesData.find(x => x.id == id); if(e){ document.getElementById('employeeId').value = e.id; document.getElementById('empName').value = e.employee_name; document.getElementById('empCode').value = e.employee_code || ''; document.getElementById('empStation').value = e.station_id || ''; document.getElementById('empDept').value = e.department || 'كهرباء'; document.getElementById('empJob').value = e.job_title || ''; document.getElementById('empPhone').value = e.phone || ''; document.getElementById('empEmail').value = e.email || ''; document.getElementById('empHireDate').value = e.hire_date || ''; document.getElementById('empStatus').value = e.status || 'active'; document.getElementById('empNotes').value = e.notes || ''; document.getElementById('employeeModalTitle').innerText = 'تعديل موظف'; document.getElementById('employeeModal').classList.add('active'); } };
-    window.deleteEmployee = async (id) => { if(confirm('هل تريد حذف هذا الموظف؟')){ const res = await deleteEmployee(id); if(res.success) loadEmployeesPage(); else alert(res.message || 'خطأ في الحذف'); } };
-    document.getElementById('employeeForm').addEventListener('submit', async (e) => { e.preventDefault(); const id = document.getElementById('employeeId').value; const data = { employee_name: document.getElementById('empName').value, employee_code: document.getElementById('empCode').value, station_id: document.getElementById('empStation').value || null, department: document.getElementById('empDept').value, job_title: document.getElementById('empJob').value, phone: document.getElementById('empPhone').value, email: document.getElementById('empEmail').value, hire_date: document.getElementById('empHireDate').value, status: document.getElementById('empStatus').value, notes: document.getElementById('empNotes').value }; let res; if(id) res = await updateEmployee(id, data); else res = await createEmployee(data); if(res.success){ closeEmployeeModal(); loadEmployeesPage(); } else alert(res.message || 'حدث خطأ'); });
 
-    // ==================== الأصول ====================
-    async function loadAssetsPage() {
-        const container = document.getElementById('pageContent');
-        container.innerHTML = `<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i><p>جاري تحميل الأصول...</p></div><div id="assetsContent"></div>`;
-        const stationsRes = await getStations();
+        // عرض اسم المستخدم
+        const user = (typeof getCurrentUser === 'function') ? getCurrentUser() : null;
+        if (user && document.getElementById('userName')) {
+            document.getElementById('userName').innerHTML = `مرحباً ${user.full_name || user.username || 'بك'}`;
+        }
+
+        // إعداد المتغيرات
+        const menuToggle = document.getElementById('menuToggle');
+        const sidebar = document.getElementById('sidebar');
+        const navItems = document.querySelectorAll('.nav-item');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const pageContent = document.getElementById('pageContent');
+
+        // القائمة الجانبية
+        menuToggle.addEventListener('click', () => sidebar.classList.toggle('open'));
+
+        // أزرار القائمة
+        navItems.forEach(item => {
+            const page = item.getAttribute('data-page');
+            if (page && page !== 'logout') {
+                item.addEventListener('click', () => {
+                    if (window.innerWidth <= 768) sidebar.classList.remove('open');
+                    setActiveNav(page);
+                    loadPage(page);
+                });
+            }
+        });
+
+        // تسجيل الخروج
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', () => {
+                if (typeof logout === 'function') logout();
+                else window.location.href = 'index.html';
+            });
+        }
+
+        function setActiveNav(page) {
+            navItems.forEach(item => {
+                item.classList.toggle('active', item.getAttribute('data-page') === page);
+            });
+        }
+
+        // ==================== دوال تحميل الصفحات ====================
+        
+        async function loadPage(page) {
+            pageContent.innerHTML = `<div class="loading-spinner"><i class="fas fa-spinner fa-spin fa-2x"></i><p>جاري تحميل ${page}...</p></div>`;
+            
+            switch(page) {
+                case 'dashboard': await loadDashboard(); break;
+                case 'stations': await loadStationsPage(); break;
+                case 'employees': await loadEmployeesPage(); break;
+                case 'assets': await loadAssetsPage(); break;
+                case 'maintenance': await loadMaintenancePage(); break;
+                case 'inspection': await loadInspectionPage(); break;
+                case 'reports': await loadReportsPage(); break;
+                case 'penalty': await loadPenaltyPage(); break;
+                case 'meters': await loadMetersPage(); break;
+                case 'monthly-reports': await loadMonthlyReportsPage(); break;
+                case 'pf-panels': await loadPowerFactorPanelsPage(); break;
+                default: pageContent.innerHTML = `<div class="no-data">صفحة ${page} قيد التطوير</div>`;
+            }
+        }
+
+        // لوحة التحكم
+        async function loadDashboard() {
+            try {
+                const statsRes = await getStationStats();
+                const stationsRes = await getStations();
+                const employeesRes = await getEmployees();
+                
+                const stats = statsRes.success ? statsRes.stats : {};
+                const stations = stationsRes.success ? stationsRes.stations : [];
+                const employees = employeesRes.success ? employeesRes.employees : [];
+                
+                let html = `
+                    <div class="welcome-section">
+                        <h2><i class="fas fa-hand-peace"></i> مرحباً بك في نظام إدارة محطات الصرف الصحي</h2>
+                        <p>نظام متكامل لإدارة وتشغيل وصيانة محطات الصرف الصحي بفرع بني مزار</p>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-card" onclick="loadPage('stations')"><div class="stat-icon"><i class="fas fa-building"></i></div><div class="stat-value">${stats.totalStations || 0}</div><div class="stat-label">إجمالي المحطات</div></div>
+                        <div class="stat-card" onclick="loadPage('stations')"><div class="stat-icon"><i class="fas fa-check-circle"></i></div><div class="stat-value">${stats.activeStations || 0}</div><div class="stat-label">محطات نشطة</div></div>
+                        <div class="stat-card" onclick="loadPage('employees')"><div class="stat-icon"><i class="fas fa-users"></i></div><div class="stat-value">${employees.length || 0}</div><div class="stat-label">الموظفين</div></div>
+                        <div class="stat-card" onclick="loadPage('reports')"><div class="stat-icon"><i class="fas fa-chart-line"></i></div><div class="stat-value">${(stats.totalCapacity || 0).toLocaleString()}</div><div class="stat-label">السعة الكلية (م³/يوم)</div></div>
+                    </div>
+                `;
+                
+                if (stations && stations.length > 0) {
+                    html += `<div class="section-title"><h3><i class="fas fa-list"></i> أحدث المحطات</h3><button class="btn-outline" onclick="loadPage('stations')">عرض الكل</button></div><div class="stations-grid">`;
+                    stations.slice(0, 4).forEach(station => {
+                        const statusMap = {
+                            'active': { class: 'status-active', text: 'نشطة' },
+                            'maintenance': { class: 'status-maintenance', text: 'صيانة' },
+                            'inactive': { class: 'status-inactive', text: 'متوقفة' },
+                            'emergency': { class: 'status-emergency', text: 'طوارئ' }
+                        };
+                        const status = statusMap[station.status] || statusMap['active'];
+                        html += `<div class="station-card" onclick="loadPage('stations')"><h4><i class="fas fa-water"></i> ${station.station_name}</h4><div class="station-info"><i class="fas fa-code-branch"></i> ${station.station_code || '---'}</div><div class="station-info"><i class="fas fa-tachometer-alt"></i> ${station.capacity || 0} م³/يوم</div><span class="station-status ${status.class}">${status.text}</span></div>`;
+                    });
+                    html += `</div>`;
+                } else {
+                    html += `<div class="no-data"><i class="fas fa-database"></i> لا توجد محطات مسجلة</div>`;
+                }
+                pageContent.innerHTML = html;
+            } catch(e) {
+                pageContent.innerHTML = `<div class="no-data">خطأ في تحميل البيانات</div>`;
+            }
+        }
+
+        // ==================== المحطات ====================
+        let stationsData = [];
+        async function loadStationsPage() {
+            try {
+                const result = await getStations();
+                stationsData = result.success ? result.stations : [];
+                renderStationsTable();
+            } catch(e) { pageContent.innerHTML = '<div class="no-data">خطأ في تحميل المحطات</div>'; }
+        }
+        
+        function renderStationsTable() {
+            if (!stationsData.length) {
+                pageContent.innerHTML = `<div class="no-data"><i class="fas fa-database"></i> لا توجد محطات<button class="btn btn-primary" style="margin-top:15px;" onclick="openStationModal()">إضافة محطة</button></div>`;
+                return;
+            }
+            let html = `<div style="margin-bottom:20px;"><button class="btn btn-primary" onclick="openStationModal()"><i class="fas fa-plus"></i> إضافة محطة</button></div>
+                <div class="table-responsive"><table class="data-table"><thead>发展<th>#</th><th>اسم المحطة</th><th>الكود</th><th>الموقع</th><th>السعة</th><th>الحالة</th><th>الإجراءات</th> </thead><tbody>`;
+            stationsData.forEach((s, i) => {
+                const statusMap = { 'active':'status-active','maintenance':'status-maintenance','inactive':'status-inactive','emergency':'status-emergency' };
+                const statusText = { 'active':'نشطة','maintenance':'صيانة','inactive':'متوقفة','emergency':'طوارئ' };
+                html += `<tr><td>${i+1}</td><td>${s.station_name}</td><td>${s.station_code || '-'}</td><td>${s.location || '-'}</td><td>${s.capacity || 0} م³</td><td><span class="status-badge ${statusMap[s.status] || 'status-active'}">${statusText[s.status] || 'نشطة'}</span></td>
+                <td><button class="btn btn-sm btn-primary" onclick="editStation(${s.id})"><i class="fas fa-edit"></i> تعديل</button> <button class="btn btn-sm btn-danger" onclick="deleteStation(${s.id})"><i class="fas fa-trash"></i> حذف</button></td></tr>`;
+            });
+            html += `</tbody></div>`;
+            pageContent.innerHTML = html;
+        }
+        
+        window.openStationModal = () => { /* فتح مودال الإضافة */ alert('سيتم فتح نموذج إضافة محطة'); };
+        window.editStation = (id) => { alert(`تعديل المحطة رقم ${id}`); };
+        window.deleteStation = async (id) => { if(confirm('حذف المحطة؟')){ const res = await deleteStation(id); if(res.success) loadStationsPage(); else alert(res.message); } };
+
+        // ==================== الموظفين ====================
+        let employeesData = [];
+        async function loadEmployeesPage() {
+            try {
+                const result = await getEmployees();
+                employeesData = result.success ? result.employees : [];
+                renderEmployeesTable();
+            } catch(e) { pageContent.innerHTML = '<div class="no-data">خطأ في تحميل الموظفين</div>'; }
+        }
+        
+        function renderEmployeesTable() {
+            if (!employeesData.length) {
+                pageContent.innerHTML = `<div class="no-data"><i class="fas fa-database"></i> لا توجد موظفين<button class="btn btn-primary" style="margin-top:15px;" onclick="openEmployeeModal()">إضافة موظف</button></div>`;
+                return;
+            }
+            let html = `<div style="margin-bottom:20px;"><button class="btn btn-primary" onclick="openEmployeeModal()"><i class="fas fa-plus"></i> إضافة موظف</button></div>
+                <div class="table-responsive"><table class="data-table"><thead>发展<th>#</th><th>الاسم</th><th>الكود</th><th>المحطة</th><th>القسم</th><th>الوظيفة</th><th>الهاتف</th><th>الحالة</th><th>الإجراءات</th> </thead><tbody>`;
+            employeesData.forEach((e, i) => {
+                html += `<tr><td>${i+1}</td><td>${e.employee_name}</td><td>${e.employee_code || '-'}</td><td>${e.station_name || '-'}</td><td>${e.department || '-'}</td><td>${e.job_title || '-'}</td><td>${e.phone || '-'}</td>
+                <td><span class="status-badge ${e.status === 'active' ? 'status-active' : 'status-inactive'}">${e.status === 'active' ? 'نشط' : 'غير نشط'}</span></td>
+                <td><button class="btn btn-sm btn-primary" onclick="editEmployee(${e.id})">تعديل</button> <button class="btn btn-sm btn-danger" onclick="deleteEmployee(${e.id})">حذف</button></td></tr>`;
+            });
+            html += `</tbody></div>`;
+            pageContent.innerHTML = html;
+        }
+        
+        window.openEmployeeModal = () => { alert('سيتم فتح نموذج إضافة موظف'); };
+        window.editEmployee = (id) => { alert(`تعديل الموظف رقم ${id}`); };
+        window.deleteEmployee = async (id) => { if(confirm('حذف الموظف؟')){ const res = await deleteEmployee(id); if(res.success) loadEmployeesPage(); else alert(res.message); } };
+
+        // ==================== الصفحات الأخرى (مؤقتة) ====================
+        async function loadAssetsPage() { pageContent.innerHTML = '<div class="no-data">صفحة الأصول - جاري التطوير</div>'; }
+        async function loadMaintenancePage() { pageContent.innerHTML = '<div class="no-data">صفحة بلاغات الصيانة - جاري التطوير</div>'; }
+        async function loadInspectionPage() { pageContent.innerHTML = '<div class="no-data">صفحة تقارير المرور - جاري التطوير</div>'; }
+        async function loadReportsPage() { pageContent.innerHTML = '<div class="no-data">صفحة التقارير التشغيلية - جاري التطوير</div>'; }
+        async function loadPenaltyPage() { pageContent.innerHTML = '<div class="no-data">صفحة غرامات معامل القدرة - جاري التطوير</div>'; }
+        async function loadMetersPage() { pageContent.innerHTML = '<div class="no-data">صفحة عدادات الكهرباء والمياه - جاري التطوير</div>'; }
+        async function loadMonthlyReportsPage() { pageContent.innerHTML = '<div class="no-data">صفحة التقارير الشهرية - جاري التطوير</div>'; }
+        async function loadPowerFactorPanelsPage() { pageContent.innerHTML = '<div class="no-data">صفحة لوحات معامل القدرة - جاري التطوير</div>'; }
+
+        // تشغيل الصفحة الرئيسية
+        loadPage('dashboard');
+    });
+</script>
+</body>
+</html>
