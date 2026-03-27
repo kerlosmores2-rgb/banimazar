@@ -1600,94 +1600,69 @@
     };
 
 
+    
+    // ============================================
     async function loadDashboard() {
         const pageContent = document.getElementById('pageContent');
-        if (!pageContent) return;
+        const user = (typeof getCurrentUser === 'function') ? getCurrentUser() : {};
         
-        // إظهار علامة التحميل
+        // 1. تسجيل الصلاحية في الكونسول للتأكد (جهاز الأفوميتر البرمجي)
+        console.log("إشارة الصلاحية الحالية:", user.role);
+
+        // 2. تحديث شاشة الترحيب باسم المستخدم وصلاحيته
+        const userNameElement = document.getElementById('userName');
+        if (user && userNameElement) {
+            const roleName = user.role === 'admin' ? 'مدير النظام' : 'مستخدم';
+            userNameElement.innerHTML = `<i class="fas fa-user-shield"></i> مرحباً: ${user.full_name || user.username || 'مهندس'} <small>(${roleName})</small>`;
+        }
+
+        // 3. إظهار رسالة التحميل
         pageContent.innerHTML = `
             <div class="loading-spinner" style="text-align:center; padding:50px;">
-                <i class="fas fa-spinner fa-spin fa-3x" style="color:#00d2ff;"></i>
-                <p style="margin-top:15px;">جاري استلام بيانات المحطات من السيرفر...</p>
+                <i class="fas fa-spinner fa-spin fa-2x"></i>
+                <p>جاري جلب بيانات المحطات بصلاحية: ${user.role || 'غير محدد'}...</p>
             </div>`;
 
         try {
-            // 1. جلب البيانات من الدوال المعرفة في نافذة window
-            const stationsRes = await safeApiCall(window.getStations).catch(err => ({ success: false }));
-            const employeesRes = await safeApiCall(window.getEmployees).catch(err => ({ success: false }));
-            const reportsRes = await safeApiCall(window.getMaintenanceReports).catch(err => ({ success: false }));
-            const pfRes = await safeApiCall(window.getPowerFactorPanels).catch(err => ({ success: false }));
+            // 4. طلب البيانات من السيرفر
+            const stationsRes = await safeApiCall(window.getStations);
+            const employeesRes = await safeApiCall(window.getEmployees);
+            const reportsRes = await safeApiCall(window.getMaintenanceReports);
 
-            // 2. معالجة البيانات بأمان (تجنب الـ undefined)
+            // 5. التأكد من وصول البيانات (حتى لو المصفوفات فارغة)
             const stations = (stationsRes && stationsRes.success) ? (stationsRes.stations || []) : [];
             const employees = (employeesRes && employeesRes.success) ? (employeesRes.employees || []) : [];
             const reports = (reportsRes && reportsRes.success) ? (reportsRes.reports || []) : [];
-            const pfPanels = (pfRes && pfRes.success) ? (pfRes.panels || []) : [];
 
-            // 3. حسابات الإحصائيات (تحويل أي Error لـ 0)
-            const activeStationsCount = stations.filter(s => s && s.status === 'active').length;
-            const totalCapacitySum = stations.reduce((sum, s) => sum + (parseFloat(s.capacity) || 0), 0);
-
-            // 4. بناء واجهة لوحة التحكم
+            // 6. بناء واجهة الإحصائيات
             let html = `
-                <div class="welcome-section" style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 15px; margin-bottom: 25px; border-right: 5px solid #00d2ff;">
-                    <h2><i class="fas fa-chart-line"></i> نظام إدارة محطات بني مزار الرقمي</h2>
-                    <p>الحالة العامة للمنظومة الآن</p>
+                <div class="welcome-section">
+                    <h2>لوحة تحكم إدارة محطات بني مزار</h2>
+                    <p>الحالة التشغيلية للمنظومة</p>
                 </div>
-                
-                <div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
-                    <div class="stat-card" style="background:#1a4a63; padding:20px; border-radius:12px; text-align:center;">
-                        <div class="stat-icon" style="font-size:2rem; color:#00d2ff;"><i class="fas fa-building"></i></div>
-                        <div class="stat-value" style="font-size:1.8rem; font-weight:bold; margin:10px 0;">${stations.length}</div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value">${stations.length}</div>
                         <div class="stat-label">إجمالي المحطات</div>
                     </div>
-                    <div class="stat-card" style="background:#1a4a63; padding:20px; border-radius:12px; text-align:center;">
-                        <div class="stat-icon" style="font-size:2rem; color:#2ecc71;"><i class="fas fa-check-circle"></i></div>
-                        <div class="stat-value" style="font-size:1.8rem; font-weight:bold; margin:10px 0;">${activeStationsCount}</div>
-                        <div class="stat-label">محطات تعمل</div>
+                    <div class="stat-card">
+                        <div class="stat-value">${employees.length}</div>
+                        <div class="stat-label">الموظفين</div>
                     </div>
-                    <div class="stat-card" style="background:#1a4a63; padding:20px; border-radius:12px; text-align:center;">
-                        <div class="stat-icon" style="font-size:2rem; color:#f1c40f;"><i class="fas fa-users"></i></div>
-                        <div class="stat-value" style="font-size:1.8rem; font-weight:bold; margin:10px 0;">${employees.length}</div>
-                        <div class="stat-label">طاقم العمل</div>
-                    </div>
-                    <div class="stat-card" style="background:#1a4a63; padding:20px; border-radius:12px; text-align:center;">
-                        <div class="stat-icon" style="font-size:2rem; color:#e74c3c;"><i class="fas fa-tools"></i></div>
-                        <div class="stat-value" style="font-size:1.8rem; font-weight:bold; margin:10px 0;">${reports.length}</div>
-                        <div class="stat-label">بلاغات مفتوحة</div>
+                    <div class="stat-card">
+                        <div class="stat-value">${reports.length}</div>
+                        <div class="stat-label">بلاغات الصيانة</div>
                     </div>
                 </div>
             `;
 
-            // إضافة جدول المحطات الأخير
-            if (stations.length > 0) {
-                html += `<h3 style="margin: 25px 0 15px;"><i class="fas fa-list"></i> آخر المحطات المضافة</h3><div class="stations-grid">`;
-                stations.slice(0, 4).forEach(s => {
-                    html += `
-                        <div class="station-card" style="background:rgba(255,255,255,0.1); padding:15px; border-radius:10px; margin-bottom:10px;">
-                            <strong>${s.station_name || 'محطة غير مسمى'}</strong>
-                            <p style="font-size:0.8rem; color:#ccc;">السعة: ${s.capacity || 0} م³/يوم</p>
-                        </div>`;
-                });
-                html += `</div>`;
-            } else {
-                html += `
-                    <div style="text-align:center; padding:30px; background:rgba(255,255,255,0.05); border-radius:15px; margin-top:20px;">
-                        <i class="fas fa-database fa-2x" style="color:#666;"></i>
-                        <p>قاعدة البيانات فارغة حالياً. ابدأ بإضافة أول محطة.</p>
-                    </div>`;
-            }
-
             pageContent.innerHTML = html;
 
-        } catch (err) {
-            console.error("Dashboard Render Error:", err);
-            pageContent.innerHTML = `<div class="no-data">عذراً، حدث خطأ أثناء عرض البيانات.</div>`;
+        } catch (error) {
+            console.error("خطأ في جلب البيانات:", error);
+            pageContent.innerHTML = `<div class="no-data">عذراً، فشل جلب البيانات. قد لا تمتلك صلاحية "مدير" للوصول لهذه الجداول.</div>`;
         }
     }
-    
-    
-    // ============================================
     // دوال التنقل بين الصفحات
     // ============================================
     function setActiveNav(page) {
