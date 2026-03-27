@@ -121,12 +121,22 @@
     </div>
 </div>
 
-
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://kerlosmores2-rgb.github.io/banimazar/client/js/api.js"></script>
 
-
 <script>
+    // وظيفة عرض رسائل الخطأ
+    function showError(msg) {
+        const div = document.getElementById('errorMessage');
+        const text = document.getElementById('errorText');
+        if (div && text) {
+            text.innerText = msg;
+            div.style.display = 'block';
+            setTimeout(() => { div.style.display = 'none'; }, 5000);
+        }
+    }
+
+    // تحميل البيانات المحفوظة عند فتح الصفحة
     function loadSavedCredentials() {
         const savedUsername = localStorage.getItem('saved_username');
         const savedPassword = localStorage.getItem('saved_password');
@@ -137,10 +147,13 @@
             document.getElementById('rememberMe').checked = true;
         }
     }
+    
     loadSavedCredentials();
 
+    // معالجة عملية تسجيل الدخول
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
         e.preventDefault();
+        
         const username = document.getElementById('username').value.trim();
         const password = document.getElementById('password').value;
         const rememberMe = document.getElementById('rememberMe').checked;
@@ -151,12 +164,18 @@
         }
         
         const btn = document.getElementById('loginBtn');
-        const original = btn.innerHTML;
+        const originalContent = btn.innerHTML;
         btn.innerHTML = '<span class="loading"></span> جاري تسجيل الدخول...';
         btn.disabled = true;
         
         try {
+            // فحص وجود دالة login قبل استدعائها
+            if (typeof login !== 'function') {
+                throw new Error('لم يتم تحميل ملف البرمجة api.js بشكل صحيح');
+            }
+
             const result = await login(username, password);
+            
             if (result.success) {
                 if (rememberMe) {
                     localStorage.setItem('saved_username', username);
@@ -169,32 +188,21 @@
                 }
                 window.location.href = 'dashboard.html';
             } else {
-                showError(result.message);
-                btn.innerHTML = original;
+                showError(result.message || 'فشل تسجيل الدخول');
+                btn.innerHTML = originalContent;
                 btn.disabled = false;
             }
         } catch (error) {
             console.error('Login error:', error);
-            showError('حدث خطأ في الاتصال بالخادم');
-            btn.innerHTML = original;
+            showError('خطأ: ' + error.message);
+            btn.innerHTML = originalContent;
             btn.disabled = false;
         }
     });
-    
-    function showError(msg) {
-        const div = document.getElementById('errorMessage');
-        document.getElementById('errorText').innerText = msg;
-        div.style.display = 'block';
-        setTimeout(() => div.style.display = 'none', 5000);
-    }
-    <script src="https://kerlosmores2-rgb.github.io/banimazar/client/js/api.js"></script>
-<script>
-    console.log("فحص api.js:", typeof login);
-    if (typeof login === 'undefined') {
-        console.error("❌ api.js لم يتم تحميله!");
-    } else {
-        console.log("✅ api.js تم تحميله");
-    }
+
+    // فحص تحميل الملف في وحدة التحكم (Console) للتأكد
+    console.log("حالة ملف api.js:", typeof login === 'function' ? "✅ جاهز" : "❌ غير موجود");
 </script>
+
 </body>
 </html>
