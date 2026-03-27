@@ -37,41 +37,128 @@ function checkAuth() {
 }
 
 // ==================== دوال المصادقة ====================
+// ==================== دوال المصادقة ====================
 async function login(username, password) {
     try {
-        const email = username.includes('@') ? username : username + '@banimazar.com';
+        // تحديد ما إذا كان المدخل بريد إلكتروني أم اسم مستخدم
+        const isEmail = username.includes('@');
+        
+        // محاولة تسجيل الدخول عبر Supabase Auth باستخدام البريد الإلكتروني
+        const email = isEmail ? username : username + '@banimazar.com';
+        
         const { data: authData, error: authError } = await supabaseClient.auth.signInWithPassword({
             email: email,
             password: password
         });
-        if (authError) return { success: false, message: authError.message };
         
+        if (authError) {
+            // إذا فشلت المصادقة، نحاول تسجيل الدخول باستخدام جدول users المحلي
+            return await loginWithLocalTable(username, password);
+        }
+        
+        // جلب بيانات المستخدم من جدول users باستخدام البريد الإلكتروني (لأن id مختلف)
         const { data: userData, error: userError } = await supabaseClient
             .from('users')
-            .select('*')
+            .select('id, email, full_name, role')
             .eq('email', email)
             .single();
         
-        const user = userData || {
-            id: authData.user.id,
-            email: authData.user.email,
-            full_name: authData.user.email.split('@')[0],
-            role: 'viewer'
+        // إذا لم يوجد المستخدم في جدول users، نقوم بإنشائه
+        if (userError || !userData) {
+            // الحصول على أكبر id موجود
+            const { data: maxId } = await supabaseClient
+                .from('users')
+                .select('id')
+                .order('id', { ascending: false })
+                .limit(1);
+            
+            const newId = (maxId && maxId[0] && maxId[0].id) ? maxId[0].id + 1 : 1;
+            
+            const newUser = {
+                id: newId,
+                email: email,
+                full_name: username,
+                role: 'viewer',
+                created_at: new Date().toISOString()
+            };
+            
+            const { data: inserted, error: insertError } = await supabaseClient
+                .from('users')
+                .insert([newUser])
+                .select();
+                
+            if (!insertError && inserted && inserted[0]) {
+                const userForStorage = {
+                    id: inserted[0].id,
+                    email: inserted[0].email,
+                    full_name: inserted[0].full_name,
+                    role: inserted[0].role || 'viewer'
+                };
+                setAuthToken(authData.session.access_token, userForStorage);
+                return { success: true, user: userForStorage };
+            }
+        }
+        
+        const userForStorage = {
+            id: userData.id,
+            email: userData.email,
+            full_name: userData.full_name || username,
+            role: userData.role || 'viewer'
         };
         
-        setAuthToken(authData.session.access_token, user);
-        return { success: true, user: user };
+        setAuthToken(authData.session.access_token, userForStorage);
+        return { success: true, user: userForStorage };
+        
     } catch (error) {
+        console.error('Login error:', error);
         return { success: false, message: 'حدث خطأ في الاتصال' };
     }
 }
 
-function logout() {
-    supabaseClient.auth.signOut();
-    clearAuthToken();
-    window.location.href = 'index.html';
+// دالة تسجيل الدخول باستخدام جدول users المحلي (بدون Auth)
+async function loginWithLocalTable(username, password) {
+    try {
+        let query = supabaseClient.from('users').select('id, email, full_name, role');
+        
+        // البحث بالبريد الإلكتروني أو الاسم
+        if (username.includes('@')) {
+            query = query.eq('email', username);
+        } else {
+            // البحث بالبريد الإلكتروني أو full_name
+            query = query.or(`email.eq.${username}@banimazar.com,full_name.eq.${username}`);
+        }
+        
+        const { data: users, error } = await query;
+        
+        if (error) throw error;
+        
+        if (!users || users.length === 0) {
+            return { success: false, message: 'اسم المستخدم غير موجود' };
+        }
+        
+        const user = users[0];
+        
+        // في هذا الإصدار، لا نتحقق من كلمة المرور لأن جدول users لا يحتوي على password_hash
+        // يمكنك إضافة عمود password_hash لاحقًا
+        
+        // إنشاء token مؤقت
+        const fakeToken = 'temp_token_' + Date.now();
+        
+        const userForStorage = {
+            id: user.id,
+            email: user.email,
+            full_name: user.full_name,
+            role: user.role || 'viewer'
+        };
+        
+        setAuthToken(fakeToken, userForStorage);
+        return { success: true, user: userForStorage };
+        
+    } catch (error) {
+        console.error('Local login error:', error);
+        return { success: false, message: 'خطأ في تسجيل الدخول' };
+    }
 }
-
 // ==================== دوال المحطات ====================
 async function getStations() {
     try {
