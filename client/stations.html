@@ -178,11 +178,11 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
     // ============================================
-    // إعدادات Supabase مباشرة - بدون الاعتماد على api.js
+    // إعدادات Supabase مباشرة
     // ============================================
     const SUPABASE_URL = 'https://jvfbkoaeugkeoiccvnkq.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_n64Hnhuruc3Oeolj-Uwg9g_tu-otJlZ';
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     // ============================================
     // المتغيرات
@@ -194,7 +194,7 @@
     // ============================================
     async function getStationsDirect() {
         try {
-            const { data, error } = await supabase
+            const { data, error } = await supabaseClient
                 .from('stations')
                 .select('*')
                 .order('station_name');
@@ -218,7 +218,7 @@
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString()
             };
-            const { data, error } = await supabase
+            const { data, error } = await supabaseClient
                 .from('stations')
                 .insert([newStation])
                 .select();
@@ -241,7 +241,7 @@
                 notes: stationData.notes || null,
                 updated_at: new Date().toISOString()
             };
-            const { data, error } = await supabase
+            const { data, error } = await supabaseClient
                 .from('stations')
                 .update(updateData)
                 .eq('id', id)
@@ -256,7 +256,7 @@
 
     async function deleteStationDirect(id) {
         try {
-            const { error } = await supabase
+            const { error } = await supabaseClient
                 .from('stations')
                 .delete()
                 .eq('id', id);
@@ -273,46 +273,35 @@
     // ============================================
     async function loadStations() {
         const container = document.getElementById('stationsList');
-        container.innerHTML = `<div class="loading-spinner"><i class="fas fa-spinner fa-spin fa-2x"></i><p>جاري تحميل البيانات...</p></div>`;
+        container.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin fa-2x"></i><p>جاري تحميل البيانات...</p></div>';
         
         try {
             const result = await getStationsDirect();
-            console.log('API Result:', result); // للتتبع
             
             if (result.success) {
                 stationsData = result.stations;
                 if (stationsData.length === 0) {
-                    container.innerHTML = `<div class="no-data"><i class="fas fa-database"></i> لا توجد محطات مسجلة</div>`;
+                    container.innerHTML = '<div class="no-data"><i class="fas fa-database"></i> لا توجد محطات مسجلة</div>';
                 } else {
                     renderStationsTable();
                 }
             } else {
-                container.innerHTML = `<div class="error-message"><i class="fas fa-exclamation-triangle"></i> خطأ: ${result.message}</div>`;
+                container.innerHTML = '<div class="error-message"><i class="fas fa-exclamation-triangle"></i> خطأ: ' + result.message + '</div>';
             }
         } catch (error) {
             console.error('Load error:', error);
-            container.innerHTML = `<div class="error-message"><i class="fas fa-exclamation-triangle"></i> خطأ في الاتصال: ${error.message}</div>`;
+            container.innerHTML = '<div class="error-message"><i class="fas fa-exclamation-triangle"></i> خطأ في الاتصال: ' + error.message + '</div>';
         }
     }
 
     function renderStationsTable() {
         const container = document.getElementById('stationsList');
-        let html = `<div class="table-responsive">
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>اسم المحطة</th>
-                        <th>الكود</th>
-                        <th>الموقع</th>
-                        <th>السعة</th>
-                        <th>الحالة</th>
-                        <th>الإجراءات</th>
-                    </tr>
-                </thead>
-                <tbody>`;
+        let html = '<div class="table-responsive"><table class="data-table"><thead><tr>' +
+            '<th>#</th><th>اسم المحطة</th><th>الكود</th><th>الموقع</th><th>السعة</th><th>الحالة</th><th>الإجراءات</th>' +
+            '</tr></thead><tbody>';
         
-        stationsData.forEach((s, i) => {
+        for (let i = 0; i < stationsData.length; i++) {
+            const s = stationsData[i];
             let statusClass = '';
             let statusText = '';
             if (s.status === 'active') { statusClass = 'status-active'; statusText = 'نشطة'; }
@@ -321,20 +310,20 @@
             else if (s.status === 'emergency') { statusClass = 'status-active'; statusText = 'طوارئ'; }
             else { statusClass = 'status-active'; statusText = s.status || 'نشطة'; }
             
-            html += `<tr>
-                <td>${i+1}</td>
-                <td><i class="fas fa-water"></i> ${s.station_name}</td>
-                <td>${s.station_code || '---'}</td>
-                <td>${s.location || '---'}</td>
-                <td>${s.capacity || 0} م³/يوم</td>
-                <td><span class="status-badge ${statusClass}">${statusText}</span></td>
-                <td>
-                    <button class="btn btn-sm btn-primary" onclick="editStation(${s.id})"><i class="fas fa-edit"></i> تعديل</button>
-                    <button class="btn btn-sm btn-danger" onclick="deleteStation(${s.id})"><i class="fas fa-trash"></i> حذف</button>
-                </td>
-            </tr>`;
-        });
-        html += `</tbody></table></div>`;
+            html += '<tr>' +
+                '<td>' + (i+1) + '</td>' +
+                '<td><i class="fas fa-water"></i> ' + s.station_name + '</td>' +
+                '<td>' + (s.station_code || '---') + '</td>' +
+                '<td>' + (s.location || '---') + '</td>' +
+                '<td>' + (s.capacity || 0) + ' م³/يوم</td>' +
+                '<td><span class="status-badge ' + statusClass + '">' + statusText + '</span></td>' +
+                '<td>' +
+                    '<button class="btn btn-sm btn-primary" onclick="editStation(' + s.id + ')"><i class="fas fa-edit"></i> تعديل</button> ' +
+                    '<button class="btn btn-sm btn-danger" onclick="deleteStation(' + s.id + ')"><i class="fas fa-trash"></i> حذف</button>' +
+                '</td>' +
+            '</tr>';
+        }
+        html += '</tbody></table></div>';
         container.innerHTML = html;
     }
 
@@ -345,8 +334,8 @@
         document.getElementById('stationModal').classList.remove('active');
     }
 
-    window.editStation = async (id) => {
-        const station = stationsData.find(s => s.id == id);
+    window.editStation = function(id) {
+        const station = stationsData.find(function(s) { return s.id == id; });
         if (station) {
             document.getElementById('stationId').value = station.id;
             document.getElementById('stationName').value = station.station_name;
@@ -360,35 +349,35 @@
         }
     };
 
-    window.deleteStation = async (id) => {
+    window.deleteStation = function(id) {
         if (confirm('هل أنت متأكد من حذف هذه المحطة؟')) {
-            const result = await deleteStationDirect(id);
-            if (result.success) {
-                loadStations();
-                // إظهار رسالة للوالد إذا كان موجوداً
-                if (window.parent && window.parent.showToast) {
-                    window.parent.showToast(result.message);
+            deleteStationDirect(id).then(function(result) {
+                if (result.success) {
+                    loadStations();
+                    if (window.parent && window.parent.showToast) {
+                        window.parent.showToast(result.message);
+                    }
+                } else {
+                    alert(result.message);
                 }
-            } else {
-                alert(result.message);
-            }
+            });
         }
     };
 
     // ============================================
     // تهيئة الأحداث
     // ============================================
-    document.getElementById('addStationBtn').addEventListener('click', () => {
+    document.getElementById('addStationBtn').addEventListener('click', function() {
         document.getElementById('stationForm').reset();
         document.getElementById('stationId').value = '';
         document.getElementById('modalTitle').innerText = 'إضافة محطة جديدة';
         document.getElementById('stationModal').classList.add('active');
     });
 
-    document.getElementById('stationForm').addEventListener('submit', async (e) => {
+    document.getElementById('stationForm').addEventListener('submit', function(e) {
         e.preventDefault();
-        const id = document.getElementById('stationId').value;
-        const data = {
+        var id = document.getElementById('stationId').value;
+        var data = {
             station_name: document.getElementById('stationName').value,
             station_code: document.getElementById('stationCode').value,
             location: document.getElementById('stationLocation').value,
@@ -397,22 +386,24 @@
             notes: document.getElementById('stationNotes').value
         };
         
-        let result;
+        var promise;
         if (id) {
-            result = await updateStationDirect(id, data);
+            promise = updateStationDirect(id, data);
         } else {
-            result = await createStationDirect(data);
+            promise = createStationDirect(data);
         }
         
-        if (result.success) {
-            closeModal();
-            loadStations();
-            if (window.parent && window.parent.showToast) {
-                window.parent.showToast(result.message);
+        promise.then(function(result) {
+            if (result.success) {
+                closeModal();
+                loadStations();
+                if (window.parent && window.parent.showToast) {
+                    window.parent.showToast(result.message);
+                }
+            } else {
+                alert(result.message);
             }
-        } else {
-            alert(result.message);
-        }
+        });
     });
 
     window.closeModal = closeModal;
