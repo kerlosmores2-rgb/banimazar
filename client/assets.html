@@ -332,7 +332,6 @@ function renderTable() {
         fields = ['building_number', 'building_name', 'description', 'notes'];
     }
     
-    // بناء الجدول بشكل صحيح
     let html = '<div class="table-responsive"><table class="data-table"><thead><tr>';
     for (let i = 0; i < columns.length; i++) {
         html += '<th>' + columns[i] + '</th>';
@@ -348,13 +347,15 @@ function renderTable() {
             html += '<td>' + val + '</td>';
         }
         html += '<td class="action-buttons">';
-        html += '<button class="btn btn-sm btn-primary" onclick="editAsset(' + item.id + ')"><i class="fas fa-edit"></i> تعديل</button>';
+        html += '<button class="btn btn-sm btn-primary" onclick="editAsset(' + item.id + ')"><i class="fas fa-edit"></i> تعديل</button> ';
         html += '<button class="btn btn-sm btn-danger" onclick="deleteAsset(' + item.id + ')"><i class="fas fa-trash"></i> حذف</button>';
         html += '</td></tr>';
     }
     html += '</tbody></table></div>';
     container.innerHTML = html;
 }
+    
+    
     function getFormFields(type, data = {}) {
         if (type === 'transformers') {
             return `
