@@ -29,6 +29,7 @@
             display: flex;
             gap: 25px;
             flex-wrap: wrap;
+            transition: all 0.3s ease;
         }
 
         /* ========== القائمة الجانبية ========== */
@@ -43,6 +44,17 @@
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
             max-height: 90vh;
             overflow-y: auto;
+            transition: all 0.3s ease;
+        }
+
+        /* وضع القائمة الجانبية مخفية */
+        .sidebar.hidden {
+            width: 0;
+            padding: 0;
+            margin: 0;
+            overflow: hidden;
+            opacity: 0;
+            visibility: hidden;
         }
 
         .sidebar::-webkit-scrollbar {
@@ -135,6 +147,12 @@
             padding: 25px;
             min-height: 500px;
             overflow-x: auto;
+            transition: all 0.3s ease;
+        }
+
+        /* عندما تكون القائمة مخفية، المحتوى يأخذ عرض أكبر */
+        .sidebar.hidden + .content {
+            flex: 1;
         }
 
         .header {
@@ -160,6 +178,34 @@
             background: rgba(0, 212, 255, 0.15);
             padding: 8px 18px;
             border-radius: 50px;
+        }
+
+        /* ========== زر إظهار/إخفاء القائمة ========== */
+        .toggle-sidebar-btn {
+            background: rgba(0, 212, 255, 0.2);
+            border: 1px solid #00d4ff;
+            color: #00d4ff;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            margin-left: 10px;
+        }
+        
+        .toggle-sidebar-btn:hover {
+            background: #00d4ff;
+            color: #1a1a2e;
+            transform: scale(1.05);
+        }
+        
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         /* ========== أزرار وعناصر ========== */
@@ -314,6 +360,8 @@
             color: #00d4ff;
             font-weight: 500;
         }
+        
+        /* ========== زر القائمة للجوال ========== */
         .menu-toggle {
             display: none;
             position: fixed;
@@ -328,14 +376,44 @@
             font-size: 1.2rem;
             color: #1a1a2e;
             cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         }
 
+        /* ========== رسائل التنبيه ========== */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: #28a745;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 10px;
+            z-index: 1100;
+            animation: slideIn 0.3s ease;
+        }
+        .toast.error {
+            background: #dc3545;
+        }
+        @keyframes slideIn {
+            from {
+                transform: translateX(-100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* ========== استجابة للشاشات الصغيرة ========== */
         @media (max-width: 768px) {
             .menu-toggle {
                 display: flex;
                 align-items: center;
                 justify-content: center;
             }
+            
+            /* على الجوال، القائمة الجانبية تظهر كـ floating sidebar */
             .sidebar {
                 position: fixed;
                 top: 0;
@@ -345,15 +423,36 @@
                 z-index: 1000;
                 transition: right 0.3s ease;
                 border-radius: 0;
+                background: rgba(10, 40, 55, 0.95);
             }
             .sidebar.open {
                 right: 0;
             }
+            .sidebar.hidden {
+                right: -300px;
+                width: 280px;
+                opacity: 1;
+                visibility: visible;
+            }
             .content {
                 margin-top: 50px;
+                width: 100%;
             }
             iframe {
                 height: 500px;
+            }
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
             }
         }
     </style>
@@ -431,7 +530,12 @@
         <!-- المحتوى الرئيسي -->
         <div class="content">
             <div class="header">
-                <h1 id="pageTitle"><i class="fas fa-tachometer-alt"></i> لوحة التحكم</h1>
+                <div class="header-left">
+                    <button class="toggle-sidebar-btn" id="toggleSidebarBtn" title="إظهار/إخفاء القائمة">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <h1 id="pageTitle"><i class="fas fa-tachometer-alt"></i> لوحة التحكم</h1>
+                </div>
                 <div class="user-info">
                     <i class="fas fa-user-circle"></i>
                     <span id="userName">مرحباً بك</span>
@@ -464,6 +568,7 @@
     // ============================================
     let currentPage = 'dashboard';
     let stationsList = [];
+    let sidebarHidden = false; // حالة القائمة الجانبية (مخفية أم لا)
 
     // ============================================
     // دوال مساعدة
@@ -472,8 +577,6 @@
         const toast = document.createElement('div');
         toast.className = `toast ${isError ? 'error' : ''}`;
         toast.innerHTML = `<i class="fas ${isError ? 'fa-exclamation-circle' : 'fa-check-circle'}"></i> ${message}`;
-        toast.style.cssText = 'position:fixed; bottom:20px; left:20px; background:#28a745; color:white; padding:12px 24px; border-radius:10px; z-index:1100; animation:slideIn 0.3s ease;';
-        if (isError) toast.style.background = '#dc3545';
         document.body.appendChild(toast);
         setTimeout(() => toast.remove(), 3000);
     }
@@ -484,6 +587,59 @@
             stationsList = result.stations;
         }
         return stationsList;
+    }
+
+    // دالة لإظهار/إخفاء القائمة الجانبية
+    function toggleSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const toggleBtn = document.getElementById('toggleSidebarBtn');
+        const isMobile = window.innerWidth <= 768;
+        
+        if (isMobile) {
+            // على الجوال: نستخدم class "open"
+            sidebar.classList.toggle('open');
+            sidebarHidden = sidebar.classList.contains('open');
+            toggleBtn.innerHTML = sidebarHidden ? '<i class="fas fa-times"></i>' : '<i class="fas fa-bars"></i>';
+        } else {
+            // على الشاشات الكبيرة: نستخدم class "hidden"
+            sidebar.classList.toggle('hidden');
+            sidebarHidden = sidebar.classList.contains('hidden');
+            toggleBtn.innerHTML = sidebarHidden ? '<i class="fas fa-bars"></i>' : '<i class="fas fa-times"></i>';
+            toggleBtn.title = sidebarHidden ? 'إظهار القائمة' : 'إخفاء القائمة';
+        }
+        
+        // حفظ حالة القائمة في localStorage
+        localStorage.setItem('sidebarHidden', sidebarHidden);
+    }
+
+    // استعادة حالة القائمة من localStorage
+    function restoreSidebarState() {
+        const savedState = localStorage.getItem('sidebarHidden');
+        const isMobile = window.innerWidth <= 768;
+        const sidebar = document.getElementById('sidebar');
+        const toggleBtn = document.getElementById('toggleSidebarBtn');
+        
+        if (savedState === 'true') {
+            sidebarHidden = true;
+            if (isMobile) {
+                sidebar.classList.remove('open');
+                toggleBtn.innerHTML = '<i class="fas fa-bars"></i>';
+            } else {
+                sidebar.classList.add('hidden');
+                toggleBtn.innerHTML = '<i class="fas fa-bars"></i>';
+                toggleBtn.title = 'إظهار القائمة';
+            }
+        } else {
+            sidebarHidden = false;
+            if (isMobile) {
+                sidebar.classList.remove('open');
+                toggleBtn.innerHTML = '<i class="fas fa-bars"></i>';
+            } else {
+                sidebar.classList.remove('hidden');
+                toggleBtn.innerHTML = '<i class="fas fa-times"></i>';
+                toggleBtn.title = 'إخفاء القائمة';
+            }
+        }
     }
 
     // CSS لإخفاء القائمة الجانبية والهيدر داخل iframe
@@ -501,10 +657,15 @@
                 .copyright:not(.page-copyright) {
                     display: none !important;
                 }
-                /* ضبط التنسيقات */
+                /* إخفاء أي عنصر يحوي كلمة sidebar */
+                body > div:first-child > div:first-child,
+                .main-layout > div:first-child:not(.content) {
+                    display: none !important;
+                }
+                /* تنسيق الجسم */
                 body {
                     background: transparent !important;
-                    padding: 0 !important;
+                    padding: 20px !important;
                     margin: 0 !important;
                 }
                 .container {
@@ -519,9 +680,15 @@
                 .main-layout {
                     display: block !important;
                 }
-                /* تنسيق الجداول */
+                /* تحسين عرض الجداول */
+                .data-table {
+                    width: 100%;
+                    border-collapse: collapse;
+                }
                 .data-table th, .data-table td {
-                    white-space: nowrap;
+                    padding: 10px;
+                    text-align: right;
+                    border-bottom: 1px solid rgba(255,255,255,0.1);
                 }
                 @media (max-width: 768px) {
                     .data-table {
@@ -668,7 +835,6 @@
         if (page === 'dashboard') {
             loadDashboard();
         } else {
-            // إنشاء iframe مع حقن CSS لإخفاء القائمة الجانبية
             const hideCSS = getIframeHideSidebarCSS();
             const iframeSrc = `${page}.html`;
             
@@ -678,69 +844,15 @@
                 </div>
             `;
             
-            // انتظار تحميل iframe ثم حقن CSS
             const iframe = document.getElementById('pageFrame');
             iframe.onload = function() {
                 try {
                     const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
                     if (iframeDoc) {
-                        // إضافة CSS لإخفاء العناصر المكررة
                         const style = iframeDoc.createElement('style');
-                        style.textContent = `
-                            /* إخفاء القائمة الجانبية والهيدر والتذييل المكرر */
-                            .sidebar, 
-                            .sidebar *,
-                            [class*="sidebar"],
-                            [id*="sidebar"],
-                            .nav-item,
-                            .menu-toggle,
-                            .header:not(.page-header),
-                            .copyright:not(.page-copyright) {
-                                display: none !important;
-                            }
-                            /* إخفاء أي عنصر يحوي كلمة sidebar */
-                            body > div:first-child > div:first-child,
-                            .main-layout > div:first-child:not(.content) {
-                                display: none !important;
-                            }
-                            /* تنسيق الجسم */
-                            body {
-                                background: transparent !important;
-                                padding: 20px !important;
-                                margin: 0 !important;
-                            }
-                            .container {
-                                max-width: 100% !important;
-                                padding: 0 !important;
-                            }
-                            .content {
-                                background: transparent !important;
-                                padding: 0 !important;
-                                margin: 0 !important;
-                            }
-                            .main-layout {
-                                display: block !important;
-                            }
-                            /* تحسين عرض الجداول */
-                            .data-table {
-                                width: 100%;
-                                border-collapse: collapse;
-                            }
-                            .data-table th, .data-table td {
-                                padding: 10px;
-                                text-align: right;
-                                border-bottom: 1px solid rgba(255,255,255,0.1);
-                            }
-                            @media (max-width: 768px) {
-                                .data-table {
-                                    display: block;
-                                    overflow-x: auto;
-                                }
-                            }
-                        `;
+                        style.textContent = hideCSS;
                         iframeDoc.head.appendChild(style);
                         
-                        // تعديل ارتفاع iframe حسب محتواه
                         const resizeIframe = () => {
                             const height = iframeDoc.body.scrollHeight;
                             iframe.style.height = Math.max(height + 50, 500) + 'px';
@@ -749,7 +861,7 @@
                         setTimeout(resizeIframe, 500);
                     }
                 } catch(e) {
-                    console.log('Cannot access iframe content (cross-origin)', e);
+                    console.log('Cannot access iframe content', e);
                 }
             };
         }
@@ -762,6 +874,38 @@
         localStorage.removeItem('authToken');
         localStorage.removeItem('currentUser');
         window.location.href = 'index.html';
+    }
+
+    // ============================================
+    // معالجة تغيير حجم الشاشة
+    // ============================================
+    function handleResize() {
+        const isMobile = window.innerWidth <= 768;
+        const sidebar = document.getElementById('sidebar');
+        const toggleBtn = document.getElementById('toggleSidebarBtn');
+        
+        if (isMobile) {
+            // على الجوال: نستخدم class "open"
+            sidebar.classList.remove('hidden');
+            if (sidebarHidden) {
+                sidebar.classList.remove('open');
+                toggleBtn.innerHTML = '<i class="fas fa-bars"></i>';
+            } else {
+                sidebar.classList.add('open');
+                toggleBtn.innerHTML = '<i class="fas fa-times"></i>';
+            }
+        } else {
+            // على الشاشات الكبيرة: نستخدم class "hidden"
+            sidebar.classList.remove('open');
+            if (sidebarHidden) {
+                sidebar.classList.add('hidden');
+                toggleBtn.innerHTML = '<i class="fas fa-bars"></i>';
+            } else {
+                sidebar.classList.remove('hidden');
+                toggleBtn.innerHTML = '<i class="fas fa-times"></i>';
+            }
+            toggleBtn.title = sidebarHidden ? 'إظهار القائمة' : 'إخفاء القائمة';
+        }
     }
 
     // ============================================
@@ -784,7 +928,12 @@
         const menuToggle = document.getElementById('menuToggle');
         const sidebar = document.getElementById('sidebar');
         const logoutBtn = document.getElementById('logoutBtn');
+        const toggleSidebarBtn = document.getElementById('toggleSidebarBtn');
 
+        // زر إظهار/إخفاء القائمة
+        toggleSidebarBtn.addEventListener('click', toggleSidebar);
+        
+        // زر القائمة للجوال
         menuToggle.addEventListener('click', () => {
             sidebar.classList.toggle('open');
         });
@@ -806,6 +955,12 @@
                 logout();
             });
         }
+
+        // استعادة حالة القائمة
+        restoreSidebarState();
+        
+        // مراقبة تغيير حجم الشاشة
+        window.addEventListener('resize', handleResize);
 
         // تشغيل الصفحة الرئيسية
         await loadStationsList();
