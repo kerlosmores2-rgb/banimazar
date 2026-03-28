@@ -276,44 +276,56 @@
     const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
 
     // ========== تحميل قائمة المحطات ==========
-  async function loadStationsSelect() {
+ async function loadStationsSelect() {
+    const select = document.getElementById('stationSelect');
+    if (!select) {
+        console.error('عنصر stationSelect غير موجود');
+        return;
+    }
+    
+    select.innerHTML = '<option value="">-- جاري التحميل --</option>';
+    
     try {
-        console.log('جاري تحميل المحطات...');
+        console.log('بدء تحميل المحطات...');
         const { data, error } = await supabaseClient
             .from('stations')
             .select('id, station_name, station_code')
             .order('station_name');
         
         if (error) {
-            console.error('خطأ في تحميل المحطات:', error);
+            console.error('خطأ في جلب المحطات:', error);
+            select.innerHTML = '<option value="">-- خطأ في التحميل --</option>';
             return;
         }
         
-        console.log('المحطات التي تم جلبها:', data);
+        console.log('عدد المحطات:', data?.length || 0);
+        console.log('بيانات المحطات:', data);
+        
         stationsList = data || [];
-        const select = document.getElementById('stationSelect');
-        
-        if (!select) {
-            console.error('عنصر stationSelect غير موجود');
-            return;
-        }
-        
-        select.innerHTML = '<option value="">-- اختر المحطة أولاً --</option>';
         
         if (stationsList.length === 0) {
-            select.innerHTML += '<option value="" disabled>⚠️ لا توجد محطات مسجلة</option>';
-            console.warn('لا توجد محطات في قاعدة البيانات');
-        } else {
-            stationsList.forEach(s => {
-                select.innerHTML += `<option value="${s.id}">${s.station_name} (${s.station_code || s.id})</option>`;
-            });
+            select.innerHTML = '<option value="">-- لا توجد محطات --</option>';
+            select.innerHTML += '<option value="" disabled>⚠️ أضف محطة أولاً</option>';
+            document.getElementById('assetsList').innerHTML = `
+                <div style="background:rgba(255,193,7,0.2); border:1px solid #ffc107; border-radius:12px; padding:20px; text-align:center; margin-top:20px;">
+                    <i class="fas fa-exclamation-triangle" style="font-size:2rem; color:#ffc107;"></i>
+                    <p style="margin-top:10px;">لا توجد محطات مسجلة</p>
+                    <p>الرجاء إضافة محطة أولاً من <strong>صفحة المحطات</strong></p>
+                </div>
+            `;
+            return;
         }
+        
+        select.innerHTML = '<option value="">-- اختر المحطة --</option>';
+        stationsList.forEach(s => {
+            select.innerHTML += `<option value="${s.id}">${s.station_name} (${s.station_code || 'بدون كود'})</option>`;
+        });
+        
+        console.log('تم تحميل ' + stationsList.length + ' محطة بنجاح');
+        
     } catch (error) {
-        console.error('Error loading stations:', error);
-        const select = document.getElementById('stationSelect');
-        if (select) {
-            select.innerHTML = '<option value="">-- خطأ في التحميل --</option>';
-        }
+        console.error('خطأ:', error);
+        select.innerHTML = '<option value="">-- خطأ في الاتصال --</option>';
     }
 }
     // ========== تحميل الأصول حسب النوع ==========
