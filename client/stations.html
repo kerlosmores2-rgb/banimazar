@@ -115,7 +115,7 @@
             background: #1e2a3a;
             border-radius: 20px;
             width: 90%;
-            max-width: 550px;
+            max-width: 600px;
             max-height: 85vh;
             overflow-y: auto;
             padding: 25px;
@@ -154,6 +154,12 @@
             border: 1px solid rgba(255,255,255,0.2);
             border-radius: 10px;
             color: #fff;
+        }
+        .form-group small {
+            display: block;
+            margin-top: 5px;
+            color: #aaa;
+            font-size: 0.7rem;
         }
         .form-actions {
             display: flex;
@@ -210,7 +216,7 @@
     </div>
 </div>
 
-<!-- 2. المودال (النافذة المنبثقة) -->
+<!-- المودال (النافذة المنبثقة) -->
 <div id="stationModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
@@ -219,22 +225,47 @@
         </div>
         <form id="stationForm">
             <input type="hidden" id="stationId">
+            
+            <!-- 1. اسم المحطة -->
             <div class="form-group">
                 <label>اسم المحطة <span style="color:#dc3545;">*</span></label>
-                <input type="text" id="stationName" required placeholder="مثال: محطة بني مزار">
+                <input type="text" id="stationName" required placeholder="مثال: محطة بني مزار المركزية">
             </div>
+            
+            <!-- 2. كود المحطة -->
             <div class="form-group">
                 <label>كود المحطة</label>
                 <input type="text" id="stationCode" placeholder="مثال: ST-001">
             </div>
+            
+            <!-- 3. الطاقة التصميمية للمحطة (متر³/ساعة) -->
             <div class="form-group">
-                <label>الموقع</label>
-                <input type="text" id="stationLocation" placeholder="مثال: بني مزار - المنيا">
+                <label>الطاقة التصميمية للمحطة (م³/ساعة)</label>
+                <input type="number" id="stationCapacity" step="0.01" placeholder="مثال: 500">
             </div>
+            
+            <!-- 4. المصب (قائمة منسدلة من المحطات المسجلة) -->
             <div class="form-group">
-                <label>السعة (م³/يوم)</label>
-                <input type="number" id="stationCapacity" step="0.01" placeholder="0">
+                <label>المصب</label>
+                <select id="downstreamStationId">
+                    <option value="">-- اختر محطة المصب --</option>
+                </select>
+                <small>اختر المحطة التي تذهب إليها المياه بعد المعالجة</small>
             </div>
+            
+            <!-- 5. الموقع الجغرافي -->
+            <div class="form-group">
+                <label>الموقع الجغرافي</label>
+                <input type="text" id="stationLocation" placeholder="مثال: 28.5000° N, 30.6667° E أو بني مزار - المنيا">
+            </div>
+            
+            <!-- 6. منطقة الخدمة -->
+            <div class="form-group">
+                <label>منطقة الخدمة</label>
+                <input type="text" id="serviceArea" placeholder="مثال: بني مزار، دلجا، أبو جرج">
+            </div>
+            
+            <!-- 7. الحالة -->
             <div class="form-group">
                 <label>الحالة</label>
                 <select id="stationStatus">
@@ -244,10 +275,13 @@
                     <option value="emergency">⚠️ طوارئ</option>
                 </select>
             </div>
+            
+            <!-- 8. ملاحظات -->
             <div class="form-group">
                 <label>ملاحظات</label>
-                <textarea id="stationNotes" rows="3" placeholder="أي ملاحظات إضافية..."></textarea>
+                <textarea id="stationNotes" rows="3" placeholder="أي ملاحظات إضافية عن المحطة..."></textarea>
             </div>
+            
             <div class="form-actions">
                 <button type="button" class="btn" onclick="closeModal()" style="background:#6c757d;">إلغاء</button>
                 <button type="submit" class="btn btn-primary">💾 حفظ</button>
@@ -258,7 +292,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-    // إعدادات Supabase
+    // ========== إعدادات Supabase ==========
     const SUPABASE_URL = 'https://jvfbkoaeugkeoiccvnkq.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_n64Hnhuruc3Oeolj-Uwg9g_tu-otJlZ';
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -269,7 +303,6 @@
     const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
     const addBtn = document.getElementById('addStationBtn');
     
-    // إخفاء زر الإضافة إذا كان المستخدم viewer
     if (user.role === 'viewer') {
         if (addBtn) addBtn.style.display = 'none';
     }
@@ -293,8 +326,10 @@
             const newStation = {
                 station_name: data.station_name,
                 station_code: data.station_code || null,
-                location: data.location || null,
                 capacity: parseFloat(data.capacity) || null,
+                downstream_station_id: data.downstream_station_id || null,
+                location: data.location || null,
+                service_area: data.service_area || null,
                 status: data.status || 'active',
                 notes: data.notes || null,
                 created_at: new Date().toISOString(),
@@ -316,8 +351,10 @@
             const updateData = {
                 station_name: data.station_name,
                 station_code: data.station_code || null,
-                location: data.location || null,
                 capacity: parseFloat(data.capacity) || null,
+                downstream_station_id: data.downstream_station_id || null,
+                location: data.location || null,
+                service_area: data.service_area || null,
                 status: data.status || 'active',
                 notes: data.notes || null,
                 updated_at: new Date().toISOString()
@@ -347,6 +384,21 @@
         }
     }
 
+    // ========== ملء قائمة محطات المصب ==========
+    function loadDownstreamStations() {
+        const select = document.getElementById('downstreamStationId');
+        if (!select) return;
+        
+        const currentId = document.getElementById('stationId').value;
+        
+        select.innerHTML = '<option value="">-- اختر محطة المصب --</option>';
+        
+        stationsData.forEach(station => {
+            if (currentId && station.id == currentId) return;
+            select.innerHTML += `<option value="${station.id}">${station.station_name} (${station.station_code || ''})</option>`;
+        });
+    }
+
     // ========== عرض البيانات ==========
     async function loadStations() {
         const container = document.getElementById('stationsList');
@@ -355,6 +407,8 @@
         const result = await getStationsDirect();
         if (result.success) {
             stationsData = result.stations;
+            loadDownstreamStations();
+            
             if (stationsData.length === 0) {
                 let html = '<div class="no-data"><i class="fas fa-database"></i><p>لا توجد محطات مسجلة</p>';
                 if (user.role !== 'viewer') {
@@ -371,28 +425,45 @@
     }
 
     function renderTable() {
-        let html = '<div class="table-responsive"><table class="data-table"><thead><tr>' +
-            '<th>#</th><th>اسم المحطة</th><th>الكود</th><th>الموقع</th><th>السعة</th><th>الحالة</th><th>الإجراءات</th>' +
-            '</tr></thead><tbody>';
+        let html = '<div class="table-responsive"><table class="data-table"><thead>发展' +
+            '<th>#</th>' +
+            '<th>اسم المحطة</th>' +
+            '<th>الكود</th>' +
+            '<th>الطاقة (م³/س)</th>' +
+            '<th>المصب</th>' +
+            '<th>الموقع الجغرافي</th>' +
+            '<th>منطقة الخدمة</th>' +
+            '<th>الحالة</th>' +
+            '<th>الإجراءات</th>' +
+            '</thead><tbody>';
         
         for (let i = 0; i < stationsData.length; i++) {
             const s = stationsData[i];
+            
             let statusClass = 'status-active';
             let statusText = 'نشطة';
             if (s.status === 'maintenance') { statusClass = 'status-maintenance'; statusText = 'صيانة'; }
             else if (s.status === 'inactive') { statusClass = 'status-inactive'; statusText = 'متوقفة'; }
             else if (s.status === 'emergency') { statusClass = 'status-emergency'; statusText = 'طوارئ'; }
             
-            html += '<tr>' +
-                '<td>' + (i+1) + '</td>' +
-                '<td><i class="fas fa-water"></i> ' + (s.station_name || '---') + '</td>' +
-                '<td>' + (s.station_code || '---') + '</td>' +
-                '<td>' + (s.location || '---') + '</td>' +
-                '<td>' + (s.capacity || 0) + ' م³/يوم</td>' +
-                '<td><span class="status-badge ' + statusClass + '">' + statusText + '</span></td>' +
+            // اسم محطة المصب
+            let downstreamName = '---';
+            if (s.downstream_station_id) {
+                const downstream = stationsData.find(st => st.id == s.downstream_station_id);
+                downstreamName = downstream ? downstream.station_name : 'غير معروف';
+            }
+            
+            html += '发展' +
+                '发展' + (i+1) + '发展' +
+                '发展<i class="fas fa-water"></i> ' + (s.station_name || '---') + '发展' +
+                '发展' + (s.station_code || '---') + '发展' +
+                '发展' + (s.capacity || 0) + '发展' +
+                '发展' + downstreamName + '发展' +
+                '发展' + (s.location || '---') + '发展' +
+                '发展' + (s.service_area || '---') + '发展' +
+                '发展<span class="status-badge ' + statusClass + '">' + statusText + '</span>发展' +
                 '<td class="action-buttons">';
             
-            // أزرار التعديل والحذف تظهر فقط للمدير والمشرف
             if (user.role !== 'viewer') {
                 html += '<button class="btn btn-sm btn-primary" onclick="editStation(' + s.id + ')"><i class="fas fa-edit"></i> تعديل</button>';
                 html += '<button class="btn btn-sm btn-danger" onclick="deleteStation(' + s.id + ')"><i class="fas fa-trash"></i> حذف</button>';
@@ -400,19 +471,19 @@
                 html += '<span class="status-badge" style="background:rgba(0,212,255,0.1);">عرض فقط</span>';
             }
             
-            html += '</td></tr>';
+            html += '发展</tr>';
         }
         html += '</tbody></table></div>';
         document.getElementById('stationsList').innerHTML = html;
     }
 
-    // ========== 4. دالة إغلاق المودال ==========
+    // ========== دوال المودال ==========
     function closeModal() {
         document.getElementById('stationModal').classList.remove('active');
     }
     window.closeModal = closeModal;
 
-    // ========== 3. فتح المودال (زر الإضافة) ==========
+    // ========== فتح المودال لإضافة جديدة ==========
     document.getElementById('addStationBtn').addEventListener('click', function() {
         if (user.role === 'viewer') {
             alert('⚠️ ليس لديك صلاحية للإضافة');
@@ -422,10 +493,11 @@
         document.getElementById('stationId').value = '';
         document.getElementById('stationStatus').value = 'active';
         document.getElementById('modalTitle').innerHTML = '<i class="fas fa-plus-circle"></i> إضافة محطة جديدة';
+        loadDownstreamStations();
         document.getElementById('stationModal').classList.add('active');
     });
 
-    // ========== 5. حفظ البيانات ==========
+    // ========== حفظ البيانات ==========
     document.getElementById('stationForm').addEventListener('submit', async function(e) {
         e.preventDefault();
         
@@ -433,8 +505,10 @@
         const data = {
             station_name: document.getElementById('stationName').value,
             station_code: document.getElementById('stationCode').value,
-            location: document.getElementById('stationLocation').value,
             capacity: parseFloat(document.getElementById('stationCapacity').value) || 0,
+            downstream_station_id: document.getElementById('downstreamStationId').value || null,
+            location: document.getElementById('stationLocation').value,
+            service_area: document.getElementById('serviceArea').value,
             status: document.getElementById('stationStatus').value,
             notes: document.getElementById('stationNotes').value
         };
@@ -462,7 +536,7 @@
         }
     });
 
-    // ========== دالة تعديل المحطة ==========
+    // ========== تعديل محطة ==========
     window.editStation = function(id) {
         if (user.role === 'viewer') {
             alert('⚠️ ليس لديك صلاحية للتعديل');
@@ -473,16 +547,23 @@
             document.getElementById('stationId').value = station.id;
             document.getElementById('stationName').value = station.station_name;
             document.getElementById('stationCode').value = station.station_code || '';
-            document.getElementById('stationLocation').value = station.location || '';
             document.getElementById('stationCapacity').value = station.capacity || '';
+            document.getElementById('stationLocation').value = station.location || '';
+            document.getElementById('serviceArea').value = station.service_area || '';
             document.getElementById('stationStatus').value = station.status || 'active';
             document.getElementById('stationNotes').value = station.notes || '';
+            
+            loadDownstreamStations();
+            if (station.downstream_station_id) {
+                document.getElementById('downstreamStationId').value = station.downstream_station_id;
+            }
+            
             document.getElementById('modalTitle').innerHTML = '<i class="fas fa-edit"></i> تعديل محطة';
             document.getElementById('stationModal').classList.add('active');
         }
     };
 
-    // ========== دالة حذف المحطة ==========
+    // ========== حذف محطة ==========
     window.deleteStation = function(id) {
         if (user.role === 'viewer') {
             alert('⚠️ ليس لديك صلاحية للحذف');
