@@ -641,65 +641,76 @@
             }
         }
     }
-
-    // CSS لإخفاء القائمة الجانبية والهيدر داخل iframe
-    function getIframeHideSidebarCSS() {
-        return `
-            <style>
-                /* إخفاء القائمة الجانبية */
-                .sidebar, 
-                .sidebar *,
-                [class*="sidebar"],
-                [id*="sidebar"],
-                .nav-item,
-                .menu-toggle,
-                .header:not(.page-header),
-                .copyright:not(.page-copyright) {
-                    display: none !important;
-                }
-                /* إخفاء أي عنصر يحوي كلمة sidebar */
-                body > div:first-child > div:first-child,
-                .main-layout > div:first-child:not(.content) {
-                    display: none !important;
-                }
-                /* تنسيق الجسم */
-                body {
-                    background: transparent !important;
-                    padding: 20px !important;
-                    margin: 0 !important;
-                }
-                .container {
-                    max-width: 100% !important;
-                    padding: 0 !important;
-                }
-                .content {
-                    background: transparent !important;
-                    padding: 0 !important;
-                    margin: 0 !important;
-                }
-                .main-layout {
-                    display: block !important;
-                }
-                /* تحسين عرض الجداول */
+function getIframeHideSidebarCSS() {
+    return `
+        <style>
+            /* إخفاء القائمة الجانبية فقط، وليس الأزرار الداخلية */
+            .sidebar, 
+            .sidebar *,
+            [class*="sidebar"],
+            [id*="sidebar"],
+            .nav-item,
+            .menu-toggle {
+                display: none !important;
+            }
+            
+            /* إزالة أي display:none من الأزرار */
+            .btn, 
+            .btn-primary,
+            #addStationBtn {
+                display: inline-flex !important;
+                visibility: visible !important;
+                opacity: 1 !important;
+            }
+            
+            /* إخفاء الهيدر المكرر فقط */
+            .header:not(.page-header) {
+                display: none !important;
+            }
+            
+            /* تنسيق الجسم */
+            body {
+                background: transparent !important;
+                padding: 15px !important;
+                margin: 0 !important;
+            }
+            
+            .container {
+                max-width: 100% !important;
+                padding: 0 !important;
+            }
+            
+            .content {
+                background: transparent !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            
+            .main-layout {
+                display: block !important;
+            }
+            
+            /* تحسين عرض الجداول */
+            .data-table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+            
+            .data-table th, .data-table td {
+                padding: 10px;
+                text-align: right;
+                border-bottom: 1px solid rgba(255,255,255,0.1);
+            }
+            
+            @media (max-width: 768px) {
                 .data-table {
-                    width: 100%;
-                    border-collapse: collapse;
+                    display: block;
+                    overflow-x: auto;
                 }
-                .data-table th, .data-table td {
-                    padding: 10px;
-                    text-align: right;
-                    border-bottom: 1px solid rgba(255,255,255,0.1);
-                }
-                @media (max-width: 768px) {
-                    .data-table {
-                        display: block;
-                        overflow-x: auto;
-                    }
-                }
-            </style>
-        `;
-    }
-
+            }
+        </style>
+    `;
+}
     // ============================================
     // لوحة التحكم الرئيسية
     // ============================================
