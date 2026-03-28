@@ -445,74 +445,73 @@
         }
     }
 
-    function renderTable() {
-        let html = '<div class="table-responsive"><table class="data-table"><thead>发展' +
-            '<th>#</th>' +
-            '<th>اسم المحطة</th>' +
-            '<th>الكود</th>' +
-            '<th>النوع</th>' +
-            '<th>المصب</th>' +
-            '<th>الموقع</th>' +
-            '<th>منطقة الخدمة</th>' +
-            '<th>الطاقة (م³/س)</th>' +
-            '<th>الحالة</th>' +
-            '<th>الإجراءات</th>' +
-            '</thead><tbody>';
+function renderTable() {
+    let html = '<div class="table-responsive"><table class="data-table"><thead><tr>' +
+        '<th>#</th>' +
+        '<th>اسم المحطة</th>' +
+        '<th>الكود</th>' +
+        '<th>النوع</th>' +
+        '<th>المصب</th>' +
+        '<th>الموقع</th>' +
+        '<th>منطقة الخدمة</th>' +
+        '<th>الطاقة (م³/س)</th>' +
+        '<th>الحالة</th>' +
+        '<th>الإجراءات</th>' +
+        '</tr></thead><tbody>';
+    
+    for (let i = 0; i < stationsData.length; i++) {
+        const s = stationsData[i];
         
-        for (let i = 0; i < stationsData.length; i++) {
-            const s = stationsData[i];
-            
-            // تحديد حالة المحطة
-            let statusClass = 'status-active';
-            let statusText = 'نشطة';
-            if (s.status === 'maintenance') { statusClass = 'status-maintenance'; statusText = 'صيانة'; }
-            else if (s.status === 'inactive') { statusClass = 'status-inactive'; statusText = 'متوقفة'; }
-            else if (s.status === 'emergency') { statusClass = 'status-emergency'; statusText = 'طوارئ'; }
-            
-            // نوع المحطة مع أيقونة
-            let typeIcon = '';
-            let typeText = s.station_type || '---';
-            if (typeText === 'معالجة') typeIcon = '🏭 ';
-            else if (typeText === 'رئيسية') typeIcon = '🏢 ';
-            else if (typeText === 'فرعية') typeIcon = '🏘️ ';
-            
-            // اسم محطة المصب
-            let downstreamName = '---';
-            if (s.downstream_station_id) {
-                const downstream = stationsData.find(st => st.id == s.downstream_station_id);
-                downstreamName = downstream ? downstream.station_name : 'غير معروف';
-            }
-            
-            // الموقع ومنطقة الخدمة
-            let locationText = s.location && s.location.trim() !== '' ? s.location : '---';
-            let serviceAreaText = s.service_area && s.service_area.trim() !== '' ? s.service_area : '---';
-            let capacityText = s.capacity ? s.capacity + ' م³/س' : '---';
-            
-            html += '发展' +
-                '发展' + (i+1) + '发展' +
-                '发展<i class="fas fa-water"></i> ' + (s.station_name || '---') + '发展' +
-                '发展' + (s.station_code || '---') + '发展' +
-                '发展' + typeIcon + typeText + '发展' +
-                '发展' + downstreamName + '发展' +
-                '发展' + locationText + '发展' +
-                '发展' + serviceAreaText + '发展' +
-                '发展' + capacityText + '发展' +
-                '发展<span class="status-badge ' + statusClass + '">' + statusText + '</span>发展' +
-                '<td class="action-buttons">';
-            
-            if (user.role !== 'viewer') {
-                html += '<button class="btn btn-sm btn-primary" onclick="editStation(' + s.id + ')"><i class="fas fa-edit"></i> تعديل</button>';
-                html += '<button class="btn btn-sm btn-danger" onclick="deleteStation(' + s.id + ')"><i class="fas fa-trash"></i> حذف</button>';
-            } else {
-                html += '<span class="status-badge" style="background:rgba(0,212,255,0.1);">عرض فقط</span>';
-            }
-            
-            html += '发展发展';
+        // تحديد حالة المحطة
+        let statusClass = 'status-active';
+        let statusText = 'نشطة';
+        if (s.status === 'maintenance') { statusClass = 'status-maintenance'; statusText = 'صيانة'; }
+        else if (s.status === 'inactive') { statusClass = 'status-inactive'; statusText = 'متوقفة'; }
+        else if (s.status === 'emergency') { statusClass = 'status-emergency'; statusText = 'طوارئ'; }
+        
+        // نوع المحطة مع أيقونة
+        let typeIcon = '';
+        let typeText = s.station_type || '---';
+        if (typeText === 'معالجة') typeIcon = '🏭 ';
+        else if (typeText === 'رئيسية') typeIcon = '🏢 ';
+        else if (typeText === 'فرعية') typeIcon = '🏘️ ';
+        
+        // اسم محطة المصب
+        let downstreamName = '---';
+        if (s.downstream_station_id) {
+            const downstream = stationsData.find(st => st.id == s.downstream_station_id);
+            downstreamName = downstream ? downstream.station_name : 'غير معروف';
         }
-        html += '</tbody>}</div>';
-        document.getElementById('stationsList').innerHTML = html;
+        
+        // الموقع ومنطقة الخدمة
+        let locationText = s.location && s.location.trim() !== '' ? s.location : '---';
+        let serviceAreaText = s.service_area && s.service_area.trim() !== '' ? s.service_area : '---';
+        let capacityText = s.capacity ? s.capacity + ' م³/س' : '---';
+        
+        html += '<tr>' +
+            '<td>' + (i+1) + '</td>' +
+            '<td><i class="fas fa-water"></i> ' + (s.station_name || '---') + '</td>' +
+            '<td>' + (s.station_code || '---') + '</td>' +
+            '<td>' + typeIcon + typeText + '</td>' +
+            '<td>' + downstreamName + '</td>' +
+            '<td>' + locationText + '</td>' +
+            '<td>' + serviceAreaText + '</td>' +
+            '<td>' + capacityText + '</td>' +
+            '<td><span class="status-badge ' + statusClass + '">' + statusText + '</span></td>' +
+            '<td class="action-buttons">';
+        
+        if (user.role !== 'viewer') {
+            html += '<button class="btn btn-sm btn-primary" onclick="editStation(' + s.id + ')"><i class="fas fa-edit"></i> تعديل</button>';
+            html += '<button class="btn btn-sm btn-danger" onclick="deleteStation(' + s.id + ')"><i class="fas fa-trash"></i> حذف</button>';
+        } else {
+            html += '<span class="status-badge" style="background:rgba(0,212,255,0.1);">عرض فقط</span>';
+        }
+        
+        html += '</td></tr>';
     }
-
+    html += '</tbody></table></div>';
+    document.getElementById('stationsList').innerHTML = html;
+}
     // ========== دوال المودال ==========
     function closeModal() {
         document.getElementById('stationModal').classList.remove('active');
