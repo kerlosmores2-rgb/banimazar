@@ -76,13 +76,17 @@
             overflow: hidden;
         }
         .data-table th, .data-table td {
-            padding: 14px 12px;
+            padding: 12px 10px;
             text-align: right;
             border-bottom: 1px solid rgba(255,255,255,0.1);
+            vertical-align: top;
+            word-break: break-word;
+            white-space: normal;
         }
         .data-table th {
             background: rgba(0,212,255,0.2);
             color: #00d4ff;
+            font-weight: 600;
         }
         .status-badge {
             display: inline-block;
@@ -195,6 +199,10 @@
                 width: 100%;
                 justify-content: center;
             }
+            .data-table th, .data-table td {
+                padding: 8px 6px;
+                font-size: 0.75rem;
+            }
         }
     </style>
 </head>
@@ -238,10 +246,15 @@
                 <input type="text" id="stationCode" placeholder="مثال: ST-001">
             </div>
             
-            <!-- 3. الطاقة التصميمية للمحطة (متر³/ساعة) -->
+            <!-- 3. نوع المحطة (قائمة منسدلة) -->
             <div class="form-group">
-                <label>الطاقة التصميمية للمحطة (م³/ساعة)</label>
-                <input type="number" id="stationCapacity" step="0.01" placeholder="مثال: 500">
+                <label>نوع المحطة</label>
+                <select id="stationType">
+                    <option value="معالجة">🏭 معالجة</option>
+                    <option value="رئيسية">🏢 رئيسية</option>
+                    <option value="فرعية">🏘️ فرعية</option>
+                </select>
+                <small>اختر نوع المحطة: معالجة / رئيسية / فرعية</small>
             </div>
             
             <!-- 4. المصب (قائمة منسدلة من المحطات المسجلة) -->
@@ -253,19 +266,25 @@
                 <small>اختر المحطة التي تذهب إليها المياه بعد المعالجة</small>
             </div>
             
-            <!-- 5. الموقع الجغرافي -->
+            <!-- 5. موقع المحطة -->
             <div class="form-group">
-                <label>الموقع الجغرافي</label>
-                <input type="text" id="stationLocation" placeholder="مثال: 28.5000° N, 30.6667° E أو بني مزار - المنيا">
+                <label>موقع المحطة</label>
+                <input type="text" id="stationLocation" placeholder="مثال: بني مزار بجوار مسجد الرحمة">
             </div>
             
             <!-- 6. منطقة الخدمة -->
             <div class="form-group">
                 <label>منطقة الخدمة</label>
-                <input type="text" id="serviceArea" placeholder="مثال: بني مزار، دلجا، أبو جرج">
+                <input type="text" id="serviceArea" placeholder="مثال: شرق المحطة ومنطقة الرحمة">
             </div>
             
-            <!-- 7. الحالة -->
+            <!-- 7. الطاقة التصميمية -->
+            <div class="form-group">
+                <label>الطاقة التصميمية (م³/ساعة)</label>
+                <input type="number" id="stationCapacity" step="0.01" placeholder="مثال: 500">
+            </div>
+            
+            <!-- 8. الحالة -->
             <div class="form-group">
                 <label>الحالة</label>
                 <select id="stationStatus">
@@ -276,7 +295,7 @@
                 </select>
             </div>
             
-            <!-- 8. ملاحظات -->
+            <!-- 9. ملاحظات -->
             <div class="form-group">
                 <label>ملاحظات</label>
                 <textarea id="stationNotes" rows="3" placeholder="أي ملاحظات إضافية عن المحطة..."></textarea>
@@ -326,10 +345,11 @@
             const newStation = {
                 station_name: data.station_name,
                 station_code: data.station_code || null,
-                capacity: parseFloat(data.capacity) || null,
+                station_type: data.station_type || null,
                 downstream_station_id: data.downstream_station_id || null,
                 location: data.location || null,
                 service_area: data.service_area || null,
+                capacity: parseFloat(data.capacity) || null,
                 status: data.status || 'active',
                 notes: data.notes || null,
                 created_at: new Date().toISOString(),
@@ -351,10 +371,11 @@
             const updateData = {
                 station_name: data.station_name,
                 station_code: data.station_code || null,
-                capacity: parseFloat(data.capacity) || null,
+                station_type: data.station_type || null,
                 downstream_station_id: data.downstream_station_id || null,
                 location: data.location || null,
                 service_area: data.service_area || null,
+                capacity: parseFloat(data.capacity) || null,
                 status: data.status || 'active',
                 notes: data.notes || null,
                 updated_at: new Date().toISOString()
@@ -399,7 +420,7 @@
         });
     }
 
-    // ========== عرض البيانات ==========
+    // ========== عرض البيانات في الجدول ==========
     async function loadStations() {
         const container = document.getElementById('stationsList');
         container.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin fa-2x"></i><p>جاري تحميل البيانات...</p></div>';
@@ -429,10 +450,11 @@
             '<th>#</th>' +
             '<th>اسم المحطة</th>' +
             '<th>الكود</th>' +
-            '<th>الطاقة (م³/س)</th>' +
+            '<th>النوع</th>' +
             '<th>المصب</th>' +
-            '<th>الموقع الجغرافي</th>' +
+            '<th>الموقع</th>' +
             '<th>منطقة الخدمة</th>' +
+            '<th>الطاقة (م³/س)</th>' +
             '<th>الحالة</th>' +
             '<th>الإجراءات</th>' +
             '</thead><tbody>';
@@ -440,11 +462,19 @@
         for (let i = 0; i < stationsData.length; i++) {
             const s = stationsData[i];
             
+            // تحديد حالة المحطة
             let statusClass = 'status-active';
             let statusText = 'نشطة';
             if (s.status === 'maintenance') { statusClass = 'status-maintenance'; statusText = 'صيانة'; }
             else if (s.status === 'inactive') { statusClass = 'status-inactive'; statusText = 'متوقفة'; }
             else if (s.status === 'emergency') { statusClass = 'status-emergency'; statusText = 'طوارئ'; }
+            
+            // نوع المحطة مع أيقونة
+            let typeIcon = '';
+            let typeText = s.station_type || '---';
+            if (typeText === 'معالجة') typeIcon = '🏭 ';
+            else if (typeText === 'رئيسية') typeIcon = '🏢 ';
+            else if (typeText === 'فرعية') typeIcon = '🏘️ ';
             
             // اسم محطة المصب
             let downstreamName = '---';
@@ -453,14 +483,20 @@
                 downstreamName = downstream ? downstream.station_name : 'غير معروف';
             }
             
+            // الموقع ومنطقة الخدمة
+            let locationText = s.location && s.location.trim() !== '' ? s.location : '---';
+            let serviceAreaText = s.service_area && s.service_area.trim() !== '' ? s.service_area : '---';
+            let capacityText = s.capacity ? s.capacity + ' م³/س' : '---';
+            
             html += '发展' +
                 '发展' + (i+1) + '发展' +
                 '发展<i class="fas fa-water"></i> ' + (s.station_name || '---') + '发展' +
                 '发展' + (s.station_code || '---') + '发展' +
-                '发展' + (s.capacity || 0) + '发展' +
+                '发展' + typeIcon + typeText + '发展' +
                 '发展' + downstreamName + '发展' +
-                '发展' + (s.location || '---') + '发展' +
-                '发展' + (s.service_area || '---') + '发展' +
+                '发展' + locationText + '发展' +
+                '发展' + serviceAreaText + '发展' +
+                '发展' + capacityText + '发展' +
                 '发展<span class="status-badge ' + statusClass + '">' + statusText + '</span>发展' +
                 '<td class="action-buttons">';
             
@@ -471,9 +507,9 @@
                 html += '<span class="status-badge" style="background:rgba(0,212,255,0.1);">عرض فقط</span>';
             }
             
-            html += '发展</tr>';
+            html += '发展发展';
         }
-        html += '</tbody></table></div>';
+        html += '</tbody>}</div>';
         document.getElementById('stationsList').innerHTML = html;
     }
 
@@ -492,6 +528,7 @@
         document.getElementById('stationForm').reset();
         document.getElementById('stationId').value = '';
         document.getElementById('stationStatus').value = 'active';
+        document.getElementById('stationType').value = 'معالجة';
         document.getElementById('modalTitle').innerHTML = '<i class="fas fa-plus-circle"></i> إضافة محطة جديدة';
         loadDownstreamStations();
         document.getElementById('stationModal').classList.add('active');
@@ -505,10 +542,11 @@
         const data = {
             station_name: document.getElementById('stationName').value,
             station_code: document.getElementById('stationCode').value,
-            capacity: parseFloat(document.getElementById('stationCapacity').value) || 0,
+            station_type: document.getElementById('stationType').value,
             downstream_station_id: document.getElementById('downstreamStationId').value || null,
             location: document.getElementById('stationLocation').value,
             service_area: document.getElementById('serviceArea').value,
+            capacity: parseFloat(document.getElementById('stationCapacity').value) || 0,
             status: document.getElementById('stationStatus').value,
             notes: document.getElementById('stationNotes').value
         };
@@ -545,17 +583,20 @@
         const station = stationsData.find(s => s.id == id);
         if (station) {
             document.getElementById('stationId').value = station.id;
-            document.getElementById('stationName').value = station.station_name;
+            document.getElementById('stationName').value = station.station_name || '';
             document.getElementById('stationCode').value = station.station_code || '';
-            document.getElementById('stationCapacity').value = station.capacity || '';
+            document.getElementById('stationType').value = station.station_type || 'معالجة';
             document.getElementById('stationLocation').value = station.location || '';
             document.getElementById('serviceArea').value = station.service_area || '';
+            document.getElementById('stationCapacity').value = station.capacity || '';
             document.getElementById('stationStatus').value = station.status || 'active';
             document.getElementById('stationNotes').value = station.notes || '';
             
             loadDownstreamStations();
             if (station.downstream_station_id) {
-                document.getElementById('downstreamStationId').value = station.downstream_station_id;
+                setTimeout(() => {
+                    document.getElementById('downstreamStationId').value = station.downstream_station_id;
+                }, 100);
             }
             
             document.getElementById('modalTitle').innerHTML = '<i class="fas fa-edit"></i> تعديل محطة';
