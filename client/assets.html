@@ -286,47 +286,35 @@ async function loadStationsSelect() {
     select.innerHTML = '<option value="">-- جاري التحميل --</option>';
     
     try {
-        console.log('جاري جلب المحطات...');
-        
-        // نفس الطريقة اللي شغالة في stations.html
         const { data, error } = await supabaseClient
             .from('stations')
             .select('id, station_name, station_code')
             .order('station_name');
         
         if (error) {
-            console.error('خطأ في جلب المحطات:', error);
+            console.error('خطأ:', error);
             select.innerHTML = '<option value="">-- خطأ في التحميل --</option>';
             return;
         }
         
-        console.log('عدد المحطات التي تم جلبها:', data?.length);
-        console.log('المحطات:', data);
-        
         stationsList = data || [];
+        console.log('تم جلب', stationsList.length, 'محطة');
         
         if (stationsList.length === 0) {
             select.innerHTML = '<option value="">-- لا توجد محطات --</option>';
-            document.getElementById('assetsList').innerHTML = `
-                <div style="background:rgba(255,193,7,0.2); border:1px solid #ffc107; border-radius:12px; padding:20px; text-align:center;">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <p>لا توجد محطات مسجلة</p>
-                    <p>الرجاء إضافة محطة أولاً من <strong>صفحة المحطات</strong></p>
-                </div>
-            `;
             return;
         }
         
-        // ملء القائمة
+        // تحديث القيمة
         select.innerHTML = '<option value="">-- اختر المحطة --</option>';
-        stationsList.forEach(station => {
-            const option = document.createElement('option');
-            option.value = station.id;
-            option.textContent = `${station.station_name} (${station.station_code || station.id})`;
-            select.appendChild(option);
-        });
         
-        console.log('تم تحميل ' + stationsList.length + ' محطة بنجاح');
+        // استخدام innerHTML بدل appendChild للتأكد
+        for (let i = 0; i < stationsList.length; i++) {
+            const s = stationsList[i];
+            select.innerHTML += `<option value="${s.id}">${s.station_name} (${s.station_code || s.id})</option>`;
+        }
+        
+        console.log('تم تحديث القائمة، عدد الخيارات:', select.options.length);
         
     } catch (error) {
         console.error('خطأ:', error);
