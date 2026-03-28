@@ -34,12 +34,21 @@
             align-items: center;
             gap: 10px;
         }
-        /* تبويبات الأقسام */
+        .station-select {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(0,212,255,0.3);
+            border-radius: 30px;
+            padding: 10px 20px;
+            color: #fff;
+            width: 280px;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
         .asset-tabs {
             display: flex;
             gap: 8px;
             flex-wrap: wrap;
-            margin-bottom: 20px;
+            margin: 20px 0;
             border-bottom: 1px solid rgba(255,255,255,0.1);
             padding-bottom: 10px;
         }
@@ -54,15 +63,6 @@
         .asset-tab.active, .asset-tab:hover {
             background: #00d4ff;
             color: #1a1a2e;
-        }
-        /* قائمة المحطات */
-        .station-select {
-            background: rgba(255,255,255,0.1);
-            border: 1px solid rgba(0,212,255,0.3);
-            border-radius: 30px;
-            padding: 8px 15px;
-            color: #fff;
-            width: 250px;
         }
         .btn {
             padding: 8px 20px;
@@ -193,21 +193,13 @@
             gap: 6px;
             flex-wrap: wrap;
         }
-        .warning-box {
-            background: rgba(255,193,7,0.2);
-            border: 1px solid #ffc107;
-            border-radius: 12px;
-            padding: 15px;
-            margin-bottom: 20px;
-            text-align: center;
-        }
         @media (max-width: 768px) {
-            .asset-tabs {
-                justify-content: center;
+            .page-header {
+                flex-direction: column;
+                align-items: stretch;
             }
-            .asset-tab {
-                padding: 5px 12px;
-                font-size: 0.7rem;
+            .station-select {
+                width: 100%;
             }
         }
     </style>
@@ -218,11 +210,10 @@
     <div class="page-header">
         <h2><i class="fas fa-microchip"></i> إدارة الأصول</h2>
         <select id="stationSelect" class="station-select">
-            <option value="">-- اختر المحطة أولاً --</option>
+            <option value="">-- اختر المحطة --</option>
         </select>
     </div>
 
-    <!-- تبويبات الأقسام -->
     <div class="asset-tabs" id="assetTabs">
         <div class="asset-tab active" data-type="transformers">🔌 محولات</div>
         <div class="asset-tab" data-type="generators">⚡ مولدات</div>
@@ -242,7 +233,7 @@
     </div>
 </div>
 
-<!-- المودال العام -->
+<!-- المودال -->
 <div id="assetModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
@@ -271,62 +262,57 @@
     let currentStationId = null;
     let currentAssetType = 'transformers';
     let assetsData = [];
-
-    // ========== صلاحيات المستخدم ==========
     const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
 
     // ========== تحميل قائمة المحطات ==========
-async function loadStationsSelect() {
-    const select = document.getElementById('stationSelect');
-    if (!select) {
-        console.error('عنصر stationSelect غير موجود');
-        return;
-    }
-    
-    select.innerHTML = '<option value="">-- جاري التحميل --</option>';
-    
-    try {
-        const { data, error } = await supabaseClient
-            .from('stations')
-            .select('id, station_name, station_code')
-            .order('station_name');
+    async function loadStationsSelect() {
+        const select = document.getElementById('stationSelect');
+        if (!select) {
+            console.error('القائمة غير موجودة');
+            return;
+        }
         
-        if (error) {
+        select.innerHTML = '<option value="">-- جاري التحميل --</option>';
+        
+        try {
+            const { data, error } = await supabaseClient
+                .from('stations')
+                .select('id, station_name, station_code')
+                .order('station_name');
+            
+            if (error) {
+                console.error('خطأ:', error);
+                select.innerHTML = '<option value="">-- خطأ في التحميل --</option>';
+                return;
+            }
+            
+            stationsList = data || [];
+            
+            if (stationsList.length === 0) {
+                select.innerHTML = '<option value="">-- لا توجد محطات --</option>';
+                return;
+            }
+            
+            select.innerHTML = '<option value="">-- اختر المحطة --</option>';
+            stationsList.forEach(s => {
+                select.innerHTML += `<option value="${s.id}">${s.station_name} (${s.station_code || s.id})</option>`;
+            });
+            
+            console.log('تم تحميل', stationsList.length, 'محطة');
+            
+        } catch (error) {
             console.error('خطأ:', error);
-            select.innerHTML = '<option value="">-- خطأ في التحميل --</option>';
-            return;
+            select.innerHTML = '<option value="">-- خطأ في الاتصال --</option>';
         }
-        
-        stationsList = data || [];
-        console.log('تم جلب', stationsList.length, 'محطة');
-        
-        if (stationsList.length === 0) {
-            select.innerHTML = '<option value="">-- لا توجد محطات --</option>';
-            return;
-        }
-        
-        // تحديث القيمة
-        select.innerHTML = '<option value="">-- اختر المحطة --</option>';
-        
-        // استخدام innerHTML بدل appendChild للتأكد
-        for (let i = 0; i < stationsList.length; i++) {
-            const s = stationsList[i];
-            select.innerHTML += `<option value="${s.id}">${s.station_name} (${s.station_code || s.id})</option>`;
-        }
-        
-        console.log('تم تحديث القائمة، عدد الخيارات:', select.options.length);
-        
-    } catch (error) {
-        console.error('خطأ:', error);
-        select.innerHTML = '<option value="">-- خطأ في الاتصال --</option>';
     }
-}
-    // ========== تحميل الأصول حسب النوع ==========
+
+    // ========== تحميل الأصول ==========
     async function loadAssets() {
         if (!currentStationId) {
-            document.getElementById('assetsList').innerHTML = '<div class="warning-box"><i class="fas fa-info-circle"></i> الرجاء اختيار محطة أولاً لعرض الأصول الخاصة بها</div>';
+            document.getElementById('assetsList').innerHTML = '<div class="no-data">الرجاء اختيار محطة أولاً</div>';
             return;
         }
+        
         document.getElementById('assetsList').innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i><p>جاري التحميل...</p></div>';
         
         try {
@@ -347,379 +333,173 @@ async function loadStationsSelect() {
                 document.getElementById('assetsList').innerHTML = `<div class="no-data">${result.message}</div>`;
             }
         } catch (error) {
+            console.error('Load assets error:', error);
             document.getElementById('assetsList').innerHTML = '<div class="no-data">خطأ في تحميل البيانات</div>';
         }
     }
 
-    // ========== دوال API لكل قسم ==========
-    
+    // ========== دوال API الأساسية (مبسطة) ==========
     async function getTransformers() {
-        const { data, error } = await supabaseClient
-            .from('transformers')
-            .select('*')
-            .eq('station_id', currentStationId)
-            .order('transformer_number');
+        const { data, error } = await supabaseClient.from('transformers').select('*').eq('station_id', currentStationId).order('transformer_number');
         if (error) return { success: false, message: error.message, data: [] };
         return { success: true, data: data || [] };
     }
-    
     async function createTransformer(data) {
         const newData = { ...data, station_id: currentStationId, created_at: new Date(), updated_at: new Date() };
         const { data: result, error } = await supabaseClient.from('transformers').insert([newData]).select();
         if (error) return { success: false, message: error.message };
         return { success: true, data: result[0], message: '✅ تم إضافة المحول' };
     }
-    
     async function updateTransformer(id, data) {
         const updateData = { ...data, updated_at: new Date() };
         const { data: result, error } = await supabaseClient.from('transformers').update(updateData).eq('id', id).select();
         if (error) return { success: false, message: error.message };
         return { success: true, data: result[0], message: '✅ تم تحديث المحول' };
     }
-    
     async function deleteTransformer(id) {
         const { error } = await supabaseClient.from('transformers').delete().eq('id', id);
         if (error) return { success: false, message: error.message };
         return { success: true, message: '✅ تم حذف المحول' };
     }
-    
+
     async function getGeneratorsData() {
-        const { data, error } = await supabaseClient
-            .from('generators')
-            .select('*')
-            .eq('station_id', currentStationId)
-            .order('generator_number');
+        const { data, error } = await supabaseClient.from('generators').select('*').eq('station_id', currentStationId).order('generator_number');
         if (error) return { success: false, message: error.message, data: [] };
         return { success: true, data: data || [] };
     }
-    
     async function createGenerator(data) {
         const newData = { ...data, station_id: currentStationId, created_at: new Date(), updated_at: new Date() };
         const { data: result, error } = await supabaseClient.from('generators').insert([newData]).select();
         if (error) return { success: false, message: error.message };
         return { success: true, data: result[0], message: '✅ تم إضافة المولد' };
     }
-    
     async function updateGenerator(id, data) {
         const updateData = { ...data, updated_at: new Date() };
         const { data: result, error } = await supabaseClient.from('generators').update(updateData).eq('id', id).select();
         if (error) return { success: false, message: error.message };
         return { success: true, data: result[0], message: '✅ تم تحديث المولد' };
     }
-    
     async function deleteGenerator(id) {
         const { error } = await supabaseClient.from('generators').delete().eq('id', id);
         if (error) return { success: false, message: error.message };
         return { success: true, message: '✅ تم حذف المولد' };
     }
-    
+
     async function getElectricalPanels() {
-        const { data, error } = await supabaseClient
-            .from('electrical_panels')
-            .select('*')
-            .eq('station_id', currentStationId)
-            .order('panel_number');
+        const { data, error } = await supabaseClient.from('electrical_panels').select('*').eq('station_id', currentStationId).order('panel_number');
         if (error) return { success: false, message: error.message, data: [] };
         return { success: true, data: data || [] };
     }
-    
     async function createElectricalPanel(data) {
         const newData = { ...data, station_id: currentStationId, created_at: new Date(), updated_at: new Date() };
         const { data: result, error } = await supabaseClient.from('electrical_panels').insert([newData]).select();
         if (error) return { success: false, message: error.message };
         return { success: true, data: result[0], message: '✅ تم إضافة اللوحة' };
     }
-    
     async function updateElectricalPanel(id, data) {
         const updateData = { ...data, updated_at: new Date() };
         const { data: result, error } = await supabaseClient.from('electrical_panels').update(updateData).eq('id', id).select();
         if (error) return { success: false, message: error.message };
         return { success: true, data: result[0], message: '✅ تم تحديث اللوحة' };
     }
-    
     async function deleteElectricalPanel(id) {
         const { error } = await supabaseClient.from('electrical_panels').delete().eq('id', id);
         if (error) return { success: false, message: error.message };
         return { success: true, message: '✅ تم حذف اللوحة' };
     }
-    
+
     async function getMainPumpsData() {
-        const { data, error } = await supabaseClient
-            .from('main_pumps')
-            .select('*')
-            .eq('station_id', currentStationId)
-            .order('pump_number');
+        const { data, error } = await supabaseClient.from('main_pumps').select('*').eq('station_id', currentStationId).order('pump_number');
         if (error) return { success: false, message: error.message, data: [] };
         return { success: true, data: data || [] };
     }
-    
     async function createMainPump(data) {
         const newData = { ...data, station_id: currentStationId, created_at: new Date(), updated_at: new Date() };
         const { data: result, error } = await supabaseClient.from('main_pumps').insert([newData]).select();
         if (error) return { success: false, message: error.message };
         return { success: true, data: result[0], message: '✅ تم إضافة الطلمبة' };
     }
-    
     async function updateMainPump(id, data) {
         const updateData = { ...data, updated_at: new Date() };
         const { data: result, error } = await supabaseClient.from('main_pumps').update(updateData).eq('id', id).select();
         if (error) return { success: false, message: error.message };
         return { success: true, data: result[0], message: '✅ تم تحديث الطلمبة' };
     }
-    
     async function deleteMainPump(id) {
         const { error } = await supabaseClient.from('main_pumps').delete().eq('id', id);
         if (error) return { success: false, message: error.message };
         return { success: true, message: '✅ تم حذف الطلمبة' };
     }
-    
+
     async function getSubPumpsData() {
-        const { data, error } = await supabaseClient
-            .from('sub_pumps')
-            .select('*')
-            .eq('station_id', currentStationId)
-            .order('pump_number');
+        const { data, error } = await supabaseClient.from('sub_pumps').select('*').eq('station_id', currentStationId).order('pump_number');
         if (error) return { success: false, message: error.message, data: [] };
         return { success: true, data: data || [] };
     }
-    
     async function createSubPump(data) {
         const newData = { ...data, station_id: currentStationId, created_at: new Date(), updated_at: new Date() };
         const { data: result, error } = await supabaseClient.from('sub_pumps').insert([newData]).select();
         if (error) return { success: false, message: error.message };
         return { success: true, data: result[0], message: '✅ تم إضافة الطلمبة الفرعية' };
     }
-    
     async function updateSubPump(id, data) {
         const updateData = { ...data, updated_at: new Date() };
         const { data: result, error } = await supabaseClient.from('sub_pumps').update(updateData).eq('id', id).select();
         if (error) return { success: false, message: error.message };
         return { success: true, data: result[0], message: '✅ تم تحديث الطلمبة الفرعية' };
     }
-    
     async function deleteSubPump(id) {
         const { error } = await supabaseClient.from('sub_pumps').delete().eq('id', id);
         if (error) return { success: false, message: error.message };
         return { success: true, message: '✅ تم حذف الطلمبة الفرعية' };
     }
-    
+
     async function getOtherAssetsData() {
-        const { data, error } = await supabaseClient
-            .from('other_assets')
-            .select('*')
-            .eq('station_id', currentStationId)
-            .order('asset_number');
+        const { data, error } = await supabaseClient.from('other_assets').select('*').eq('station_id', currentStationId).order('asset_number');
         if (error) return { success: false, message: error.message, data: [] };
         return { success: true, data: data || [] };
     }
-    
     async function createOtherAsset(data) {
         const newData = { ...data, station_id: currentStationId, created_at: new Date(), updated_at: new Date() };
         const { data: result, error } = await supabaseClient.from('other_assets').insert([newData]).select();
         if (error) return { success: false, message: error.message };
         return { success: true, data: result[0], message: '✅ تم إضافة الأصل' };
     }
-    
     async function updateOtherAsset(id, data) {
         const updateData = { ...data, updated_at: new Date() };
         const { data: result, error } = await supabaseClient.from('other_assets').update(updateData).eq('id', id).select();
         if (error) return { success: false, message: error.message };
         return { success: true, data: result[0], message: '✅ تم تحديث الأصل' };
     }
-    
     async function deleteOtherAsset(id) {
         const { error } = await supabaseClient.from('other_assets').delete().eq('id', id);
         if (error) return { success: false, message: error.message };
         return { success: true, message: '✅ تم حذف الأصل' };
     }
-    
+
     async function getBuildingsData() {
-        const { data, error } = await supabaseClient
-            .from('buildings')
-            .select('*')
-            .eq('station_id', currentStationId)
-            .order('building_number');
+        const { data, error } = await supabaseClient.from('buildings').select('*').eq('station_id', currentStationId).order('building_number');
         if (error) return { success: false, message: error.message, data: [] };
         return { success: true, data: data || [] };
     }
-    
     async function createBuilding(data) {
         const newData = { ...data, station_id: currentStationId, created_at: new Date(), updated_at: new Date() };
         const { data: result, error } = await supabaseClient.from('buildings').insert([newData]).select();
         if (error) return { success: false, message: error.message };
         return { success: true, data: result[0], message: '✅ تم إضافة المبنى' };
     }
-    
     async function updateBuilding(id, data) {
         const updateData = { ...data, updated_at: new Date() };
         const { data: result, error } = await supabaseClient.from('buildings').update(updateData).eq('id', id).select();
         if (error) return { success: false, message: error.message };
         return { success: true, data: result[0], message: '✅ تم تحديث المبنى' };
     }
-    
     async function deleteBuilding(id) {
         const { error } = await supabaseClient.from('buildings').delete().eq('id', id);
         if (error) return { success: false, message: error.message };
         return { success: true, message: '✅ تم حذف المبنى' };
     }
-    
-    // ========== نماذج الإضافة لكل قسم ==========
-    function getFormFields(type, data = {}) {
-        if (type === 'transformers') {
-            return `
-                <div class="form-row">
-                    <div class="form-group"><label>رقم المحول *</label><input type="text" id="transformer_number" value="${data.transformer_number || ''}" required></div>
-                    <div class="form-group"><label>قدرة المحول (KVA)</label><input type="number" id="rated_power_kva" step="0.01" value="${data.rated_power_kva || ''}"></div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group"><label>جهد الدخول (KV)</label><input type="number" id="input_voltage_kv" step="0.01" value="${data.input_voltage_kv || ''}"></div>
-                    <div class="form-group"><label>جهد الخروج (V)</label><input type="number" id="output_voltage_v" step="0.01" value="${data.output_voltage_v || ''}"></div>
-                </div>
-                <div class="form-group"><label>ملاحظات</label><textarea id="notes" rows="2">${data.notes || ''}</textarea></div>
-            `;
-        } else if (type === 'generators') {
-            return `
-                <div class="form-row">
-                    <div class="form-group"><label>رقم المولد *</label><input type="text" id="generator_number" value="${data.generator_number || ''}" required></div>
-                    <div class="form-group"><label>نوع المحرك</label><input type="text" id="engine_type" value="${data.engine_type || ''}"></div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group"><label>معدل السولار على الحمل (لتر/س)</label><input type="number" id="fuel_rate_with_load" step="0.01" value="${data.fuel_rate_with_load || ''}"></div>
-                    <div class="form-group"><label>معدل السولار بدون حمل (لتر/س)</label><input type="number" id="fuel_rate_no_load" step="0.01" value="${data.fuel_rate_no_load || ''}"></div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group"><label>كمية الزيت (لتر)</label><input type="number" id="oil_quantity" step="0.01" value="${data.oil_quantity || ''}"></div>
-                    <div class="form-group"><label>نوع المولد</label><input type="text" id="generator_type" value="${data.generator_type || ''}"></div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group"><label>جهد المولد (V)</label><input type="number" id="voltage_v" step="0.01" value="${data.voltage_v || ''}"></div>
-                    <div class="form-group"><label>قدرة المولد (KVA)</label><input type="number" id="rated_power_kva" step="0.01" value="${data.rated_power_kva || ''}"></div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group"><label>قدرة المولد (KW)</label><input type="number" id="rated_power_kw" step="0.01" value="${data.rated_power_kw || ''}"></div>
-                </div>
-                <div class="form-group"><label>ملاحظات</label><textarea id="notes" rows="2">${data.notes || ''}</textarea></div>
-            `;
-        } else if (type === 'panels') {
-            return `
-                <div class="form-row">
-                    <div class="form-group"><label>رقم اللوحة *</label><input type="text" id="panel_number" value="${data.panel_number || ''}" required></div>
-                    <div class="form-group"><label>اسم اللوحة</label><input type="text" id="panel_name" value="${data.panel_name || ''}"></div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group"><label>نوع اللوحة</label><select id="panel_type">
-                        <option value="فرعية" ${data.panel_type === 'فرعية' ? 'selected' : ''}>فرعية</option>
-                        <option value="مركزية" ${data.panel_type === 'مركزية' ? 'selected' : ''}>مركزية</option>
-                        <option value="معامل قدرة" ${data.panel_type === 'معامل قدرة' ? 'selected' : ''}>معامل قدرة</option>
-                        <option value="توزيع" ${data.panel_type === 'توزيع' ? 'selected' : ''}>توزيع</option>
-                        <option value="انارة" ${data.panel_type === 'انارة' ? 'selected' : ''}>انارة</option>
-                        <option value="تحكم اوتوماتيك" ${data.panel_type === 'تحكم اوتوماتيك' ? 'selected' : ''}>تحكم اوتوماتيك</option>
-                    </select></div>
-                    <div class="form-group"><label>مصدر التغذية</label><input type="text" id="power_source" value="${data.power_source || ''}"></div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group"><label>جهد التغذية (V)</label><input type="number" id="supply_voltage_v" step="0.01" value="${data.supply_voltage_v || ''}"></div>
-                </div>
-                <div class="form-group"><label>وصف اللوحة</label><textarea id="description" rows="2">${data.description || ''}</textarea></div>
-                <div class="form-group"><label>ملاحظات</label><textarea id="notes" rows="2">${data.notes || ''}</textarea></div>
-            `;
-        } else if (type === 'main_pumps') {
-            return `
-                <div class="form-row">
-                    <div class="form-group"><label>رقم الطلمبة *</label><input type="text" id="pump_number" value="${data.pump_number || ''}" required></div>
-                    <div class="form-group"><label>نوع الطلمبة</label><select id="pump_type">
-                        <option value="رأسية كوبلنج" ${data.pump_type === 'رأسية كوبلنج' ? 'selected' : ''}>رأسية كوبلنج</option>
-                        <option value="رأسية عامود كردان" ${data.pump_type === 'رأسية عامود كردان' ? 'selected' : ''}>رأسية عامود كردان</option>
-                        <option value="غاطس مبتل" ${data.pump_type === 'غاطس مبتل' ? 'selected' : ''}>غاطس مبتل</option>
-                        <option value="غاطس جاف" ${data.pump_type === 'غاطس جاف' ? 'selected' : ''}>غاطس جاف</option>
-                    </select></div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group"><label>التصرف (م³/ساعة)</label><input type="number" id="flow_rate_m3h" step="0.01" value="${data.flow_rate_m3h || ''}"></div>
-                    <div class="form-group"><label>الماركة</label><input type="text" id="brand" value="${data.brand || ''}"></div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group"><label>الرفع (متر)</label><input type="number" id="head_m" step="0.01" value="${data.head_m || ''}"></div>
-                    <div class="form-group"><label>رقم البلي</label><input type="text" id="bearing_number" value="${data.bearing_number || ''}"></div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group"><label>فتحة السحب/الطرد</label><input type="text" id="suction_discharge" value="${data.suction_discharge || ''}"></div>
-                    <div class="form-group"><label>محبس السحب/الطرد</label><input type="text" id="suction_valve" value="${data.suction_valve || ''}"></div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group"><label>محبس عدم الرجوع</label><input type="text" id="non_return_valve" value="${data.non_return_valve || ''}"></div>
-                    <div class="form-group"><label>قدرة المحرك (KW)</label><input type="number" id="motor_power_kw" step="0.01" value="${data.motor_power_kw || ''}"></div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group"><label>عدد لفات المحرك (RPM)</label><input type="number" id="motor_rpm" value="${data.motor_rpm || ''}"></div>
-                </div>
-                <div class="form-group"><label>وصف</label><textarea id="description" rows="2">${data.description || ''}</textarea></div>
-                <div class="form-group"><label>ملاحظات</label><textarea id="notes" rows="2">${data.notes || ''}</textarea></div>
-            `;
-        } else if (type === 'sub_pumps') {
-            return `
-                <div class="form-row">
-                    <div class="form-group"><label>رقم الطلمبة *</label><input type="text" id="pump_number" value="${data.pump_number || ''}" required></div>
-                    <div class="form-group"><label>نوع الطلمبة</label><select id="pump_type">
-                        <option value="غاطس" ${data.pump_type === 'غاطس' ? 'selected' : ''}>غاطس</option>
-                        <option value="حبس جلندات" ${data.pump_type === 'حبس جلندات' ? 'selected' : ''}>حبس جلندات</option>
-                        <option value="حمأة" ${data.pump_type === 'حمأة' ? 'selected' : ''}>حمأة</option>
-                        <option value="تصافي" ${data.pump_type === 'تصافي' ? 'selected' : ''}>تصافي</option>
-                        <option value="مياه معادة" ${data.pump_type === 'مياه معادة' ? 'selected' : ''}>مياه معادة</option>
-                        <option value="بوستر" ${data.pump_type === 'بوستر' ? 'selected' : ''}>بوستر</option>
-                        <option value="سولار" ${data.pump_type === 'سولار' ? 'selected' : ''}>سولار</option>
-                        <option value="اطفاء حريق" ${data.pump_type === 'اطفاء حريق' ? 'selected' : ''}>اطفاء حريق</option>
-                    </select></div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group"><label>التصرف (م³/ساعة)</label><input type="number" id="flow_rate_m3h" step="0.01" value="${data.flow_rate_m3h || ''}"></div>
-                    <div class="form-group"><label>الرفع (متر)</label><input type="number" id="head_m" step="0.01" value="${data.head_m || ''}"></div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group"><label>قدرة المحرك (KW)</label><input type="number" id="motor_power_kw" step="0.01" value="${data.motor_power_kw || ''}"></div>
-                    <div class="form-group"><label>سرعة المحرك (RPM)</label><input type="number" id="motor_rpm" value="${data.motor_rpm || ''}"></div>
-                </div>
-                <div class="form-group"><label>وصف</label><textarea id="description" rows="2">${data.description || ''}</textarea></div>
-                <div class="form-group"><label>ملاحظات</label><textarea id="notes" rows="2">${data.notes || ''}</textarea></div>
-            `;
-        } else if (type === 'other_assets') {
-            return `
-                <div class="form-row">
-                    <div class="form-group"><label>رقم الأصل *</label><input type="text" id="asset_number" value="${data.asset_number || ''}" required></div>
-                    <div class="form-group"><label>نوع الأصل</label><select id="asset_type">
-                        <option value="مطرقة مائية" ${data.asset_type === 'مطرقة مائية' ? 'selected' : ''}>مطرقة مائية</option>
-                        <option value="جهاز قياس تصرف" ${data.asset_type === 'جهاز قياس تصرف' ? 'selected' : ''}>جهاز قياس تصرف</option>
-                        <option value="جهاز قياس منسوب" ${data.asset_type === 'جهاز قياس منسوب' ? 'selected' : ''}>جهاز قياس منسوب</option>
-                        <option value="مصفي ميكانيكية" ${data.asset_type === 'مصفي ميكانيكية' ? 'selected' : ''}>مصفي ميكانيكية</option>
-                        <option value="عربة ازالة رمال" ${data.asset_type === 'عربة ازالة رمال' ? 'selected' : ''}>عربة ازالة رمال</option>
-                        <option value="حوض ترسيب ابتدائي" ${data.asset_type === 'حوض ترسيب ابتدائي' ? 'selected' : ''}>حوض ترسيب ابتدائي</option>
-                        <option value="حوض ترسيب نهائي" ${data.asset_type === 'حوض ترسيب نهائي' ? 'selected' : ''}>حوض ترسيب نهائي</option>
-                        <option value="حوض سكنر" ${data.asset_type === 'حوض سكنر' ? 'selected' : ''}>حوض سكنر</option>
-                        <option value="مرشح زلطي" ${data.asset_type === 'مرشح زلطي' ? 'selected' : ''}>مرشح زلطي</option>
-                        <option value="مروحة تهوية" ${data.asset_type === 'مروحة تهوية' ? 'selected' : ''}>مروحة تهوية</option>
-                        <option value="جهاز تحكم كلور" ${data.asset_type === 'جهاز تحكم كلور' ? 'selected' : ''}>جهاز تحكم كلور</option>
-                        <option value="نافخ هواء" ${data.asset_type === 'نافخ هواء' ? 'selected' : ''}>نافخ هواء</option>
-                        <option value="ضاغط هواء" ${data.asset_type === 'ضاغط هواء' ? 'selected' : ''}>ضاغط هواء</option>
-                        <option value="ونش" ${data.asset_type === 'ونش' ? 'selected' : ''}>ونش</option>
-                        <option value="مشحمة كهربائية" ${data.asset_type === 'مشحمة كهربائية' ? 'selected' : ''}>مشحمة كهربائية</option>
-                    </select></div>
-                </div>
-                <div class="form-group"><label>وصف الأصل</label><textarea id="description" rows="2">${data.description || ''}</textarea></div>
-                <div class="form-group"><label>ملاحظات</label><textarea id="notes" rows="2">${data.notes || ''}</textarea></div>
-            `;
-        } else if (type === 'buildings') {
-            return `
-                <div class="form-row">
-                    <div class="form-group"><label>رقم المبنى *</label><input type="text" id="building_number" value="${data.building_number || ''}" required></div>
-                    <div class="form-group"><label>اسم المبنى</label><input type="text" id="building_name" value="${data.building_name || ''}"></div>
-                </div>
-                <div class="form-group"><label>وصف المبنى</label><textarea id="description" rows="2">${data.description || ''}</textarea></div>
-                <div class="form-group"><label>ملاحظات</label><textarea id="notes" rows="2">${data.notes || ''}</textarea></div>
-            `;
-        }
-        return '<div class="form-group"><label>لا توجد حقول</label></div>';
-    }
-    
+
     // ========== عرض الجدول ==========
     function renderTable() {
         const container = document.getElementById('assetsList');
@@ -764,18 +544,133 @@ async function loadStationsSelect() {
             for (let j = 0; j < fields.length; j++) {
                 let val = item[fields[j]];
                 if (val === undefined || val === null) val = '---';
-                html += `<td>${val}</td>`;
+                html += `<td class="text-center">${val}</td>`;
             }
             html += `<td class="action-buttons">
                 <button class="btn btn-sm btn-primary" onclick="editAsset(${item.id})"><i class="fas fa-edit"></i> تعديل</button>
                 <button class="btn btn-sm btn-danger" onclick="deleteAsset(${item.id})"><i class="fas fa-trash"></i> حذف</button>
-             </td>`;
+              </td>`;
             html += '发展';
         }
         html += '</tbody> </div>';
         container.innerHTML = html;
     }
-    
+
+    // ========== نماذج الإضافة ==========
+    function getFormFields(type, data = {}) {
+        if (type === 'transformers') {
+            return `
+                <div class="form-row"><div class="form-group"><label>رقم المحول *</label><input type="text" id="transformer_number" value="${data.transformer_number || ''}" required></div>
+                <div class="form-group"><label>قدرة المحول (KVA)</label><input type="number" id="rated_power_kva" step="0.01" value="${data.rated_power_kva || ''}"></div></div>
+                <div class="form-row"><div class="form-group"><label>جهد الدخول (KV)</label><input type="number" id="input_voltage_kv" step="0.01" value="${data.input_voltage_kv || ''}"></div>
+                <div class="form-group"><label>جهد الخروج (V)</label><input type="number" id="output_voltage_v" step="0.01" value="${data.output_voltage_v || ''}"></div></div>
+                <div class="form-group"><label>ملاحظات</label><textarea id="notes" rows="2">${data.notes || ''}</textarea></div>
+            `;
+        } else if (type === 'generators') {
+            return `
+                <div class="form-row"><div class="form-group"><label>رقم المولد *</label><input type="text" id="generator_number" value="${data.generator_number || ''}" required></div>
+                <div class="form-group"><label>نوع المحرك</label><input type="text" id="engine_type" value="${data.engine_type || ''}"></div></div>
+                <div class="form-row"><div class="form-group"><label>معدل السولار على الحمل (لتر/س)</label><input type="number" id="fuel_rate_with_load" step="0.01" value="${data.fuel_rate_with_load || ''}"></div>
+                <div class="form-group"><label>معدل السولار بدون حمل (لتر/س)</label><input type="number" id="fuel_rate_no_load" step="0.01" value="${data.fuel_rate_no_load || ''}"></div></div>
+                <div class="form-row"><div class="form-group"><label>كمية الزيت (لتر)</label><input type="number" id="oil_quantity" step="0.01" value="${data.oil_quantity || ''}"></div>
+                <div class="form-group"><label>نوع المولد</label><input type="text" id="generator_type" value="${data.generator_type || ''}"></div></div>
+                <div class="form-row"><div class="form-group"><label>جهد المولد (V)</label><input type="number" id="voltage_v" step="0.01" value="${data.voltage_v || ''}"></div>
+                <div class="form-group"><label>قدرة المولد (KVA)</label><input type="number" id="rated_power_kva" step="0.01" value="${data.rated_power_kva || ''}"></div></div>
+                <div class="form-row"><div class="form-group"><label>قدرة المولد (KW)</label><input type="number" id="rated_power_kw" step="0.01" value="${data.rated_power_kw || ''}"></div></div>
+                <div class="form-group"><label>ملاحظات</label><textarea id="notes" rows="2">${data.notes || ''}</textarea></div>
+            `;
+        } else if (type === 'panels') {
+            return `
+                <div class="form-row"><div class="form-group"><label>رقم اللوحة *</label><input type="text" id="panel_number" value="${data.panel_number || ''}" required></div>
+                <div class="form-group"><label>اسم اللوحة</label><input type="text" id="panel_name" value="${data.panel_name || ''}"></div></div>
+                <div class="form-row"><div class="form-group"><label>نوع اللوحة</label><select id="panel_type">
+                    <option value="فرعية" ${data.panel_type === 'فرعية' ? 'selected' : ''}>فرعية</option>
+                    <option value="مركزية" ${data.panel_type === 'مركزية' ? 'selected' : ''}>مركزية</option>
+                    <option value="معامل قدرة" ${data.panel_type === 'معامل قدرة' ? 'selected' : ''}>معامل قدرة</option>
+                    <option value="توزيع" ${data.panel_type === 'توزيع' ? 'selected' : ''}>توزيع</option>
+                    <option value="انارة" ${data.panel_type === 'انارة' ? 'selected' : ''}>انارة</option>
+                    <option value="تحكم اوتوماتيك" ${data.panel_type === 'تحكم اوتوماتيك' ? 'selected' : ''}>تحكم اوتوماتيك</option>
+                </select></div>
+                <div class="form-group"><label>مصدر التغذية</label><input type="text" id="power_source" value="${data.power_source || ''}"></div></div>
+                <div class="form-row"><div class="form-group"><label>جهد التغذية (V)</label><input type="number" id="supply_voltage_v" step="0.01" value="${data.supply_voltage_v || ''}"></div></div>
+                <div class="form-group"><label>وصف اللوحة</label><textarea id="description" rows="2">${data.description || ''}</textarea></div>
+                <div class="form-group"><label>ملاحظات</label><textarea id="notes" rows="2">${data.notes || ''}</textarea></div>
+            `;
+        } else if (type === 'main_pumps') {
+            return `
+                <div class="form-row"><div class="form-group"><label>رقم الطلمبة *</label><input type="text" id="pump_number" value="${data.pump_number || ''}" required></div>
+                <div class="form-group"><label>نوع الطلمبة</label><select id="pump_type">
+                    <option value="رأسية كوبلنج" ${data.pump_type === 'رأسية كوبلنج' ? 'selected' : ''}>رأسية كوبلنج</option>
+                    <option value="رأسية عامود كردان" ${data.pump_type === 'رأسية عامود كردان' ? 'selected' : ''}>رأسية عامود كردان</option>
+                    <option value="غاطس مبتل" ${data.pump_type === 'غاطس مبتل' ? 'selected' : ''}>غاطس مبتل</option>
+                    <option value="غاطس جاف" ${data.pump_type === 'غاطس جاف' ? 'selected' : ''}>غاطس جاف</option>
+                </select></div></div>
+                <div class="form-row"><div class="form-group"><label>التصرف (م³/ساعة)</label><input type="number" id="flow_rate_m3h" step="0.01" value="${data.flow_rate_m3h || ''}"></div>
+                <div class="form-group"><label>الماركة</label><input type="text" id="brand" value="${data.brand || ''}"></div></div>
+                <div class="form-row"><div class="form-group"><label>الرفع (متر)</label><input type="number" id="head_m" step="0.01" value="${data.head_m || ''}"></div>
+                <div class="form-group"><label>رقم البلي</label><input type="text" id="bearing_number" value="${data.bearing_number || ''}"></div></div>
+                <div class="form-row"><div class="form-group"><label>فتحة السحب/الطرد</label><input type="text" id="suction_discharge" value="${data.suction_discharge || ''}"></div>
+                <div class="form-group"><label>محبس السحب/الطرد</label><input type="text" id="suction_valve" value="${data.suction_valve || ''}"></div></div>
+                <div class="form-row"><div class="form-group"><label>محبس عدم الرجوع</label><input type="text" id="non_return_valve" value="${data.non_return_valve || ''}"></div>
+                <div class="form-group"><label>قدرة المحرك (KW)</label><input type="number" id="motor_power_kw" step="0.01" value="${data.motor_power_kw || ''}"></div></div>
+                <div class="form-row"><div class="form-group"><label>عدد لفات المحرك (RPM)</label><input type="number" id="motor_rpm" value="${data.motor_rpm || ''}"></div></div>
+                <div class="form-group"><label>وصف</label><textarea id="description" rows="2">${data.description || ''}</textarea></div>
+                <div class="form-group"><label>ملاحظات</label><textarea id="notes" rows="2">${data.notes || ''}</textarea></div>
+            `;
+        } else if (type === 'sub_pumps') {
+            return `
+                <div class="form-row"><div class="form-group"><label>رقم الطلمبة *</label><input type="text" id="pump_number" value="${data.pump_number || ''}" required></div>
+                <div class="form-group"><label>نوع الطلمبة</label><select id="pump_type">
+                    <option value="غاطس" ${data.pump_type === 'غاطس' ? 'selected' : ''}>غاطس</option>
+                    <option value="حبس جلندات" ${data.pump_type === 'حبس جلندات' ? 'selected' : ''}>حبس جلندات</option>
+                    <option value="حمأة" ${data.pump_type === 'حمأة' ? 'selected' : ''}>حمأة</option>
+                    <option value="تصافي" ${data.pump_type === 'تصافي' ? 'selected' : ''}>تصافي</option>
+                    <option value="مياه معادة" ${data.pump_type === 'مياه معادة' ? 'selected' : ''}>مياه معادة</option>
+                    <option value="بوستر" ${data.pump_type === 'بوستر' ? 'selected' : ''}>بوستر</option>
+                    <option value="سولار" ${data.pump_type === 'سولار' ? 'selected' : ''}>سولار</option>
+                    <option value="اطفاء حريق" ${data.pump_type === 'اطفاء حريق' ? 'selected' : ''}>اطفاء حريق</option>
+                </select></div></div>
+                <div class="form-row"><div class="form-group"><label>التصرف (م³/ساعة)</label><input type="number" id="flow_rate_m3h" step="0.01" value="${data.flow_rate_m3h || ''}"></div>
+                <div class="form-group"><label>الرفع (متر)</label><input type="number" id="head_m" step="0.01" value="${data.head_m || ''}"></div></div>
+                <div class="form-row"><div class="form-group"><label>قدرة المحرك (KW)</label><input type="number" id="motor_power_kw" step="0.01" value="${data.motor_power_kw || ''}"></div>
+                <div class="form-group"><label>سرعة المحرك (RPM)</label><input type="number" id="motor_rpm" value="${data.motor_rpm || ''}"></div></div>
+                <div class="form-group"><label>وصف</label><textarea id="description" rows="2">${data.description || ''}</textarea></div>
+                <div class="form-group"><label>ملاحظات</label><textarea id="notes" rows="2">${data.notes || ''}</textarea></div>
+            `;
+        } else if (type === 'other_assets') {
+            return `
+                <div class="form-row"><div class="form-group"><label>رقم الأصل *</label><input type="text" id="asset_number" value="${data.asset_number || ''}" required></div>
+                <div class="form-group"><label>نوع الأصل</label><select id="asset_type">
+                    <option value="مطرقة مائية" ${data.asset_type === 'مطرقة مائية' ? 'selected' : ''}>مطرقة مائية</option>
+                    <option value="جهاز قياس تصرف" ${data.asset_type === 'جهاز قياس تصرف' ? 'selected' : ''}>جهاز قياس تصرف</option>
+                    <option value="جهاز قياس منسوب" ${data.asset_type === 'جهاز قياس منسوب' ? 'selected' : ''}>جهاز قياس منسوب</option>
+                    <option value="مصفي ميكانيكية" ${data.asset_type === 'مصفي ميكانيكية' ? 'selected' : ''}>مصفي ميكانيكية</option>
+                    <option value="عربة ازالة رمال" ${data.asset_type === 'عربة ازالة رمال' ? 'selected' : ''}>عربة ازالة رمال</option>
+                    <option value="حوض ترسيب ابتدائي" ${data.asset_type === 'حوض ترسيب ابتدائي' ? 'selected' : ''}>حوض ترسيب ابتدائي</option>
+                    <option value="حوض ترسيب نهائي" ${data.asset_type === 'حوض ترسيب نهائي' ? 'selected' : ''}>حوض ترسيب نهائي</option>
+                    <option value="حوض سكنر" ${data.asset_type === 'حوض سكنر' ? 'selected' : ''}>حوض سكنر</option>
+                    <option value="مرشح زلطي" ${data.asset_type === 'مرشح زلطي' ? 'selected' : ''}>مرشح زلطي</option>
+                    <option value="مروحة تهوية" ${data.asset_type === 'مروحة تهوية' ? 'selected' : ''}>مروحة تهوية</option>
+                    <option value="جهاز تحكم كلور" ${data.asset_type === 'جهاز تحكم كلور' ? 'selected' : ''}>جهاز تحكم كلور</option>
+                    <option value="نافخ هواء" ${data.asset_type === 'نافخ هواء' ? 'selected' : ''}>نافخ هواء</option>
+                    <option value="ضاغط هواء" ${data.asset_type === 'ضاغط هواء' ? 'selected' : ''}>ضاغط هواء</option>
+                    <option value="ونش" ${data.asset_type === 'ونش' ? 'selected' : ''}>ونش</option>
+                    <option value="مشحمة كهربائية" ${data.asset_type === 'مشحمة كهربائية' ? 'selected' : ''}>مشحمة كهربائية</option>
+                </select></div></div>
+                <div class="form-group"><label>وصف الأصل</label><textarea id="description" rows="2">${data.description || ''}</textarea></div>
+                <div class="form-group"><label>ملاحظات</label><textarea id="notes" rows="2">${data.notes || ''}</textarea></div>
+            `;
+        } else if (type === 'buildings') {
+            return `
+                <div class="form-row"><div class="form-group"><label>رقم المبنى *</label><input type="text" id="building_number" value="${data.building_number || ''}" required></div>
+                <div class="form-group"><label>اسم المبنى</label><input type="text" id="building_name" value="${data.building_name || ''}"></div></div>
+                <div class="form-group"><label>وصف المبنى</label><textarea id="description" rows="2">${data.description || ''}</textarea></div>
+                <div class="form-group"><label>ملاحظات</label><textarea id="notes" rows="2">${data.notes || ''}</textarea></div>
+            `;
+        }
+        return '<div class="form-group"><label>لا توجد حقول</label></div>';
+    }
+
     // ========== دوال المودال ==========
     function closeModal() {
         document.getElementById('assetModal').classList.remove('active');
@@ -881,6 +776,7 @@ async function loadStationsSelect() {
         });
     });
     
+    // تشغيل
     loadStationsSelect();
 </script>
 </body>
