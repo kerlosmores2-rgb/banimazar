@@ -128,7 +128,51 @@
         </div>
     </div>
 </div>
-
+<!-- نافذة إضافة/تعديل محطة -->
+<div id="stationModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="modalTitle">إضافة محطة جديدة</h3>
+            <span class="modal-close" onclick="closeModal()">&times;</span>
+        </div>
+        <form id="stationForm">
+            <input type="hidden" id="stationId">
+            <div class="form-group">
+                <label>اسم المحطة *</label>
+                <input type="text" id="stationName" required>
+            </div>
+            <div class="form-group">
+                <label>كود المحطة</label>
+                <input type="text" id="stationCode">
+            </div>
+            <div class="form-group">
+                <label>الموقع</label>
+                <input type="text" id="stationLocation">
+            </div>
+            <div class="form-group">
+                <label>السعة (م³/يوم)</label>
+                <input type="number" id="stationCapacity" step="0.01">
+            </div>
+            <div class="form-group">
+                <label>الحالة</label>
+                <select id="stationStatus">
+                    <option value="active">✅ نشطة</option>
+                    <option value="maintenance">🔧 تحت الصيانة</option>
+                    <option value="inactive">⭕ متوقفة</option>
+                    <option value="emergency">⚠️ طوارئ</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>ملاحظات</label>
+                <textarea id="stationNotes" rows="3"></textarea>
+            </div>
+            <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+                <button type="button" class="btn" onclick="closeModal()" style="background:#6c757d;">إلغاء</button>
+                <button type="submit" class="btn btn-primary">💾 حفظ</button>
+            </div>
+        </form>
+    </div>
+</div>
 <!-- Modal إضافة/تعديل محطة -->
 <div id="stationModal" class="modal">
     <div class="modal-content">
