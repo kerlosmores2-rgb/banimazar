@@ -241,7 +241,7 @@
             <span class="modal-close" onclick="closeModal()">&times;</span>
         </div>
         <form id="assetForm">
-            <input type="hidden" id="assetId">
+            <input type="hidden" id="recordId">
             <div id="formFields"></div>
             <div class="form-actions">
                 <button type="button" class="btn" onclick="closeModal()" style="background:#6c757d;">إلغاء</button>
@@ -267,10 +267,7 @@
     // ========== تحميل قائمة المحطات ==========
     async function loadStationsSelect() {
         const select = document.getElementById('stationSelect');
-        if (!select) {
-            console.error('القائمة غير موجودة');
-            return;
-        }
+        if (!select) return;
         
         select.innerHTML = '<option value="">-- جاري التحميل --</option>';
         
@@ -280,11 +277,7 @@
                 .select('id, station_name, station_code')
                 .order('station_name');
             
-            if (error) {
-                console.error('خطأ:', error);
-                select.innerHTML = '<option value="">-- خطأ في التحميل --</option>';
-                return;
-            }
+            if (error) throw error;
             
             stationsList = data || [];
             
@@ -302,7 +295,73 @@
             
         } catch (error) {
             console.error('خطأ:', error);
-            select.innerHTML = '<option value="">-- خطأ في الاتصال --</option>';
+            select.innerHTML = '<option value="">-- خطأ في التحميل --</option>';
+        }
+    }
+
+    // ========== دوال API عامة ==========
+    async function getTableData(tableName) {
+        try {
+            const { data, error } = await supabaseClient
+                .from(tableName)
+                .select('*')
+                .eq('station_id', currentStationId)
+                .order('id', { ascending: false });
+            if (error) throw error;
+            return { success: true, data: data || [] };
+        } catch (error) {
+            console.error('Error getting data from', tableName, error);
+            return { success: false, message: error.message, data: [] };
+        }
+    }
+
+    async function createTableRecord(tableName, data) {
+        try {
+            const newData = { 
+                ...data, 
+                station_id: currentStationId, 
+                created_at: new Date().toISOString(), 
+                updated_at: new Date().toISOString() 
+            };
+            const { data: result, error } = await supabaseClient
+                .from(tableName)
+                .insert([newData])
+                .select();
+            if (error) throw error;
+            return { success: true, data: result[0], message: '✅ تم الإضافة بنجاح' };
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
+    }
+
+    async function updateTableRecord(tableName, id, data) {
+        try {
+            const updateData = { 
+                ...data, 
+                updated_at: new Date().toISOString() 
+            };
+            const { data: result, error } = await supabaseClient
+                .from(tableName)
+                .update(updateData)
+                .eq('id', id)
+                .select();
+            if (error) throw error;
+            return { success: true, data: result[0], message: '✅ تم التحديث بنجاح' };
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
+    }
+
+    async function deleteTableRecord(tableName, id) {
+        try {
+            const { error } = await supabaseClient
+                .from(tableName)
+                .delete()
+                .eq('id', id);
+            if (error) throw error;
+            return { success: true, message: '✅ تم الحذف بنجاح' };
+        } catch (error) {
+            return { success: false, message: error.message };
         }
     }
 
@@ -315,189 +374,22 @@
         
         document.getElementById('assetsList').innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i><p>جاري التحميل...</p></div>';
         
-        try {
-            let result;
-            if (currentAssetType === 'transformers') result = await getTransformers();
-            else if (currentAssetType === 'generators') result = await getGeneratorsData();
-            else if (currentAssetType === 'panels') result = await getElectricalPanels();
-            else if (currentAssetType === 'main_pumps') result = await getMainPumpsData();
-            else if (currentAssetType === 'sub_pumps') result = await getSubPumpsData();
-            else if (currentAssetType === 'other_assets') result = await getOtherAssetsData();
-            else if (currentAssetType === 'buildings') result = await getBuildingsData();
-            else result = { success: true, data: [] };
-            
-            if (result.success) {
-                assetsData = result.data || [];
-                renderTable();
-            } else {
-                document.getElementById('assetsList').innerHTML = `<div class="no-data">${result.message}</div>`;
-            }
-        } catch (error) {
-            console.error('Load assets error:', error);
-            document.getElementById('assetsList').innerHTML = '<div class="no-data">خطأ في تحميل البيانات</div>';
+        let result;
+        if (currentAssetType === 'transformers') result = await getTableData('transformers');
+        else if (currentAssetType === 'generators') result = await getTableData('generators');
+        else if (currentAssetType === 'panels') result = await getTableData('electrical_panels');
+        else if (currentAssetType === 'main_pumps') result = await getTableData('main_pumps');
+        else if (currentAssetType === 'sub_pumps') result = await getTableData('sub_pumps');
+        else if (currentAssetType === 'other_assets') result = await getTableData('other_assets');
+        else if (currentAssetType === 'buildings') result = await getTableData('buildings');
+        else result = { success: true, data: [] };
+        
+        if (result.success) {
+            assetsData = result.data || [];
+            renderTable();
+        } else {
+            document.getElementById('assetsList').innerHTML = `<div class="no-data">${result.message}</div>`;
         }
-    }
-
-    // ========== دوال API الأساسية (مبسطة) ==========
-    async function getTransformers() {
-        const { data, error } = await supabaseClient.from('transformers').select('*').eq('station_id', currentStationId).order('transformer_number');
-        if (error) return { success: false, message: error.message, data: [] };
-        return { success: true, data: data || [] };
-    }
-    async function createTransformer(data) {
-        const newData = { ...data, station_id: currentStationId, created_at: new Date(), updated_at: new Date() };
-        const { data: result, error } = await supabaseClient.from('transformers').insert([newData]).select();
-        if (error) return { success: false, message: error.message };
-        return { success: true, data: result[0], message: '✅ تم إضافة المحول' };
-    }
-    async function updateTransformer(id, data) {
-        const updateData = { ...data, updated_at: new Date() };
-        const { data: result, error } = await supabaseClient.from('transformers').update(updateData).eq('id', id).select();
-        if (error) return { success: false, message: error.message };
-        return { success: true, data: result[0], message: '✅ تم تحديث المحول' };
-    }
-    async function deleteTransformer(id) {
-        const { error } = await supabaseClient.from('transformers').delete().eq('id', id);
-        if (error) return { success: false, message: error.message };
-        return { success: true, message: '✅ تم حذف المحول' };
-    }
-
-    async function getGeneratorsData() {
-        const { data, error } = await supabaseClient.from('generators').select('*').eq('station_id', currentStationId).order('generator_number');
-        if (error) return { success: false, message: error.message, data: [] };
-        return { success: true, data: data || [] };
-    }
-    async function createGenerator(data) {
-        const newData = { ...data, station_id: currentStationId, created_at: new Date(), updated_at: new Date() };
-        const { data: result, error } = await supabaseClient.from('generators').insert([newData]).select();
-        if (error) return { success: false, message: error.message };
-        return { success: true, data: result[0], message: '✅ تم إضافة المولد' };
-    }
-    async function updateGenerator(id, data) {
-        const updateData = { ...data, updated_at: new Date() };
-        const { data: result, error } = await supabaseClient.from('generators').update(updateData).eq('id', id).select();
-        if (error) return { success: false, message: error.message };
-        return { success: true, data: result[0], message: '✅ تم تحديث المولد' };
-    }
-    async function deleteGenerator(id) {
-        const { error } = await supabaseClient.from('generators').delete().eq('id', id);
-        if (error) return { success: false, message: error.message };
-        return { success: true, message: '✅ تم حذف المولد' };
-    }
-
-    async function getElectricalPanels() {
-        const { data, error } = await supabaseClient.from('electrical_panels').select('*').eq('station_id', currentStationId).order('panel_number');
-        if (error) return { success: false, message: error.message, data: [] };
-        return { success: true, data: data || [] };
-    }
-    async function createElectricalPanel(data) {
-        const newData = { ...data, station_id: currentStationId, created_at: new Date(), updated_at: new Date() };
-        const { data: result, error } = await supabaseClient.from('electrical_panels').insert([newData]).select();
-        if (error) return { success: false, message: error.message };
-        return { success: true, data: result[0], message: '✅ تم إضافة اللوحة' };
-    }
-    async function updateElectricalPanel(id, data) {
-        const updateData = { ...data, updated_at: new Date() };
-        const { data: result, error } = await supabaseClient.from('electrical_panels').update(updateData).eq('id', id).select();
-        if (error) return { success: false, message: error.message };
-        return { success: true, data: result[0], message: '✅ تم تحديث اللوحة' };
-    }
-    async function deleteElectricalPanel(id) {
-        const { error } = await supabaseClient.from('electrical_panels').delete().eq('id', id);
-        if (error) return { success: false, message: error.message };
-        return { success: true, message: '✅ تم حذف اللوحة' };
-    }
-
-    async function getMainPumpsData() {
-        const { data, error } = await supabaseClient.from('main_pumps').select('*').eq('station_id', currentStationId).order('pump_number');
-        if (error) return { success: false, message: error.message, data: [] };
-        return { success: true, data: data || [] };
-    }
-    async function createMainPump(data) {
-        const newData = { ...data, station_id: currentStationId, created_at: new Date(), updated_at: new Date() };
-        const { data: result, error } = await supabaseClient.from('main_pumps').insert([newData]).select();
-        if (error) return { success: false, message: error.message };
-        return { success: true, data: result[0], message: '✅ تم إضافة الطلمبة' };
-    }
-    async function updateMainPump(id, data) {
-        const updateData = { ...data, updated_at: new Date() };
-        const { data: result, error } = await supabaseClient.from('main_pumps').update(updateData).eq('id', id).select();
-        if (error) return { success: false, message: error.message };
-        return { success: true, data: result[0], message: '✅ تم تحديث الطلمبة' };
-    }
-    async function deleteMainPump(id) {
-        const { error } = await supabaseClient.from('main_pumps').delete().eq('id', id);
-        if (error) return { success: false, message: error.message };
-        return { success: true, message: '✅ تم حذف الطلمبة' };
-    }
-
-    async function getSubPumpsData() {
-        const { data, error } = await supabaseClient.from('sub_pumps').select('*').eq('station_id', currentStationId).order('pump_number');
-        if (error) return { success: false, message: error.message, data: [] };
-        return { success: true, data: data || [] };
-    }
-    async function createSubPump(data) {
-        const newData = { ...data, station_id: currentStationId, created_at: new Date(), updated_at: new Date() };
-        const { data: result, error } = await supabaseClient.from('sub_pumps').insert([newData]).select();
-        if (error) return { success: false, message: error.message };
-        return { success: true, data: result[0], message: '✅ تم إضافة الطلمبة الفرعية' };
-    }
-    async function updateSubPump(id, data) {
-        const updateData = { ...data, updated_at: new Date() };
-        const { data: result, error } = await supabaseClient.from('sub_pumps').update(updateData).eq('id', id).select();
-        if (error) return { success: false, message: error.message };
-        return { success: true, data: result[0], message: '✅ تم تحديث الطلمبة الفرعية' };
-    }
-    async function deleteSubPump(id) {
-        const { error } = await supabaseClient.from('sub_pumps').delete().eq('id', id);
-        if (error) return { success: false, message: error.message };
-        return { success: true, message: '✅ تم حذف الطلمبة الفرعية' };
-    }
-
-    async function getOtherAssetsData() {
-        const { data, error } = await supabaseClient.from('other_assets').select('*').eq('station_id', currentStationId).order('asset_number');
-        if (error) return { success: false, message: error.message, data: [] };
-        return { success: true, data: data || [] };
-    }
-    async function createOtherAsset(data) {
-        const newData = { ...data, station_id: currentStationId, created_at: new Date(), updated_at: new Date() };
-        const { data: result, error } = await supabaseClient.from('other_assets').insert([newData]).select();
-        if (error) return { success: false, message: error.message };
-        return { success: true, data: result[0], message: '✅ تم إضافة الأصل' };
-    }
-    async function updateOtherAsset(id, data) {
-        const updateData = { ...data, updated_at: new Date() };
-        const { data: result, error } = await supabaseClient.from('other_assets').update(updateData).eq('id', id).select();
-        if (error) return { success: false, message: error.message };
-        return { success: true, data: result[0], message: '✅ تم تحديث الأصل' };
-    }
-    async function deleteOtherAsset(id) {
-        const { error } = await supabaseClient.from('other_assets').delete().eq('id', id);
-        if (error) return { success: false, message: error.message };
-        return { success: true, message: '✅ تم حذف الأصل' };
-    }
-
-    async function getBuildingsData() {
-        const { data, error } = await supabaseClient.from('buildings').select('*').eq('station_id', currentStationId).order('building_number');
-        if (error) return { success: false, message: error.message, data: [] };
-        return { success: true, data: data || [] };
-    }
-    async function createBuilding(data) {
-        const newData = { ...data, station_id: currentStationId, created_at: new Date(), updated_at: new Date() };
-        const { data: result, error } = await supabaseClient.from('buildings').insert([newData]).select();
-        if (error) return { success: false, message: error.message };
-        return { success: true, data: result[0], message: '✅ تم إضافة المبنى' };
-    }
-    async function updateBuilding(id, data) {
-        const updateData = { ...data, updated_at: new Date() };
-        const { data: result, error } = await supabaseClient.from('buildings').update(updateData).eq('id', id).select();
-        if (error) return { success: false, message: error.message };
-        return { success: true, data: result[0], message: '✅ تم تحديث المبنى' };
-    }
-    async function deleteBuilding(id) {
-        const { error } = await supabaseClient.from('buildings').delete().eq('id', id);
-        if (error) return { success: false, message: error.message };
-        return { success: true, message: '✅ تم حذف المبنى' };
     }
 
     // ========== عرض الجدول ==========
@@ -544,7 +436,7 @@
             for (let j = 0; j < fields.length; j++) {
                 let val = item[fields[j]];
                 if (val === undefined || val === null) val = '---';
-                html += `<td class="text-center">${val}</td>`;
+                html += `<td>${val}</td>`;
             }
             html += `<td class="action-buttons">
                 <button class="btn btn-sm btn-primary" onclick="editAsset(${item.id})"><i class="fas fa-edit"></i> تعديل</button>
@@ -685,6 +577,7 @@
         currentEditId = id;
         const fieldsHtml = getFormFields(currentAssetType, item);
         document.getElementById('formFields').innerHTML = fieldsHtml;
+        document.getElementById('recordId').value = id;
         document.getElementById('modalTitle').innerHTML = `<i class="fas fa-edit"></i> تعديل ${getTypeTitle()}`;
         document.getElementById('assetModal').classList.add('active');
     };
@@ -692,13 +585,13 @@
     window.deleteAsset = async (id) => {
         if (!confirm('⚠️ هل أنت متأكد من حذف هذا الأصل؟')) return;
         let result;
-        if (currentAssetType === 'transformers') result = await deleteTransformer(id);
-        else if (currentAssetType === 'generators') result = await deleteGenerator(id);
-        else if (currentAssetType === 'panels') result = await deleteElectricalPanel(id);
-        else if (currentAssetType === 'main_pumps') result = await deleteMainPump(id);
-        else if (currentAssetType === 'sub_pumps') result = await deleteSubPump(id);
-        else if (currentAssetType === 'other_assets') result = await deleteOtherAsset(id);
-        else if (currentAssetType === 'buildings') result = await deleteBuilding(id);
+        if (currentAssetType === 'transformers') result = await deleteTableRecord('transformers', id);
+        else if (currentAssetType === 'generators') result = await deleteTableRecord('generators', id);
+        else if (currentAssetType === 'panels') result = await deleteTableRecord('electrical_panels', id);
+        else if (currentAssetType === 'main_pumps') result = await deleteTableRecord('main_pumps', id);
+        else if (currentAssetType === 'sub_pumps') result = await deleteTableRecord('sub_pumps', id);
+        else if (currentAssetType === 'other_assets') result = await deleteTableRecord('other_assets', id);
+        else if (currentAssetType === 'buildings') result = await deleteTableRecord('buildings', id);
         else return;
         if (result.success) {
             loadAssets();
@@ -722,6 +615,7 @@
     document.getElementById('addAssetBtn').addEventListener('click', () => {
         if (!currentStationId) { alert('⚠️ الرجاء اختيار المحطة أولاً'); return; }
         currentEditId = null;
+        document.getElementById('recordId').value = '';
         const fieldsHtml = getFormFields(currentAssetType, {});
         document.getElementById('formFields').innerHTML = fieldsHtml;
         document.getElementById('modalTitle').innerHTML = `<i class="fas fa-plus-circle"></i> إضافة ${getTypeTitle()}`;
@@ -732,25 +626,25 @@
         e.preventDefault();
         const formData = {};
         const inputs = document.querySelectorAll('#assetForm input, #assetForm select, #assetForm textarea');
-        inputs.forEach(input => { if (input.id) formData[input.id] = input.value; });
+        inputs.forEach(input => { if (input.id && input.id !== 'recordId') formData[input.id] = input.value; });
         
         let result;
         if (currentEditId) {
-            if (currentAssetType === 'transformers') result = await updateTransformer(currentEditId, formData);
-            else if (currentAssetType === 'generators') result = await updateGenerator(currentEditId, formData);
-            else if (currentAssetType === 'panels') result = await updateElectricalPanel(currentEditId, formData);
-            else if (currentAssetType === 'main_pumps') result = await updateMainPump(currentEditId, formData);
-            else if (currentAssetType === 'sub_pumps') result = await updateSubPump(currentEditId, formData);
-            else if (currentAssetType === 'other_assets') result = await updateOtherAsset(currentEditId, formData);
-            else if (currentAssetType === 'buildings') result = await updateBuilding(currentEditId, formData);
+            if (currentAssetType === 'transformers') result = await updateTableRecord('transformers', currentEditId, formData);
+            else if (currentAssetType === 'generators') result = await updateTableRecord('generators', currentEditId, formData);
+            else if (currentAssetType === 'panels') result = await updateTableRecord('electrical_panels', currentEditId, formData);
+            else if (currentAssetType === 'main_pumps') result = await updateTableRecord('main_pumps', currentEditId, formData);
+            else if (currentAssetType === 'sub_pumps') result = await updateTableRecord('sub_pumps', currentEditId, formData);
+            else if (currentAssetType === 'other_assets') result = await updateTableRecord('other_assets', currentEditId, formData);
+            else if (currentAssetType === 'buildings') result = await updateTableRecord('buildings', currentEditId, formData);
         } else {
-            if (currentAssetType === 'transformers') result = await createTransformer(formData);
-            else if (currentAssetType === 'generators') result = await createGenerator(formData);
-            else if (currentAssetType === 'panels') result = await createElectricalPanel(formData);
-            else if (currentAssetType === 'main_pumps') result = await createMainPump(formData);
-            else if (currentAssetType === 'sub_pumps') result = await createSubPump(formData);
-            else if (currentAssetType === 'other_assets') result = await createOtherAsset(formData);
-            else if (currentAssetType === 'buildings') result = await createBuilding(formData);
+            if (currentAssetType === 'transformers') result = await createTableRecord('transformers', formData);
+            else if (currentAssetType === 'generators') result = await createTableRecord('generators', formData);
+            else if (currentAssetType === 'panels') result = await createTableRecord('electrical_panels', formData);
+            else if (currentAssetType === 'main_pumps') result = await createTableRecord('main_pumps', formData);
+            else if (currentAssetType === 'sub_pumps') result = await createTableRecord('sub_pumps', formData);
+            else if (currentAssetType === 'other_assets') result = await createTableRecord('other_assets', formData);
+            else if (currentAssetType === 'buildings') result = await createTableRecord('buildings', formData);
         }
         if (result && result.success) {
             closeModal();
