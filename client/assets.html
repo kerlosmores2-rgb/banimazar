@@ -13,10 +13,7 @@
             color: #fff;
             padding: 15px;
         }
-        .assets-container {
-            width: 100%;
-            max-width: 100%;
-        }
+        .assets-container { width: 100%; max-width: 100%; }
         .page-header {
             display: flex;
             justify-content: space-between;
@@ -75,18 +72,9 @@
             gap: 8px;
             font-size: 0.85rem;
         }
-        .btn-primary {
-            background: #00d4ff;
-            color: #1a1a2e;
-        }
-        .btn-danger {
-            background: #dc3545;
-            color: white;
-        }
-        .btn-sm {
-            padding: 5px 12px;
-            font-size: 0.7rem;
-        }
+        .btn-primary { background: #00d4ff; color: #1a1a2e; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-sm { padding: 5px 12px; font-size: 0.7rem; }
         .data-table {
             width: 100%;
             border-collapse: collapse;
@@ -101,10 +89,7 @@
             border-bottom: 1px solid rgba(255,255,255,0.1);
             font-size: 0.8rem;
         }
-        .data-table th {
-            background: rgba(0,212,255,0.2);
-            color: #00d4ff;
-        }
+        .data-table th { background: rgba(0,212,255,0.2); color: #00d4ff; }
         .modal {
             display: none;
             position: fixed;
@@ -117,9 +102,7 @@
             justify-content: center;
             align-items: center;
         }
-        .modal.active {
-            display: flex;
-        }
+        .modal.active { display: flex; }
         .modal-content {
             background: #1e2a3a;
             border-radius: 20px;
@@ -137,24 +120,10 @@
             padding-bottom: 10px;
             border-bottom: 1px solid rgba(255,255,255,0.1);
         }
-        .modal-header h3 {
-            color: #00d4ff;
-            font-size: 1.1rem;
-        }
-        .modal-close {
-            font-size: 1.5rem;
-            cursor: pointer;
-            color: #dc3545;
-        }
-        .form-group {
-            margin-bottom: 12px;
-        }
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-size: 0.8rem;
-            color: #00d4ff;
-        }
+        .modal-header h3 { color: #00d4ff; font-size: 1.1rem; }
+        .modal-close { font-size: 1.5rem; cursor: pointer; color: #dc3545; }
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; margin-bottom: 5px; font-size: 0.8rem; color: #00d4ff; }
         .form-group input, .form-group select, .form-group textarea {
             width: 100%;
             padding: 8px 12px;
@@ -175,32 +144,13 @@
             justify-content: flex-end;
             margin-top: 20px;
         }
-        .loading-spinner {
-            text-align: center;
-            padding: 40px;
-            color: #00d4ff;
-        }
-        .no-data {
-            text-align: center;
-            padding: 40px;
-            color: rgba(255,255,255,0.5);
-        }
-        .table-responsive {
-            overflow-x: auto;
-        }
-        .action-buttons {
-            display: flex;
-            gap: 6px;
-            flex-wrap: wrap;
-        }
+        .loading-spinner { text-align: center; padding: 40px; color: #00d4ff; }
+        .no-data { text-align: center; padding: 40px; color: rgba(255,255,255,0.5); }
+        .table-responsive { overflow-x: auto; }
+        .action-buttons { display: flex; gap: 6px; flex-wrap: wrap; }
         @media (max-width: 768px) {
-            .page-header {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            .station-select {
-                width: 100%;
-            }
+            .page-header { flex-direction: column; align-items: stretch; }
+            .station-select { width: 100%; }
         }
     </style>
 </head>
@@ -253,7 +203,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-    // ========== إعدادات Supabase ==========
     const SUPABASE_URL = 'https://jvfbkoaeugkeoiccvnkq.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_n64Hnhuruc3Oeolj-Uwg9g_tu-otJlZ';
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -264,71 +213,44 @@
     let assetsData = [];
     const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
 
-    // ========== تحميل قائمة المحطات ==========
     async function loadStationsSelect() {
         const select = document.getElementById('stationSelect');
         if (!select) return;
-        
         select.innerHTML = '<option value="">-- جاري التحميل --</option>';
-        
         try {
-            const { data, error } = await supabaseClient
-                .from('stations')
-                .select('id, station_name, station_code')
-                .order('station_name');
-            
+            const { data, error } = await supabaseClient.from('stations').select('id, station_name, station_code').order('station_name');
             if (error) throw error;
-            
             stationsList = data || [];
-            
             if (stationsList.length === 0) {
                 select.innerHTML = '<option value="">-- لا توجد محطات --</option>';
                 return;
             }
-            
             select.innerHTML = '<option value="">-- اختر المحطة --</option>';
             stationsList.forEach(s => {
                 select.innerHTML += `<option value="${s.id}">${s.station_name} (${s.station_code || s.id})</option>`;
             });
-            
-            console.log('تم تحميل', stationsList.length, 'محطة');
-            
         } catch (error) {
-            console.error('خطأ:', error);
-            select.innerHTML = '<option value="">-- خطأ في التحميل --</option>';
+            console.error(error);
+            select.innerHTML = '<option value="">-- خطأ --</option>';
         }
     }
 
-    // ========== دوال API عامة ==========
     async function getTableData(tableName) {
         try {
-            const { data, error } = await supabaseClient
-                .from(tableName)
-                .select('*')
-                .eq('station_id', currentStationId)
-                .order('id', { ascending: false });
+            const { data, error } = await supabaseClient.from(tableName).select('*').eq('station_id', currentStationId).order('id', { ascending: false });
             if (error) throw error;
             return { success: true, data: data || [] };
         } catch (error) {
-            console.error('Error getting data from', tableName, error);
             return { success: false, message: error.message, data: [] };
         }
     }
 
     async function createTableRecord(tableName, data) {
         try {
-            const newData = { 
-                ...data, 
-                station_id: currentStationId, 
-                created_at: new Date().toISOString(), 
-                updated_at: new Date().toISOString() 
-            };
-            const { data: result, error } = await supabaseClient
-                .from(tableName)
-                .insert([newData])
-                .select();
+            const newData = { ...data, station_id: currentStationId, created_at: new Date().toISOString(), updated_at: new Date().toISOString() };
+            const { data: result, error } = await supabaseClient.from(tableName).insert([newData]).select();
             if (error) throw error;
-            return { success: true, data: result[0], message: '✅ تم الإضافة بنجاح' };
+            return { success: true, data: result[0], message: '✅ تم الإضافة' };
         } catch (error) {
             return { success: false, message: error.message };
         }
@@ -336,17 +258,10 @@
 
     async function updateTableRecord(tableName, id, data) {
         try {
-            const updateData = { 
-                ...data, 
-                updated_at: new Date().toISOString() 
-            };
-            const { data: result, error } = await supabaseClient
-                .from(tableName)
-                .update(updateData)
-                .eq('id', id)
-                .select();
+            const updateData = { ...data, updated_at: new Date().toISOString() };
+            const { data: result, error } = await supabaseClient.from(tableName).update(updateData).eq('id', id).select();
             if (error) throw error;
-            return { success: true, data: result[0], message: '✅ تم التحديث بنجاح' };
+            return { success: true, data: result[0], message: '✅ تم التحديث' };
         } catch (error) {
             return { success: false, message: error.message };
         }
@@ -354,24 +269,19 @@
 
     async function deleteTableRecord(tableName, id) {
         try {
-            const { error } = await supabaseClient
-                .from(tableName)
-                .delete()
-                .eq('id', id);
+            const { error } = await supabaseClient.from(tableName).delete().eq('id', id);
             if (error) throw error;
-            return { success: true, message: '✅ تم الحذف بنجاح' };
+            return { success: true, message: '✅ تم الحذف' };
         } catch (error) {
             return { success: false, message: error.message };
         }
     }
 
-    // ========== تحميل الأصول ==========
     async function loadAssets() {
         if (!currentStationId) {
             document.getElementById('assetsList').innerHTML = '<div class="no-data">الرجاء اختيار محطة أولاً</div>';
             return;
         }
-        
         document.getElementById('assetsList').innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i><p>جاري التحميل...</p></div>';
         
         let result;
@@ -392,17 +302,14 @@
         }
     }
 
-    // ========== عرض الجدول ==========
     function renderTable() {
         const container = document.getElementById('assetsList');
         if (!assetsData.length) {
-            container.innerHTML = '<div class="no-data"><i class="fas fa-database"></i> لا توجد بيانات</div>';
+            container.innerHTML = '<div class="no-data">لا توجد بيانات</div>';
             return;
         }
         
-        let columns = [];
-        let fields = [];
-        
+        let columns = [], fields = [];
         if (currentAssetType === 'transformers') {
             columns = ['رقم المحول', 'قدرة (KVA)', 'جهد دخول (KV)', 'جهد خروج (V)', 'ملاحظات'];
             fields = ['transformer_number', 'rated_power_kva', 'input_voltage_kv', 'output_voltage_v', 'notes'];
@@ -426,29 +333,27 @@
             fields = ['building_number', 'building_name', 'description', 'notes'];
         }
         
-        let html = '<div class="table-responsive"><table class="data-table"><thead>发展';
-        columns.forEach(col => html += `<th>${col}</th>`);
-        html += '<th>الإجراءات</th> </thead><tbody>';
+        let html = '<div class="table-responsive"><table class="data-table"><thead><tr>';
+        columns.forEach(col => html += '<th>' + col + '</th>');
+        html += '<th>الإجراءات</th></tr></thead><tbody>';
         
         for (let i = 0; i < assetsData.length; i++) {
             const item = assetsData[i];
-            html += '发展';
+            html += '<tr>';
             for (let j = 0; j < fields.length; j++) {
                 let val = item[fields[j]];
                 if (val === undefined || val === null) val = '---';
-                html += `<td>${val}</td>`;
+                html += '<td>' + val + '</td>';
             }
-            html += `<td class="action-buttons">
-                <button class="btn btn-sm btn-primary" onclick="editAsset(${item.id})"><i class="fas fa-edit"></i> تعديل</button>
-                <button class="btn btn-sm btn-danger" onclick="deleteAsset(${item.id})"><i class="fas fa-trash"></i> حذف</button>
-              </td>`;
-            html += '发展';
+            html += '<td class="action-buttons">';
+            html += '<button class="btn btn-sm btn-primary" onclick="editAsset(' + item.id + ')"><i class="fas fa-edit"></i> تعديل</button>';
+            html += '<button class="btn btn-sm btn-danger" onclick="deleteAsset(' + item.id + ')"><i class="fas fa-trash"></i> حذف</button>';
+            html += '</td></tr>';
         }
-        html += '</tbody> </div>';
+        html += '</tbody></table></div>';
         container.innerHTML = html;
     }
 
-    // ========== نماذج الإضافة ==========
     function getFormFields(type, data = {}) {
         if (type === 'transformers') {
             return `
@@ -563,7 +468,6 @@
         return '<div class="form-group"><label>لا توجد حقول</label></div>';
     }
 
-    // ========== دوال المودال ==========
     function closeModal() {
         document.getElementById('assetModal').classList.remove('active');
     }
@@ -578,7 +482,7 @@
         const fieldsHtml = getFormFields(currentAssetType, item);
         document.getElementById('formFields').innerHTML = fieldsHtml;
         document.getElementById('recordId').value = id;
-        document.getElementById('modalTitle').innerHTML = `<i class="fas fa-edit"></i> تعديل ${getTypeTitle()}`;
+        document.getElementById('modalTitle').innerHTML = '<i class="fas fa-edit"></i> تعديل ' + getTypeTitle();
         document.getElementById('assetModal').classList.add('active');
     };
     
@@ -618,7 +522,7 @@
         document.getElementById('recordId').value = '';
         const fieldsHtml = getFormFields(currentAssetType, {});
         document.getElementById('formFields').innerHTML = fieldsHtml;
-        document.getElementById('modalTitle').innerHTML = `<i class="fas fa-plus-circle"></i> إضافة ${getTypeTitle()}`;
+        document.getElementById('modalTitle').innerHTML = '<i class="fas fa-plus-circle"></i> إضافة ' + getTypeTitle();
         document.getElementById('assetModal').classList.add('active');
     });
     
@@ -655,7 +559,6 @@
         }
     });
     
-    // ========== تهيئة الأحداث ==========
     document.getElementById('stationSelect').addEventListener('change', (e) => {
         currentStationId = e.target.value;
         if (currentStationId) loadAssets();
@@ -670,7 +573,6 @@
         });
     });
     
-    // تشغيل
     loadStationsSelect();
 </script>
 </body>
