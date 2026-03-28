@@ -301,59 +301,60 @@
             document.getElementById('assetsList').innerHTML = `<div class="no-data">${result.message}</div>`;
         }
     }
-
-    function renderTable() {
-        const container = document.getElementById('assetsList');
-        if (!assetsData.length) {
-            container.innerHTML = '<div class="no-data">لا توجد بيانات</div>';
-            return;
-        }
-        
-        let columns = [], fields = [];
-        if (currentAssetType === 'transformers') {
-            columns = ['رقم المحول', 'قدرة (KVA)', 'جهد دخول (KV)', 'جهد خروج (V)', 'ملاحظات'];
-            fields = ['transformer_number', 'rated_power_kva', 'input_voltage_kv', 'output_voltage_v', 'notes'];
-        } else if (currentAssetType === 'generators') {
-            columns = ['رقم المولد', 'نوع المحرك', 'نوع المولد', 'قدرة (KVA)', 'ملاحظات'];
-            fields = ['generator_number', 'engine_type', 'generator_type', 'rated_power_kva', 'notes'];
-        } else if (currentAssetType === 'panels') {
-            columns = ['رقم اللوحة', 'اسم اللوحة', 'نوع اللوحة', 'مصدر التغذية', 'جهد (V)', 'ملاحظات'];
-            fields = ['panel_number', 'panel_name', 'panel_type', 'power_source', 'supply_voltage_v', 'notes'];
-        } else if (currentAssetType === 'main_pumps') {
-            columns = ['رقم الطلمبة', 'النوع', 'التصرف (م³/س)', 'الرفع (م)', 'قدرة (KW)', 'ملاحظات'];
-            fields = ['pump_number', 'pump_type', 'flow_rate_m3h', 'head_m', 'motor_power_kw', 'notes'];
-        } else if (currentAssetType === 'sub_pumps') {
-            columns = ['رقم الطلمبة', 'النوع', 'التصرف (م³/س)', 'الرفع (م)', 'قدرة (KW)', 'ملاحظات'];
-            fields = ['pump_number', 'pump_type', 'flow_rate_m3h', 'head_m', 'motor_power_kw', 'notes'];
-        } else if (currentAssetType === 'other_assets') {
-            columns = ['رقم الأصل', 'نوع الأصل', 'وصف', 'ملاحظات'];
-            fields = ['asset_number', 'asset_type', 'description', 'notes'];
-        } else if (currentAssetType === 'buildings') {
-            columns = ['رقم المبنى', 'اسم المبنى', 'وصف', 'ملاحظات'];
-            fields = ['building_number', 'building_name', 'description', 'notes'];
-        }
-        
-        let html = '<div class="table-responsive"><table class="data-table"><thead><tr>';
-        columns.forEach(col => html += '<th>' + col + '</th>');
-        html += '<th>الإجراءات</th></tr></thead><tbody>';
-        
-        for (let i = 0; i < assetsData.length; i++) {
-            const item = assetsData[i];
-            html += '<tr>';
-            for (let j = 0; j < fields.length; j++) {
-                let val = item[fields[j]];
-                if (val === undefined || val === null) val = '---';
-                html += '<td>' + val + '</td>';
-            }
-            html += '<td class="action-buttons">';
-            html += '<button class="btn btn-sm btn-primary" onclick="editAsset(' + item.id + ')"><i class="fas fa-edit"></i> تعديل</button>';
-            html += '<button class="btn btn-sm btn-danger" onclick="deleteAsset(' + item.id + ')"><i class="fas fa-trash"></i> حذف</button>';
-            html += '</td></tr>';
-        }
-        html += '</tbody></table></div>';
-        container.innerHTML = html;
+function renderTable() {
+    const container = document.getElementById('assetsList');
+    if (!assetsData.length) {
+        container.innerHTML = '<div class="no-data">لا توجد بيانات</div>';
+        return;
     }
-
+    
+    let columns = [], fields = [];
+    if (currentAssetType === 'transformers') {
+        columns = ['رقم المحول', 'قدرة (KVA)', 'جهد دخول (KV)', 'جهد خروج (V)', 'ملاحظات'];
+        fields = ['transformer_number', 'rated_power_kva', 'input_voltage_kv', 'output_voltage_v', 'notes'];
+    } else if (currentAssetType === 'generators') {
+        columns = ['رقم المولد', 'نوع المحرك', 'نوع المولد', 'قدرة (KVA)', 'ملاحظات'];
+        fields = ['generator_number', 'engine_type', 'generator_type', 'rated_power_kva', 'notes'];
+    } else if (currentAssetType === 'panels') {
+        columns = ['رقم اللوحة', 'اسم اللوحة', 'نوع اللوحة', 'مصدر التغذية', 'جهد (V)', 'ملاحظات'];
+        fields = ['panel_number', 'panel_name', 'panel_type', 'power_source', 'supply_voltage_v', 'notes'];
+    } else if (currentAssetType === 'main_pumps') {
+        columns = ['رقم الطلمبة', 'النوع', 'التصرف (م³/س)', 'الرفع (م)', 'قدرة (KW)', 'ملاحظات'];
+        fields = ['pump_number', 'pump_type', 'flow_rate_m3h', 'head_m', 'motor_power_kw', 'notes'];
+    } else if (currentAssetType === 'sub_pumps') {
+        columns = ['رقم الطلمبة', 'النوع', 'التصرف (م³/س)', 'الرفع (م)', 'قدرة (KW)', 'ملاحظات'];
+        fields = ['pump_number', 'pump_type', 'flow_rate_m3h', 'head_m', 'motor_power_kw', 'notes'];
+    } else if (currentAssetType === 'other_assets') {
+        columns = ['رقم الأصل', 'نوع الأصل', 'وصف', 'ملاحظات'];
+        fields = ['asset_number', 'asset_type', 'description', 'notes'];
+    } else if (currentAssetType === 'buildings') {
+        columns = ['رقم المبنى', 'اسم المبنى', 'وصف', 'ملاحظات'];
+        fields = ['building_number', 'building_name', 'description', 'notes'];
+    }
+    
+    // بناء الجدول بشكل صحيح
+    let html = '<div class="table-responsive"><table class="data-table"><thead><tr>';
+    for (let i = 0; i < columns.length; i++) {
+        html += '<th>' + columns[i] + '</th>';
+    }
+    html += '<th>الإجراءات</th></tr></thead><tbody>';
+    
+    for (let i = 0; i < assetsData.length; i++) {
+        const item = assetsData[i];
+        html += '<tr>';
+        for (let j = 0; j < fields.length; j++) {
+            let val = item[fields[j]];
+            if (val === undefined || val === null) val = '---';
+            html += '<td>' + val + '</td>';
+        }
+        html += '<td class="action-buttons">';
+        html += '<button class="btn btn-sm btn-primary" onclick="editAsset(' + item.id + ')"><i class="fas fa-edit"></i> تعديل</button>';
+        html += '<button class="btn btn-sm btn-danger" onclick="deleteAsset(' + item.id + ')"><i class="fas fa-trash"></i> حذف</button>';
+        html += '</td></tr>';
+    }
+    html += '</tbody></table></div>';
+    container.innerHTML = html;
+}
     function getFormFields(type, data = {}) {
         if (type === 'transformers') {
             return `
