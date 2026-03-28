@@ -62,7 +62,6 @@
             border-radius: 30px;
             padding: 8px 15px;
             color: #fff;
-            margin-bottom: 20px;
             width: 250px;
         }
         .btn {
@@ -106,12 +105,6 @@
             background: rgba(0,212,255,0.2);
             color: #00d4ff;
         }
-        .status-badge {
-            display: inline-block;
-            padding: 3px 10px;
-            border-radius: 15px;
-            font-size: 0.7rem;
-        }
         .modal {
             display: none;
             position: fixed;
@@ -131,7 +124,7 @@
             background: #1e2a3a;
             border-radius: 20px;
             width: 90%;
-            max-width: 700px;
+            max-width: 750px;
             max-height: 85vh;
             overflow-y: auto;
             padding: 20px;
@@ -200,16 +193,20 @@
             gap: 6px;
             flex-wrap: wrap;
         }
+        .warning-box {
+            background: rgba(255,193,7,0.2);
+            border: 1px solid #ffc107;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
         @media (max-width: 768px) {
             .asset-tabs {
                 justify-content: center;
             }
             .asset-tab {
                 padding: 5px 12px;
-                font-size: 0.7rem;
-            }
-            .data-table th, .data-table td {
-                padding: 6px 4px;
                 font-size: 0.7rem;
             }
         }
@@ -221,17 +218,17 @@
     <div class="page-header">
         <h2><i class="fas fa-microchip"></i> إدارة الأصول</h2>
         <select id="stationSelect" class="station-select">
-            <option value="">اختر المحطة أولاً</option>
+            <option value="">-- اختر المحطة أولاً --</option>
         </select>
     </div>
 
     <!-- تبويبات الأقسام -->
     <div class="asset-tabs" id="assetTabs">
-        <div class="asset-tab active" data-type="transformers">🔌 مصادر التغذية (محولات)</div>
-        <div class="asset-tab" data-type="generators">⚡ المولدات</div>
-        <div class="asset-tab" data-type="panels">📊 اللوحات الكهربائية</div>
-        <div class="asset-tab" data-type="main_pumps">💧 الطلمبات الرئيسية</div>
-        <div class="asset-tab" data-type="sub_pumps">💧 الطلمبات الفرعية</div>
+        <div class="asset-tab active" data-type="transformers">🔌 محولات</div>
+        <div class="asset-tab" data-type="generators">⚡ مولدات</div>
+        <div class="asset-tab" data-type="panels">📊 لوحات كهربائية</div>
+        <div class="asset-tab" data-type="main_pumps">💧 طلمبات رئيسية</div>
+        <div class="asset-tab" data-type="sub_pumps">💧 طلمبات فرعية</div>
         <div class="asset-tab" data-type="other_assets">📦 أصول أخرى</div>
         <div class="asset-tab" data-type="buildings">🏢 مباني</div>
     </div>
@@ -288,7 +285,7 @@
             if (error) throw error;
             stationsList = data || [];
             const select = document.getElementById('stationSelect');
-            select.innerHTML = '<option value="">اختر المحطة أولاً</option>';
+            select.innerHTML = '<option value="">-- اختر المحطة أولاً --</option>';
             stationsList.forEach(s => {
                 select.innerHTML += `<option value="${s.id}">${s.station_name} (${s.station_code || s.id})</option>`;
             });
@@ -300,7 +297,7 @@
     // ========== تحميل الأصول حسب النوع ==========
     async function loadAssets() {
         if (!currentStationId) {
-            document.getElementById('assetsList').innerHTML = '<div class="no-data"><i class="fas fa-info-circle"></i> الرجاء اختيار محطة أولاً</div>';
+            document.getElementById('assetsList').innerHTML = '<div class="warning-box"><i class="fas fa-info-circle"></i> الرجاء اختيار محطة أولاً لعرض الأصول الخاصة بها</div>';
             return;
         }
         document.getElementById('assetsList').innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i><p>جاري التحميل...</p></div>';
@@ -329,7 +326,6 @@
 
     // ========== دوال API لكل قسم ==========
     
-    // المحولات
     async function getTransformers() {
         const { data, error } = await supabaseClient
             .from('transformers')
@@ -360,7 +356,6 @@
         return { success: true, message: '✅ تم حذف المحول' };
     }
     
-    // المولدات
     async function getGeneratorsData() {
         const { data, error } = await supabaseClient
             .from('generators')
@@ -391,7 +386,6 @@
         return { success: true, message: '✅ تم حذف المولد' };
     }
     
-    // اللوحات الكهربائية
     async function getElectricalPanels() {
         const { data, error } = await supabaseClient
             .from('electrical_panels')
@@ -422,7 +416,6 @@
         return { success: true, message: '✅ تم حذف اللوحة' };
     }
     
-    // الطلمبات الرئيسية
     async function getMainPumpsData() {
         const { data, error } = await supabaseClient
             .from('main_pumps')
@@ -453,7 +446,6 @@
         return { success: true, message: '✅ تم حذف الطلمبة' };
     }
     
-    // الطلمبات الفرعية
     async function getSubPumpsData() {
         const { data, error } = await supabaseClient
             .from('sub_pumps')
@@ -484,7 +476,6 @@
         return { success: true, message: '✅ تم حذف الطلمبة الفرعية' };
     }
     
-    // الأصول الأخرى
     async function getOtherAssetsData() {
         const { data, error } = await supabaseClient
             .from('other_assets')
@@ -515,7 +506,6 @@
         return { success: true, message: '✅ تم حذف الأصل' };
     }
     
-    // المباني
     async function getBuildingsData() {
         const { data, error } = await supabaseClient
             .from('buildings')
@@ -715,7 +705,7 @@
         let fields = [];
         
         if (currentAssetType === 'transformers') {
-            columns = ['المحول', 'قدرة (KVA)', 'جهد دخول (KV)', 'جهد خروج (V)', 'ملاحظات'];
+            columns = ['رقم المحول', 'قدرة (KVA)', 'جهد دخول (KV)', 'جهد خروج (V)', 'ملاحظات'];
             fields = ['transformer_number', 'rated_power_kva', 'input_voltage_kv', 'output_voltage_v', 'notes'];
         } else if (currentAssetType === 'generators') {
             columns = ['رقم المولد', 'نوع المحرك', 'نوع المولد', 'قدرة (KVA)', 'ملاحظات'];
@@ -737,13 +727,13 @@
             fields = ['building_number', 'building_name', 'description', 'notes'];
         }
         
-        let html = '<div class="table-responsive"><table class="data-table"><thead><tr>';
+        let html = '<div class="table-responsive"><table class="data-table"><thead>发展';
         columns.forEach(col => html += `<th>${col}</th>`);
-        html += '<th>الإجراءات</th></tr></thead><tbody>';
+        html += '<th>الإجراءات</th> </thead><tbody>';
         
         for (let i = 0; i < assetsData.length; i++) {
             const item = assetsData[i];
-            html += '<tr>';
+            html += '发展';
             for (let j = 0; j < fields.length; j++) {
                 let val = item[fields[j]];
                 if (val === undefined || val === null) val = '---';
@@ -752,9 +742,10 @@
             html += `<td class="action-buttons">
                 <button class="btn btn-sm btn-primary" onclick="editAsset(${item.id})"><i class="fas fa-edit"></i> تعديل</button>
                 <button class="btn btn-sm btn-danger" onclick="deleteAsset(${item.id})"><i class="fas fa-trash"></i> حذف</button>
-            </td></tr>`;
+             </td>`;
+            html += '发展';
         }
-        html += '</tbody></table></div>';
+        html += '</tbody> </div>';
         container.innerHTML = html;
     }
     
