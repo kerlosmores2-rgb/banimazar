@@ -11,17 +11,15 @@
             font-family: 'Cairo', 'Tahoma', sans-serif;
             background: transparent;
             color: #fff;
-            padding: 0;
-            margin: 0;
+            padding: 15px;
         }
-        .stations-container { width: 100%; padding: 0; }
         .page-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
             padding-bottom: 15px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
+            border-bottom: 1px solid rgba(255,255,255,0.2);
             flex-wrap: wrap;
             gap: 10px;
         }
@@ -40,10 +38,30 @@
         .btn-primary { background: #00d4ff; color: #1a1a2e; }
         .btn-danger { background: #dc3545; color: white; }
         .btn-sm { padding: 5px 12px; font-size: 0.7rem; }
-        .data-table { width: 100%; border-collapse: collapse; margin-top: 20px; display: block; overflow-x: auto; }
-        .data-table th, .data-table td { padding: 12px; text-align: right; border-bottom: 1px solid rgba(255,255,255,0.1); white-space: nowrap; }
-        .data-table th { background: rgba(0,212,255,0.15); color: #00d4ff; }
-        .status-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .data-table th, .data-table td {
+            padding: 12px;
+            text-align: right;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .data-table th {
+            background: rgba(0,212,255,0.2);
+            color: #00d4ff;
+            font-weight: 600;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+        }
         .status-active { background: rgba(40,167,69,0.2); color: #28a745; }
         .status-maintenance { background: rgba(255,193,7,0.2); color: #ffc107; }
         .status-inactive { background: rgba(108,117,125,0.2); color: #adb5bd; }
@@ -69,14 +87,30 @@
             overflow-y: auto;
             padding: 25px;
         }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
         .modal-header h3 { color: #00d4ff; }
         .modal-close { font-size: 1.5rem; cursor: pointer; color: #dc3545; }
         .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; font-size: 0.85rem; }
-        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; color: #fff; }
+        .form-group label { display: block; margin-bottom: 5px; font-size: 0.85rem; color: #00d4ff; }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 10px;
+            color: #fff;
+        }
         .loading-spinner { text-align: center; padding: 60px; color: #00d4ff; }
         .no-data { text-align: center; padding: 60px; color: rgba(255,255,255,0.5); }
+        .error-message { text-align: center; padding: 60px; color: #dc3545; }
+        .table-responsive { overflow-x: auto; }
     </style>
 </head>
 <body>
@@ -88,10 +122,14 @@
     </div>
 
     <div id="stationsList">
-        <div class="loading-spinner"><i class="fas fa-spinner fa-spin fa-2x"></i><p>جاري تحميل البيانات...</p></div>
+        <div class="loading-spinner">
+            <i class="fas fa-spinner fa-spin fa-2x"></i>
+            <p>جاري تحميل البيانات...</p>
+        </div>
     </div>
 </div>
 
+<!-- Modal إضافة/تعديل محطة -->
 <div id="stationModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
@@ -100,12 +138,35 @@
         </div>
         <form id="stationForm">
             <input type="hidden" id="stationId">
-            <div class="form-group"><label>اسم المحطة *</label><input type="text" id="stationName" required></div>
-            <div class="form-group"><label>كود المحطة</label><input type="text" id="stationCode"></div>
-            <div class="form-group"><label>الموقع</label><input type="text" id="stationLocation"></div>
-            <div class="form-group"><label>السعة (م³/يوم)</label><input type="number" id="stationCapacity" step="0.01"></div>
-            <div class="form-group"><label>الحالة</label><select id="stationStatus"><option value="active">نشطة</option><option value="maintenance">تحت الصيانة</option><option value="inactive">متوقفة</option><option value="emergency">طوارئ</option></select></div>
-            <div class="form-group"><label>ملاحظات</label><textarea id="stationNotes" rows="3"></textarea></div>
+            <div class="form-group">
+                <label>اسم المحطة *</label>
+                <input type="text" id="stationName" required>
+            </div>
+            <div class="form-group">
+                <label>كود المحطة</label>
+                <input type="text" id="stationCode">
+            </div>
+            <div class="form-group">
+                <label>الموقع</label>
+                <input type="text" id="stationLocation">
+            </div>
+            <div class="form-group">
+                <label>السعة (م³/يوم)</label>
+                <input type="number" id="stationCapacity" step="0.01">
+            </div>
+            <div class="form-group">
+                <label>الحالة</label>
+                <select id="stationStatus">
+                    <option value="active">نشطة</option>
+                    <option value="maintenance">تحت الصيانة</option>
+                    <option value="inactive">متوقفة</option>
+                    <option value="emergency">طوارئ</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>ملاحظات</label>
+                <textarea id="stationNotes" rows="3"></textarea>
+            </div>
             <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
                 <button type="button" class="btn" onclick="closeModal()">إلغاء</button>
                 <button type="submit" class="btn btn-primary">حفظ</button>
@@ -115,51 +176,174 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/api.js"></script>
 <script>
-    if (typeof checkAuth === 'function' && !checkAuth()) {
-        if (window.parent !== window) window.parent.location.href = 'index.html';
-        else window.location.href = 'index.html';
-        return;
-    }
+    // ============================================
+    // إعدادات Supabase مباشرة - بدون الاعتماد على api.js
+    // ============================================
+    const SUPABASE_URL = 'https://jvfbkoaeugkeoiccvnkq.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_n64Hnhuruc3Oeolj-Uwg9g_tu-otJlZ';
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+    // ============================================
+    // المتغيرات
+    // ============================================
     let stationsData = [];
 
+    // ============================================
+    // دوال API مباشرة
+    // ============================================
+    async function getStationsDirect() {
+        try {
+            const { data, error } = await supabase
+                .from('stations')
+                .select('*')
+                .order('station_name');
+            if (error) throw error;
+            return { success: true, stations: data || [] };
+        } catch (error) {
+            console.error('Error fetching stations:', error);
+            return { success: false, message: error.message, stations: [] };
+        }
+    }
+
+    async function createStationDirect(stationData) {
+        try {
+            const newStation = {
+                station_name: stationData.station_name,
+                station_code: stationData.station_code || null,
+                location: stationData.location || null,
+                capacity: parseFloat(stationData.capacity) || null,
+                status: stationData.status || 'active',
+                notes: stationData.notes || null,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            };
+            const { data, error } = await supabase
+                .from('stations')
+                .insert([newStation])
+                .select();
+            if (error) throw error;
+            return { success: true, data: data[0], message: 'تم إضافة المحطة بنجاح' };
+        } catch (error) {
+            console.error('Error creating station:', error);
+            return { success: false, message: error.message };
+        }
+    }
+
+    async function updateStationDirect(id, stationData) {
+        try {
+            const updateData = {
+                station_name: stationData.station_name,
+                station_code: stationData.station_code || null,
+                location: stationData.location || null,
+                capacity: parseFloat(stationData.capacity) || null,
+                status: stationData.status || 'active',
+                notes: stationData.notes || null,
+                updated_at: new Date().toISOString()
+            };
+            const { data, error } = await supabase
+                .from('stations')
+                .update(updateData)
+                .eq('id', id)
+                .select();
+            if (error) throw error;
+            return { success: true, data: data[0], message: 'تم تحديث المحطة بنجاح' };
+        } catch (error) {
+            console.error('Error updating station:', error);
+            return { success: false, message: error.message };
+        }
+    }
+
+    async function deleteStationDirect(id) {
+        try {
+            const { error } = await supabase
+                .from('stations')
+                .delete()
+                .eq('id', id);
+            if (error) throw error;
+            return { success: true, message: 'تم حذف المحطة بنجاح' };
+        } catch (error) {
+            console.error('Error deleting station:', error);
+            return { success: false, message: error.message };
+        }
+    }
+
+    // ============================================
+    // عرض البيانات
+    // ============================================
     async function loadStations() {
         const container = document.getElementById('stationsList');
+        container.innerHTML = `<div class="loading-spinner"><i class="fas fa-spinner fa-spin fa-2x"></i><p>جاري تحميل البيانات...</p></div>`;
+        
         try {
-            const result = await getStations();
+            const result = await getStationsDirect();
+            console.log('API Result:', result); // للتتبع
+            
             if (result.success) {
                 stationsData = result.stations;
-                renderStationsTable();
+                if (stationsData.length === 0) {
+                    container.innerHTML = `<div class="no-data"><i class="fas fa-database"></i> لا توجد محطات مسجلة</div>`;
+                } else {
+                    renderStationsTable();
+                }
             } else {
-                container.innerHTML = `<div class="no-data">${result.message}</div>`;
+                container.innerHTML = `<div class="error-message"><i class="fas fa-exclamation-triangle"></i> خطأ: ${result.message}</div>`;
             }
         } catch (error) {
-            container.innerHTML = `<div class="no-data">خطأ في تحميل البيانات</div>`;
+            console.error('Load error:', error);
+            container.innerHTML = `<div class="error-message"><i class="fas fa-exclamation-triangle"></i> خطأ في الاتصال: ${error.message}</div>`;
         }
     }
 
     function renderStationsTable() {
         const container = document.getElementById('stationsList');
-        if (!stationsData.length) {
-            container.innerHTML = `<div class="no-data">لا توجد محطات مسجلة</div>`;
-            return;
-        }
-        let html = `<div style="overflow-x: auto;"><table class="data-table"><thead><tr><th>#</th><th>اسم المحطة</th><th>الكود</th><th>الموقع</th><th>السعة</th><th>الحالة</th><th>الإجراءات</th></tr></thead><tbody>`;
+        let html = `<div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>اسم المحطة</th>
+                        <th>الكود</th>
+                        <th>الموقع</th>
+                        <th>السعة</th>
+                        <th>الحالة</th>
+                        <th>الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+        
         stationsData.forEach((s, i) => {
-            let statusClass = s.status === 'active' ? 'status-active' : s.status === 'maintenance' ? 'status-maintenance' : s.status === 'inactive' ? 'status-inactive' : 'status-active';
-            let statusText = s.status === 'active' ? 'نشطة' : s.status === 'maintenance' ? 'صيانة' : s.status === 'inactive' ? 'متوقفة' : 'نشطة';
-            html += `<tr><td>${i+1}</td><td><i class="fas fa-water"></i> ${s.station_name}</td><td>${s.station_code || '---'}</td><td>${s.location || '---'}</td><td>${s.capacity || 0} م³/يوم</td><td><span class="status-badge ${statusClass}">${statusText}</span></td>
-            <td><button class="btn btn-sm btn-primary" onclick="editStation(${s.id})"><i class="fas fa-edit"></i> تعديل</button>
-            <button class="btn btn-sm btn-danger" onclick="deleteStation(${s.id})"><i class="fas fa-trash"></i> حذف</button></td></tr>`;
+            let statusClass = '';
+            let statusText = '';
+            if (s.status === 'active') { statusClass = 'status-active'; statusText = 'نشطة'; }
+            else if (s.status === 'maintenance') { statusClass = 'status-maintenance'; statusText = 'صيانة'; }
+            else if (s.status === 'inactive') { statusClass = 'status-inactive'; statusText = 'متوقفة'; }
+            else if (s.status === 'emergency') { statusClass = 'status-active'; statusText = 'طوارئ'; }
+            else { statusClass = 'status-active'; statusText = s.status || 'نشطة'; }
+            
+            html += `<tr>
+                <td>${i+1}</td>
+                <td><i class="fas fa-water"></i> ${s.station_name}</td>
+                <td>${s.station_code || '---'}</td>
+                <td>${s.location || '---'}</td>
+                <td>${s.capacity || 0} م³/يوم</td>
+                <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                <td>
+                    <button class="btn btn-sm btn-primary" onclick="editStation(${s.id})"><i class="fas fa-edit"></i> تعديل</button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteStation(${s.id})"><i class="fas fa-trash"></i> حذف</button>
+                </td>
+            </tr>`;
         });
         html += `</tbody></table></div>`;
         container.innerHTML = html;
     }
 
-    function closeModal() { document.getElementById('stationModal').classList.remove('active'); }
-    window.closeModal = closeModal;
+    // ============================================
+    // دوال المودال
+    // ============================================
+    function closeModal() {
+        document.getElementById('stationModal').classList.remove('active');
+    }
 
     window.editStation = async (id) => {
         const station = stationsData.find(s => s.id == id);
@@ -177,15 +361,23 @@
     };
 
     window.deleteStation = async (id) => {
-        if (confirm('هل أنت متأكد من الحذف؟')) {
-            const result = await deleteStation(id);
+        if (confirm('هل أنت متأكد من حذف هذه المحطة؟')) {
+            const result = await deleteStationDirect(id);
             if (result.success) {
                 loadStations();
-                if (window.parent && window.parent.showToast) window.parent.showToast(result.message);
-            } else alert(result.message);
+                // إظهار رسالة للوالد إذا كان موجوداً
+                if (window.parent && window.parent.showToast) {
+                    window.parent.showToast(result.message);
+                }
+            } else {
+                alert(result.message);
+            }
         }
     };
 
+    // ============================================
+    // تهيئة الأحداث
+    // ============================================
     document.getElementById('addStationBtn').addEventListener('click', () => {
         document.getElementById('stationForm').reset();
         document.getElementById('stationId').value = '';
@@ -200,18 +392,32 @@
             station_name: document.getElementById('stationName').value,
             station_code: document.getElementById('stationCode').value,
             location: document.getElementById('stationLocation').value,
-            capacity: parseFloat(document.getElementById('stationCapacity').value),
+            capacity: document.getElementById('stationCapacity').value,
             status: document.getElementById('stationStatus').value,
             notes: document.getElementById('stationNotes').value
         };
-        let result = id ? await updateStation(id, data) : await createStation(data);
+        
+        let result;
+        if (id) {
+            result = await updateStationDirect(id, data);
+        } else {
+            result = await createStationDirect(data);
+        }
+        
         if (result.success) {
             closeModal();
             loadStations();
-            if (window.parent && window.parent.showToast) window.parent.showToast(result.message);
-        } else alert(result.message);
+            if (window.parent && window.parent.showToast) {
+                window.parent.showToast(result.message);
+            }
+        } else {
+            alert(result.message);
+        }
     });
 
+    window.closeModal = closeModal;
+
+    // بدء التحميل
     loadStations();
 </script>
 </body>
