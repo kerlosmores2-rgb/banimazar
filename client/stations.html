@@ -6,38 +6,67 @@
     <title>المحطات</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
         body {
             font-family: 'Cairo', 'Tahoma', sans-serif;
             background: transparent;
             color: #fff;
             padding: 15px;
         }
+        .stations-container {
+            width: 100%;
+            max-width: 100%;
+        }
         .page-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
             padding-bottom: 15px;
-            border-bottom: 1px solid rgba(255,255,255,0.2);
+            border-bottom: 2px solid rgba(0,212,255,0.3);
             flex-wrap: wrap;
+            gap: 15px;
+        }
+        .page-header h2 {
+            color: #00d4ff;
+            font-size: 1.4rem;
+            display: flex;
+            align-items: center;
             gap: 10px;
         }
-        .page-header h2 { color: #00d4ff; font-size: 1.3rem; }
         .btn {
-            padding: 8px 20px;
+            padding: 10px 24px;
             border: none;
-            border-radius: 25px;
+            border-radius: 30px;
             cursor: pointer;
-            transition: 0.3s;
+            transition: all 0.3s;
             display: inline-flex;
             align-items: center;
-            gap: 8px;
-            font-size: 0.85rem;
+            gap: 10px;
+            font-size: 0.9rem;
+            font-weight: 500;
         }
-        .btn-primary { background: #00d4ff; color: #1a1a2e; }
-        .btn-danger { background: #dc3545; color: white; }
-        .btn-sm { padding: 5px 12px; font-size: 0.7rem; }
+        .btn-primary {
+            background: #00d4ff;
+            color: #1a1a2e;
+            box-shadow: 0 2px 8px rgba(0,212,255,0.3);
+        }
+        .btn-primary:hover {
+            background: #00c4e8;
+            transform: translateY(-2px);
+        }
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        .btn-sm {
+            padding: 6px 14px;
+            font-size: 0.75rem;
+        }
         .data-table {
             width: 100%;
             border-collapse: collapse;
@@ -47,14 +76,13 @@
             overflow: hidden;
         }
         .data-table th, .data-table td {
-            padding: 12px;
+            padding: 14px 12px;
             text-align: right;
             border-bottom: 1px solid rgba(255,255,255,0.1);
         }
         .data-table th {
             background: rgba(0,212,255,0.2);
             color: #00d4ff;
-            font-weight: 600;
         }
         .status-badge {
             display: inline-block;
@@ -65,6 +93,9 @@
         .status-active { background: rgba(40,167,69,0.2); color: #28a745; }
         .status-maintenance { background: rgba(255,193,7,0.2); color: #ffc107; }
         .status-inactive { background: rgba(108,117,125,0.2); color: #adb5bd; }
+        .status-emergency { background: rgba(220,53,69,0.2); color: #dc3545; }
+        
+        /* تنسيق المودال */
         .modal {
             display: none;
             position: fixed;
@@ -72,12 +103,14 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.8);
+            background: rgba(0,0,0,0.85);
             z-index: 1000;
             justify-content: center;
             align-items: center;
         }
-        .modal.active { display: flex; }
+        .modal.active {
+            display: flex;
+        }
         .modal-content {
             background: #1e2a3a;
             border-radius: 20px;
@@ -92,25 +125,71 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
-            padding-bottom: 10px;
+            padding-bottom: 12px;
             border-bottom: 1px solid rgba(255,255,255,0.1);
         }
-        .modal-header h3 { color: #00d4ff; }
-        .modal-close { font-size: 1.5rem; cursor: pointer; color: #dc3545; }
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; font-size: 0.85rem; color: #00d4ff; }
-        .form-group input, .form-group select, .form-group textarea {
+        .modal-header h3 {
+            color: #00d4ff;
+        }
+        .modal-close {
+            font-size: 1.8rem;
+            cursor: pointer;
+            color: #dc3545;
+        }
+        .form-group {
+            margin-bottom: 18px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+            color: #00d4ff;
+        }
+        .form-group input, 
+        .form-group select, 
+        .form-group textarea {
             width: 100%;
-            padding: 10px;
+            padding: 10px 14px;
             background: rgba(255,255,255,0.1);
             border: 1px solid rgba(255,255,255,0.2);
             border-radius: 10px;
             color: #fff;
         }
-        .loading-spinner { text-align: center; padding: 60px; color: #00d4ff; }
-        .no-data { text-align: center; padding: 60px; color: rgba(255,255,255,0.5); }
-        .error-message { text-align: center; padding: 60px; color: #dc3545; }
-        .table-responsive { overflow-x: auto; }
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 25px;
+        }
+        .loading-spinner {
+            text-align: center;
+            padding: 60px;
+            color: #00d4ff;
+        }
+        .no-data {
+            text-align: center;
+            padding: 60px;
+            color: rgba(255,255,255,0.5);
+        }
+        .table-responsive {
+            overflow-x: auto;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        @media (max-width: 768px) {
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
     </style>
 </head>
 <body>
@@ -118,7 +197,9 @@
 <div class="stations-container">
     <div class="page-header">
         <h2><i class="fas fa-building"></i> إدارة المحطات</h2>
-        <button class="btn btn-primary" id="addStationBtn"><i class="fas fa-plus"></i> إضافة محطة جديدة</button>
+        <button class="btn btn-primary" id="addStationBtn">
+            <i class="fas fa-plus"></i> إضافة محطة جديدة
+        </button>
     </div>
 
     <div id="stationsList">
@@ -128,7 +209,8 @@
         </div>
     </div>
 </div>
-<!-- نافذة إضافة/تعديل محطة -->
+
+<!-- 2. المودال (النافذة المنبثقة) -->
 <div id="stationModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
@@ -138,20 +220,20 @@
         <form id="stationForm">
             <input type="hidden" id="stationId">
             <div class="form-group">
-                <label>اسم المحطة *</label>
-                <input type="text" id="stationName" required>
+                <label>اسم المحطة <span style="color:#dc3545;">*</span></label>
+                <input type="text" id="stationName" required placeholder="مثال: محطة بني مزار">
             </div>
             <div class="form-group">
                 <label>كود المحطة</label>
-                <input type="text" id="stationCode">
+                <input type="text" id="stationCode" placeholder="مثال: ST-001">
             </div>
             <div class="form-group">
                 <label>الموقع</label>
-                <input type="text" id="stationLocation">
+                <input type="text" id="stationLocation" placeholder="مثال: بني مزار - المنيا">
             </div>
             <div class="form-group">
                 <label>السعة (م³/يوم)</label>
-                <input type="number" id="stationCapacity" step="0.01">
+                <input type="number" id="stationCapacity" step="0.01" placeholder="0">
             </div>
             <div class="form-group">
                 <label>الحالة</label>
@@ -164,56 +246,11 @@
             </div>
             <div class="form-group">
                 <label>ملاحظات</label>
-                <textarea id="stationNotes" rows="3"></textarea>
+                <textarea id="stationNotes" rows="3" placeholder="أي ملاحظات إضافية..."></textarea>
             </div>
-            <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+            <div class="form-actions">
                 <button type="button" class="btn" onclick="closeModal()" style="background:#6c757d;">إلغاء</button>
                 <button type="submit" class="btn btn-primary">💾 حفظ</button>
-            </div>
-        </form>
-    </div>
-</div>
-<!-- Modal إضافة/تعديل محطة -->
-<div id="stationModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3 id="modalTitle">إضافة محطة جديدة</h3>
-            <span class="modal-close" onclick="closeModal()">&times;</span>
-        </div>
-        <form id="stationForm">
-            <input type="hidden" id="stationId">
-            <div class="form-group">
-                <label>اسم المحطة *</label>
-                <input type="text" id="stationName" required>
-            </div>
-            <div class="form-group">
-                <label>كود المحطة</label>
-                <input type="text" id="stationCode">
-            </div>
-            <div class="form-group">
-                <label>الموقع</label>
-                <input type="text" id="stationLocation">
-            </div>
-            <div class="form-group">
-                <label>السعة (م³/يوم)</label>
-                <input type="number" id="stationCapacity" step="0.01">
-            </div>
-            <div class="form-group">
-                <label>الحالة</label>
-                <select id="stationStatus">
-                    <option value="active">نشطة</option>
-                    <option value="maintenance">تحت الصيانة</option>
-                    <option value="inactive">متوقفة</option>
-                    <option value="emergency">طوارئ</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>ملاحظات</label>
-                <textarea id="stationNotes" rows="3"></textarea>
-            </div>
-            <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
-                <button type="button" class="btn" onclick="closeModal()">إلغاء</button>
-                <button type="submit" class="btn btn-primary">حفظ</button>
             </div>
         </form>
     </div>
@@ -221,21 +258,23 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-    // ============================================
-    // إعدادات Supabase مباشرة
-    // ============================================
+    // إعدادات Supabase
     const SUPABASE_URL = 'https://jvfbkoaeugkeoiccvnkq.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_n64Hnhuruc3Oeolj-Uwg9g_tu-otJlZ';
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // ============================================
-    // المتغيرات
-    // ============================================
     let stationsData = [];
 
-    // ============================================
-    // دوال API مباشرة
-    // ============================================
+    // ========== صلاحيات المستخدم ==========
+    const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    const addBtn = document.getElementById('addStationBtn');
+    
+    // إخفاء زر الإضافة إذا كان المستخدم viewer
+    if (user.role === 'viewer') {
+        if (addBtn) addBtn.style.display = 'none';
+    }
+
+    // ========== دوال API ==========
     async function getStationsDirect() {
         try {
             const { data, error } = await supabaseClient
@@ -245,55 +284,52 @@
             if (error) throw error;
             return { success: true, stations: data || [] };
         } catch (error) {
-            console.error('Error fetching stations:', error);
             return { success: false, message: error.message, stations: [] };
         }
     }
 
-    async function createStationDirect(stationData) {
+    async function createStationDirect(data) {
         try {
             const newStation = {
-                station_name: stationData.station_name,
-                station_code: stationData.station_code || null,
-                location: stationData.location || null,
-                capacity: parseFloat(stationData.capacity) || null,
-                status: stationData.status || 'active',
-                notes: stationData.notes || null,
+                station_name: data.station_name,
+                station_code: data.station_code || null,
+                location: data.location || null,
+                capacity: parseFloat(data.capacity) || null,
+                status: data.status || 'active',
+                notes: data.notes || null,
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString()
             };
-            const { data, error } = await supabaseClient
+            const { data: result, error } = await supabaseClient
                 .from('stations')
                 .insert([newStation])
                 .select();
             if (error) throw error;
-            return { success: true, data: data[0], message: 'تم إضافة المحطة بنجاح' };
+            return { success: true, data: result[0], message: '✅ تم إضافة المحطة بنجاح' };
         } catch (error) {
-            console.error('Error creating station:', error);
             return { success: false, message: error.message };
         }
     }
 
-    async function updateStationDirect(id, stationData) {
+    async function updateStationDirect(id, data) {
         try {
             const updateData = {
-                station_name: stationData.station_name,
-                station_code: stationData.station_code || null,
-                location: stationData.location || null,
-                capacity: parseFloat(stationData.capacity) || null,
-                status: stationData.status || 'active',
-                notes: stationData.notes || null,
+                station_name: data.station_name,
+                station_code: data.station_code || null,
+                location: data.location || null,
+                capacity: parseFloat(data.capacity) || null,
+                status: data.status || 'active',
+                notes: data.notes || null,
                 updated_at: new Date().toISOString()
             };
-            const { data, error } = await supabaseClient
+            const { data: result, error } = await supabaseClient
                 .from('stations')
                 .update(updateData)
                 .eq('id', id)
                 .select();
             if (error) throw error;
-            return { success: true, data: data[0], message: 'تم تحديث المحطة بنجاح' };
+            return { success: true, data: result[0], message: '✅ تم تحديث المحطة بنجاح' };
         } catch (error) {
-            console.error('Error updating station:', error);
             return { success: false, message: error.message };
         }
     }
@@ -305,81 +341,134 @@
                 .delete()
                 .eq('id', id);
             if (error) throw error;
-            return { success: true, message: 'تم حذف المحطة بنجاح' };
+            return { success: true, message: '✅ تم حذف المحطة بنجاح' };
         } catch (error) {
-            console.error('Error deleting station:', error);
             return { success: false, message: error.message };
         }
     }
 
-    // ============================================
-    // عرض البيانات
-    // ============================================
+    // ========== عرض البيانات ==========
     async function loadStations() {
         const container = document.getElementById('stationsList');
         container.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin fa-2x"></i><p>جاري تحميل البيانات...</p></div>';
         
-        try {
-            const result = await getStationsDirect();
-            
-            if (result.success) {
-                stationsData = result.stations;
-                if (stationsData.length === 0) {
-                    container.innerHTML = '<div class="no-data"><i class="fas fa-database"></i> لا توجد محطات مسجلة</div>';
-                } else {
-                    renderStationsTable();
+        const result = await getStationsDirect();
+        if (result.success) {
+            stationsData = result.stations;
+            if (stationsData.length === 0) {
+                let html = '<div class="no-data"><i class="fas fa-database"></i><p>لا توجد محطات مسجلة</p>';
+                if (user.role !== 'viewer') {
+                    html += '<button class="btn btn-primary" onclick="document.getElementById(\'addStationBtn\').click()" style="margin-top:15px;"><i class="fas fa-plus"></i> إضافة أول محطة</button>';
                 }
+                html += '</div>';
+                container.innerHTML = html;
             } else {
-                container.innerHTML = '<div class="error-message"><i class="fas fa-exclamation-triangle"></i> خطأ: ' + result.message + '</div>';
+                renderTable();
             }
-        } catch (error) {
-            console.error('Load error:', error);
-            container.innerHTML = '<div class="error-message"><i class="fas fa-exclamation-triangle"></i> خطأ في الاتصال: ' + error.message + '</div>';
+        } else {
+            container.innerHTML = '<div class="no-data">خطأ: ' + result.message + '</div>';
         }
     }
 
-    function renderStationsTable() {
-        const container = document.getElementById('stationsList');
+    function renderTable() {
         let html = '<div class="table-responsive"><table class="data-table"><thead><tr>' +
             '<th>#</th><th>اسم المحطة</th><th>الكود</th><th>الموقع</th><th>السعة</th><th>الحالة</th><th>الإجراءات</th>' +
             '</tr></thead><tbody>';
         
         for (let i = 0; i < stationsData.length; i++) {
             const s = stationsData[i];
-            let statusClass = '';
-            let statusText = '';
-            if (s.status === 'active') { statusClass = 'status-active'; statusText = 'نشطة'; }
-            else if (s.status === 'maintenance') { statusClass = 'status-maintenance'; statusText = 'صيانة'; }
+            let statusClass = 'status-active';
+            let statusText = 'نشطة';
+            if (s.status === 'maintenance') { statusClass = 'status-maintenance'; statusText = 'صيانة'; }
             else if (s.status === 'inactive') { statusClass = 'status-inactive'; statusText = 'متوقفة'; }
-            else if (s.status === 'emergency') { statusClass = 'status-active'; statusText = 'طوارئ'; }
-            else { statusClass = 'status-active'; statusText = s.status || 'نشطة'; }
+            else if (s.status === 'emergency') { statusClass = 'status-emergency'; statusText = 'طوارئ'; }
             
             html += '<tr>' +
                 '<td>' + (i+1) + '</td>' +
-                '<td><i class="fas fa-water"></i> ' + s.station_name + '</td>' +
+                '<td><i class="fas fa-water"></i> ' + (s.station_name || '---') + '</td>' +
                 '<td>' + (s.station_code || '---') + '</td>' +
                 '<td>' + (s.location || '---') + '</td>' +
                 '<td>' + (s.capacity || 0) + ' م³/يوم</td>' +
                 '<td><span class="status-badge ' + statusClass + '">' + statusText + '</span></td>' +
-                '<td>' +
-                    '<button class="btn btn-sm btn-primary" onclick="editStation(' + s.id + ')"><i class="fas fa-edit"></i> تعديل</button> ' +
-                    '<button class="btn btn-sm btn-danger" onclick="deleteStation(' + s.id + ')"><i class="fas fa-trash"></i> حذف</button>' +
-                '</td>' +
-            '</tr>';
+                '<td class="action-buttons">';
+            
+            // أزرار التعديل والحذف تظهر فقط للمدير والمشرف
+            if (user.role !== 'viewer') {
+                html += '<button class="btn btn-sm btn-primary" onclick="editStation(' + s.id + ')"><i class="fas fa-edit"></i> تعديل</button>';
+                html += '<button class="btn btn-sm btn-danger" onclick="deleteStation(' + s.id + ')"><i class="fas fa-trash"></i> حذف</button>';
+            } else {
+                html += '<span class="status-badge" style="background:rgba(0,212,255,0.1);">عرض فقط</span>';
+            }
+            
+            html += '</td></tr>';
         }
         html += '</tbody></table></div>';
-        container.innerHTML = html;
+        document.getElementById('stationsList').innerHTML = html;
     }
 
-    // ============================================
-    // دوال المودال
-    // ============================================
+    // ========== 4. دالة إغلاق المودال ==========
     function closeModal() {
         document.getElementById('stationModal').classList.remove('active');
     }
+    window.closeModal = closeModal;
 
+    // ========== 3. فتح المودال (زر الإضافة) ==========
+    document.getElementById('addStationBtn').addEventListener('click', function() {
+        if (user.role === 'viewer') {
+            alert('⚠️ ليس لديك صلاحية للإضافة');
+            return;
+        }
+        document.getElementById('stationForm').reset();
+        document.getElementById('stationId').value = '';
+        document.getElementById('stationStatus').value = 'active';
+        document.getElementById('modalTitle').innerHTML = '<i class="fas fa-plus-circle"></i> إضافة محطة جديدة';
+        document.getElementById('stationModal').classList.add('active');
+    });
+
+    // ========== 5. حفظ البيانات ==========
+    document.getElementById('stationForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const id = document.getElementById('stationId').value;
+        const data = {
+            station_name: document.getElementById('stationName').value,
+            station_code: document.getElementById('stationCode').value,
+            location: document.getElementById('stationLocation').value,
+            capacity: parseFloat(document.getElementById('stationCapacity').value) || 0,
+            status: document.getElementById('stationStatus').value,
+            notes: document.getElementById('stationNotes').value
+        };
+        
+        if (!data.station_name) {
+            alert('⚠️ الرجاء إدخال اسم المحطة');
+            return;
+        }
+        
+        let result;
+        if (id) {
+            result = await updateStationDirect(id, data);
+        } else {
+            result = await createStationDirect(data);
+        }
+        
+        if (result.success) {
+            closeModal();
+            loadStations();
+            if (window.parent && window.parent.showToast) {
+                window.parent.showToast(result.message);
+            }
+        } else {
+            alert('❌ ' + result.message);
+        }
+    });
+
+    // ========== دالة تعديل المحطة ==========
     window.editStation = function(id) {
-        const station = stationsData.find(function(s) { return s.id == id; });
+        if (user.role === 'viewer') {
+            alert('⚠️ ليس لديك صلاحية للتعديل');
+            return;
+        }
+        const station = stationsData.find(s => s.id == id);
         if (station) {
             document.getElementById('stationId').value = station.id;
             document.getElementById('stationName').value = station.station_name;
@@ -388,69 +477,28 @@
             document.getElementById('stationCapacity').value = station.capacity || '';
             document.getElementById('stationStatus').value = station.status || 'active';
             document.getElementById('stationNotes').value = station.notes || '';
-            document.getElementById('modalTitle').innerText = 'تعديل محطة';
+            document.getElementById('modalTitle').innerHTML = '<i class="fas fa-edit"></i> تعديل محطة';
             document.getElementById('stationModal').classList.add('active');
         }
     };
 
+    // ========== دالة حذف المحطة ==========
     window.deleteStation = function(id) {
-        if (confirm('هل أنت متأكد من حذف هذه المحطة؟')) {
-            deleteStationDirect(id).then(function(result) {
+        if (user.role === 'viewer') {
+            alert('⚠️ ليس لديك صلاحية للحذف');
+            return;
+        }
+        if (confirm('⚠️ هل أنت متأكد من حذف هذه المحطة؟')) {
+            deleteStationDirect(id).then(result => {
                 if (result.success) {
                     loadStations();
-                    if (window.parent && window.parent.showToast) {
-                        window.parent.showToast(result.message);
-                    }
+                    if (window.parent && window.parent.showToast) window.parent.showToast(result.message);
                 } else {
                     alert(result.message);
                 }
             });
         }
     };
-
-    // ============================================
-    // تهيئة الأحداث
-    // ============================================
-    document.getElementById('addStationBtn').addEventListener('click', function() {
-        document.getElementById('stationForm').reset();
-        document.getElementById('stationId').value = '';
-        document.getElementById('modalTitle').innerText = 'إضافة محطة جديدة';
-        document.getElementById('stationModal').classList.add('active');
-    });
-
-    document.getElementById('stationForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        var id = document.getElementById('stationId').value;
-        var data = {
-            station_name: document.getElementById('stationName').value,
-            station_code: document.getElementById('stationCode').value,
-            location: document.getElementById('stationLocation').value,
-            capacity: document.getElementById('stationCapacity').value,
-            status: document.getElementById('stationStatus').value,
-            notes: document.getElementById('stationNotes').value
-        };
-        
-        var promise;
-        if (id) {
-            promise = updateStationDirect(id, data);
-        } else {
-            promise = createStationDirect(data);
-        }
-        
-        promise.then(function(result) {
-            if (result.success) {
-                closeModal();
-                loadStations();
-                if (window.parent && window.parent.showToast) {
-                    window.parent.showToast(result.message);
-                }
-            } else {
-                alert(result.message);
-            }
-        });
-    });
-
-    window.closeModal = closeModal;
 
     // بدء التحميل
     loadStations();
