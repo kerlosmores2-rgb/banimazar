@@ -501,7 +501,7 @@ function renderTable() {
             '<td class="action-buttons">';
         
         if (user.role !== 'viewer') {
-            html += '<button class="btn btn-sm btn-primary" onclick="editStation(' + s.id + ')"><i class="fas fa-edit"></i> تعديل</button>';
+            html += '<button class="btn btn-sm btn-primary" onclick="editStation(' + s.id + ')"><i class="fas fa-edit"></i> عرض</button>';
             html += '<button class="btn btn-sm btn-danger" onclick="deleteStation(' + s.id + ')"><i class="fas fa-trash"></i> حذف</button>';
         } else {
             html += '<span class="status-badge" style="background:rgba(0,212,255,0.1);">عرض فقط</span>';
