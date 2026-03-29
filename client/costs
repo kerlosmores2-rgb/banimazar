@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>تقرير تكاليف التشغيل - فرع بني مزار</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap');
+        
+        /* التنسيق العام للشاشة */
+        body { font-family: 'Cairo', sans-serif; background: #0b2533; color: #fff; padding: 20px; }
+        .container { max-width: 1000px; margin: auto; background: #164a63; padding: 25px; border-radius: 15px; }
+        .no-print { display: flex; gap: 10px; margin-bottom: 20px; }
+        
+        .section-box { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid #1e5f7a; }
+        .row-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-bottom: 10px; }
+        
+        label { display: block; font-size: 11px; color: #88daff; margin-bottom: 3px; }
+        input, select { width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #1e5f7a; background: #0f3b4f; color: #fff; font-family: 'Cairo'; font-size: 13px; }
+        input[readonly] { background: #092a3a; color: #2ecc71; border: 1px dashed #2ecc71; }
+        
+        .total-banner { background: #00d4ff; color: #000; padding: 8px; border-radius: 5px; font-weight: bold; text-align: center; margin-top: 5px; font-size: 14px; }
+        
+        .btn { padding: 10px 25px; border: none; border-radius: 20px; cursor: pointer; font-weight: bold; font-family: 'Cairo'; transition: 0.3s; }
+        .btn-save { background: #28a745; color: white; flex: 2; }
+        .btn-print { background: #f39c12; color: white; flex: 1; }
+
+        /* تنسيق الطباعة فقط */
+        @media print {
+            body { background: white !important; color: black !important; padding: 0; }
+            .container { box-shadow: none; width: 100%; max-width: 100%; background: white !important; }
+            .no-print, .btn-save, .btn-print { display: none !important; }
+            .section-box { border: 1px solid #000 !important; background: white !important; color: black !important; page-break-inside: avoid; }
+            input, select { border: none !important; background: transparent !important; color: black !important; appearance: none; -webkit-appearance: none; }
+            label { color: #555 !important; font-weight: bold; }
+            .total-banner { border: 1px solid #000; background: #eee !important; color: black !important; }
+            .print-header { display: block !important; text-align: center; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 10px; }
+            .signature-area { display: flex !important; justify-content: space-between; margin-top: 40px; color: black; }
+        }
+        
+        .print-header, .signature-area { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container" id="reportArea">
+    <div class="print-header">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="text-align: right;">الشركة القابضة لمياه الشرب والصرف الصحي<br>شركة مياه المنيا - فرع بني مزار</div>
+            <div style="text-align: center;"><h2>تقرير تكاليف تشغيل محطة</h2></div>
+            <div style="text-align: left;">تاريخ التقرير: <span id="printDate"></span></div>
+        </div>
+    </div>
+
+    <div class="no-print">
+        <div style="flex: 1;">
+            <label>المحطة:</label>
+            <select id="mainStation" onchange="loadStationAssets()"></select>
+        </div>
+        <div style="flex: 1;">
+            <label>شهر المحاسبة:</label>
+            <input type="month" id="accMonth" onchange="fetchPreviousData()">
+        </div>
+    </div>
+
+    <div class="section-box">
+        <h4 style="color: #f1c40f; border-bottom: 1px solid; margin-bottom: 10px;">📊 أولاً: كميات المياه المرفوعة</h4>
+        <div class="row-grid">
+            <div><label>المعدة</label><select id="pump1List" onchange="getFlow(1)"></select></div>
+            <div><label>التصرف (م3/س)</label><input type="number" id="p1_flow" readonly></div>
+            <div><label>ساعات التشغيل</label><input type="number" id="p1_hours" oninput="calcAll()"></div>
+            <div><label>الإجمالي (م3)</label><input type="number" id="p1_total" readonly></div>
+        </div>
+        <div class="row-grid">
+            <div><label>المعدة</label><select id="pump2List" onchange="getFlow(2)"></select></div>
+            <div><label>التصرف (م3/س)</label><input type="number" id="p2_flow" readonly></div>
+            <div><label>ساعات التشغيل</label><input type="number" id="p2_hours" oninput="calcAll()"></div>
+            <div><label>الإجمالي (م3)</label><input type="number" id="p2_total" readonly></div>
+        </div>
+        <div class="total-banner">إجمالي الإنتاج التقديري للمحطة: <span id="totalWaterDisp">0</span> م3</div>
+    </div>
+
+    <div class="section-box">
+        <h4 style="color: #00d4ff; border-bottom: 1px solid; margin-bottom: 10px;">⚡ ثانياً: استهلاك القوى الكهربائية</h4>
+        <div class="row-grid">
+            <div style="grid-column: span 1;"><b>عداد (1)</b></div>
+            <div><label>سابق</label><input type="number" id="e1_prev" readonly></div>
+            <div><label>حالي</label><input type="number" id="e1_curr" oninput="calcAll()"></div>
+            <div><label>الاستهلاك</label><input type="number" id="e1_diff" readonly></div>
+            <div><label>قيمة الفاتورة</label><input type="number" id="e1_cost" oninput="calcAll()"></div>
+        </div>
+        <div class="row-grid">
+            <div style="grid-column: span 1;"><b>عداد (2)</b></div>
+            <div><label>سابق</label><input type="number" id="e2_prev" readonly></div>
+            <div><label>حالي</label><input type="number" id="e2_curr" oninput="calcAll()"></div>
+            <div><label>الاستهلاك</label><input type="number" id="e2_diff" readonly></div>
+            <div><label>قيمة الفاتورة</label><input type="number" id="e2_cost" oninput="calcAll()"></div>
+        </div>
+        <div class="total-banner">إجمالي الكهرباء: <span id="totalElecQty">0</span> ك.و | التكلفة الكلية: <span id="totalElecMoney">0</span> ج.م</div>
+    </div>
+
+    <div class="section-box">
+        <h4 style="color: #2ecc71; border-bottom: 1px solid; margin-bottom: 10px;">💧 ثالثاً: عداد المياه الميكانيكي</h4>
+        <div class="row-grid">
+            <div><label>القراءة السابقة</label><input type="number" id="wm_prev" readonly></div>
+            <div><label>القراءة الحالية</label><input type="number" id="wm_curr" oninput="calcAll()"></div>
+            <div><label>كمية الاستهلاك</label><input type="number" id="wm_diff" readonly></div>
+            <div><label>قيمة المطالبة</label><input type="number" id="wm_cost" oninput="calcAll()"></div>
+        </div>
+    </div>
+
+    <div class="section-box">
+        <h4 style="color: #e67e22; border-bottom: 1px solid; margin-bottom: 10px;">⛽ رابعاً: ميزانية وقود المولد (السولار)</h4>
+        <div class="row-grid">
+            <div><label>رصيد سابق</label><input type="number" id="sol_prev" readonly></div>
+            <div><label>كمية مضافة</label><input type="number" id="sol_added" oninput="calcAll()"></div>
+            <div><label>ساعات (حمل)</label><input type="number" id="sol_h_load" oninput="calcAll()"></div>
+            <div><label>ساعات (بدون)</label><input type="number" id="sol_h_no" oninput="calcAll()"></div>
+            <div><label>المعدل (لتر/س)</label><input type="number" id="sol_rate" readonly></div>
+        </div>
+        <div class="total-banner">الرصيد الفعلي الحالي بالمستودع: <span id="sol_final">0</span> لتر</div>
+    </div>
+
+    <div class="no-print" style="margin-top: 30px;">
+        <button class="btn btn-print" onclick="printReport()"><i class="fas fa-print"></i> طباعة التقرير</button>
+        <button class="btn btn-save" onclick="saveData()"><i class="fas fa-save"></i> اعتماد وحفظ البيانات</button>
+    </div>
+
+    <div class="signature-area">
+        <div style="text-align: center;">مسؤول المحطة<br>....................</div>
+        <div style="text-align: center;">المراجعة المالية<br>....................</div>
+        <div style="text-align: center;">مدير محطات الفرع<br><b>م/ (اسمك هنا)</b></div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+    const SUPABASE_URL = 'https://jvfbkoaeugkeoiccvnkq.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_n64Hnhuruc3Oeolj-Uwg9g_tu-otJlZ';
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    let currentPumps = [], currentGens = [];
+
+    async function init() {
+        const { data } = await supabaseClient.from('stations').select('*');
+        const sel = document.getElementById('mainStation');
+        sel.innerHTML = '<option value="">اختر المحطة</option>';
+        data.forEach(s => sel.innerHTML += `<option value="${s.id}">${s.station_name}</option>`);
+        document.getElementById('printDate').innerText = new Date().toLocaleDateString('ar-EG');
+    }
+
+    async function loadStationAssets() {
+        const sid = document.getElementById('mainStation').value;
+        const p1 = await supabaseClient.from('main_pumps').select('*').eq('station_id', sid);
+        const p2 = await supabaseClient.from('sub_pumps').select('*').eq('station_id', sid);
+        const gen = await supabaseClient.from('generators').select('*').eq('station_id', sid);
+
+        currentPumps = [...(p1.data || []), ...(p2.data || [])];
+        ['pump1List', 'pump2List'].forEach(id => {
+            const s = document.getElementById(id);
+            s.innerHTML = '<option value="">اختر..</option>';
+            currentPumps.forEach(p => s.innerHTML += `<option value="${p.id}">${p.asset_name || p.pump_number}</option>`);
+        });
+        
+        if(gen.data && gen.data.length > 0) {
+            document.getElementById('sol_rate').value = gen.data[0].consumption_rate || 0;
+        }
+    }
+
+    function calcAll() {
+        // حساب المياه
+        const h1 = parseFloat(document.getElementById('p1_hours').value) || 0;
+        const f1 = parseFloat(document.getElementById('p1_flow').value) || 0;
+        const h2 = parseFloat(document.getElementById('p2_hours').value) || 0;
+        const f2 = parseFloat(document.getElementById('p2_flow').value) || 0;
+        document.getElementById('p1_total').value = h1 * f1;
+        document.getElementById('p2_total').value = h2 * f2;
+        document.getElementById('totalWaterDisp').innerText = (h1 * f1) + (h2 * f2);
+
+        // حساب الكهرباء
+        const e1_c = parseFloat(document.getElementById('e1_curr').value) || 0;
+        const e1_p = parseFloat(document.getElementById('e1_prev').value) || 0;
+        const e2_c = parseFloat(document.getElementById('e2_curr').value) || 0;
+        const e2_p = parseFloat(document.getElementById('e2_prev').value) || 0;
+        document.getElementById('e1_diff').value = e1_c - e1_p;
+        document.getElementById('e2_diff').value = e2_c - e2_p;
+        document.getElementById('totalElecQty').innerText = (e1_c - e1_p) + (e2_c - e2_p);
+        document.getElementById('totalElecMoney').innerText = (parseFloat(document.getElementById('e1_cost').value) || 0) + (parseFloat(document.getElementById('e2_cost').value) || 0);
+
+        // عداد المياه
+        const wmc = parseFloat(document.getElementById('wm_curr').value) || 0;
+        const wmp = parseFloat(document.getElementById('wm_prev').value) || 0;
+        document.getElementById('wm_diff').value = wmc - wmp;
+
+        // حساب السولار
+        const sol_p = parseFloat(document.getElementById('sol_prev').value) || 0;
+        const sol_a = parseFloat(document.getElementById('sol_added').value) || 0;
+        const hl = parseFloat(document.getElementById('sol_h_load').value) || 0;
+        const hn = parseFloat(document.getElementById('sol_h_no').value) || 0;
+        const r = parseFloat(document.getElementById('sol_rate').value) || 0;
+        const consumed = (hl * r) + (hn * (r * 0.6)); // افتراض الاستهلاك بدون حمل 60%
+        document.getElementById('sol_final').innerText = (sol_p + sol_a - consumed).toFixed(2);
+    }
+
+    async function fetchPreviousData() {
+        const sid = document.getElementById('mainStation').value;
+        const month = document.getElementById('accMonth').value;
+        if(!sid || !month) return;
+        
+        const d = new Date(month + "-01");
+        d.setMonth(d.setMonth() - 1);
+        const prevMonth = d.toISOString().split('T')[0];
+
+        const { data } = await supabaseClient.from('station_costs').select('*').eq('station_id', sid).eq('accounting_month', prevMonth).single();
+        if(data) {
+            document.getElementById('e1_prev').value = data.elec1_curr;
+            document.getElementById('e2_prev').value = data.elec2_curr;
+            document.getElementById('wm_prev').value = data.water_mech_curr;
+            document.getElementById('sol_prev').value = data.solar_current_balance;
+        } else {
+            alert("لا توجد بيانات سابقة.. يرجى إدخال القراءات السابقة يدوياً.");
+            ['e1_prev', 'e2_prev', 'wm_prev', 'sol_prev'].forEach(id => document.getElementById(id).readOnly = false);
+        }
+    }
+
+    window.getFlow = (num) => {
+        const id = document.getElementById(`pump${num}List`).value;
+        const p = currentPumps.find(x => String(x.id) === String(id));
+        document.getElementById(`p${num}_flow`).value = p ? p.flow_rate : 0;
+        calcAll();
+    };
+
+    window.printReport = () => {
+        window.print();
+    };
+
+    init();
+</script>
+</body>
+</html>
