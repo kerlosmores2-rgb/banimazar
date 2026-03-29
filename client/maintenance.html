@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>إدارة بلاغات الصيانة - بني مزار</title>
+    <title>إدارة بلاغات الصيانة المطور - بني مزار</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap');
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Cairo', sans-serif; background: #0f3b4f; color: #fff; padding: 20px; line-height: 1.6; }
         
-        /* الهيدر والبحث */
         .header-section { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px; }
         .search-box { position: relative; flex-grow: 1; max-width: 400px; }
         .search-box input { width: 100%; padding: 10px 40px 10px 15px; border-radius: 20px; border: none; background: #164a63; color: white; }
@@ -26,38 +25,33 @@
         .stat-card { background: rgba(22, 74, 99, 0.8); padding: 15px; border-radius: 12px; text-align: center; border-bottom: 4px solid #00d4ff; }
         .stat-card span { display: block; font-size: 1.8rem; font-weight: bold; color: #00d4ff; }
 
-        /* الجدول */
         .table-container { background: #164a63; border-radius: 15px; overflow-x: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
-        .data-table { width: 100%; border-collapse: collapse; min-width: 800px; }
+        .data-table { width: 100%; border-collapse: collapse; min-width: 1000px; }
         .data-table th { background: rgba(0, 212, 255, 0.1); color: #00d4ff; padding: 15px; text-align: center; font-size: 0.9rem; }
         .data-table td { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); text-align: center; vertical-align: middle; }
         
-        /* الحالات */
         .badge { padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: bold; }
         .bg-wait { background: #f39c12; color: #000; }
         .bg-done { background: #28a745; color: #fff; }
         .bg-work { background: #00d4ff; color: #000; }
 
-        /* المودال */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); justify-content: center; align-items: center; z-index: 2000; padding: 10px; }
         .modal.active { display: flex; }
-        .modal-content { background: #1e2a3a; padding: 25px; border-radius: 20px; width: 100%; max-width: 500px; border: 1px solid #00d4ff; }
+        .modal-content { background: #1e2a3a; padding: 25px; border-radius: 20px; width: 100%; max-width: 550px; border: 1px solid #00d4ff; max-height: 90vh; overflow-y: auto; }
         
-        label { color: #00d4ff; font-size: 0.85rem; margin-bottom: 5px; display: block; }
+        label { color: #00d4ff; font-size: 0.85rem; margin-bottom: 5px; display: block; font-weight: bold; }
         input, select, textarea { width: 100%; padding: 10px; margin-bottom: 15px; border-radius: 8px; border: 1px solid #333; background: #2c3e50; color: white; font-family: 'Cairo'; }
     </style>
 </head>
 <body>
 
     <div class="header-section">
-        <h2><i class="fas fa-tools"></i> بلاغات الصيانة</h2>
-        
+        <h2><i class="fas fa-tools"></i> نظام بلاغات الصيانة المطور</h2>
         <div class="search-box">
             <i class="fas fa-search"></i>
-            <input type="text" id="searchInput" placeholder="ابحث بالمحطة، المعدة، أو الموظف..." onkeyup="filterTickets()">
+            <input type="text" id="searchInput" placeholder="ابحث بالمحطة، المعدة، الموظف، أو قطعة الغيار..." onkeyup="filterTickets()">
         </div>
-
-        <button class="btn btn-primary" id="addTicketBtn"><i class="fas fa-plus"></i> بلاغ جديد</button>
+        <button class="btn btn-primary" id="addTicketBtn"><i class="fas fa-plus"></i> تسجيل بلاغ جديد</button>
     </div>
 
     <div class="dashboard">
@@ -74,7 +68,7 @@
 
     <div id="ticketModal" class="modal">
         <div class="modal-content">
-            <h3 style="margin-bottom: 15px; color:#00d4ff;">سجل بلاغ جديد</h3>
+            <h3 style="margin-bottom: 15px; color:#00d4ff;"><i class="fas fa-plus-circle"></i> سجل بلاغ عطل جديد</h3>
             <form id="ticketForm">
                 <label>المحطة:</label>
                 <select id="ticketStation" required onchange="updateRelatedData()"></select>
@@ -85,17 +79,24 @@
                         <select id="ticketAsset" required><option value="">اختر المحطة</option></select>
                     </div>
                     <div>
-                        <label>الموظف:</label>
-                        <select id="ticketEmployee" required><option value="">اختر المحطة</option></select>
+                        <label>نوع العطل:</label>
+                        <select id="faultType" required>
+                            <option value="كهرباء">كهرباء ⚡</option>
+                            <option value="ميكانيكا">ميكانيكا ⚙️</option>
+                            <option value="أخرى">أخرى</option>
+                        </select>
                     </div>
                 </div>
 
-                <label>وصف العطل:</label>
-                <textarea id="faultDesc" rows="3" required></textarea>
+                <label>الموظف المبلغ:</label>
+                <select id="ticketEmployee" required><option value="">اختر المحطة</option></select>
+
+                <label>وصف العطل الفني:</label>
+                <textarea id="faultDesc" rows="3" placeholder="اشرح المشكلة بالتفصيل..." required></textarea>
 
                 <div style="text-align: left;">
                     <button type="button" class="btn btn-danger" onclick="closeModal()">إلغاء</button>
-                    <button type="submit" class="btn btn-success">حفظ البلاغ</button>
+                    <button type="submit" class="btn btn-success">حفظ وإرسال</button>
                 </div>
             </form>
         </div>
@@ -103,17 +104,22 @@
 
     <div id="statusModal" class="modal">
         <div class="modal-content">
-            <h3 style="margin-bottom: 15px; color:#00d4ff;">تحديث حالة البلاغ</h3>
+            <h3 style="margin-bottom: 15px; color:#00d4ff;"><i class="fas fa-edit"></i> تحديث حالة البلاغ</h3>
             <input type="hidden" id="editTicketId">
-            <label>اختر الحالة الجديدة:</label>
+            
+            <label>الحالة الحالية:</label>
             <select id="newStatus">
                 <option value="قيد الانتظار">⏳ قيد الانتظار</option>
                 <option value="جاري العمل">🛠️ جاري العمل</option>
                 <option value="تم الإصلاح">✅ تم الإصلاح (إغلاق البلاغ)</option>
             </select>
-            <div style="text-align: left;">
+
+            <label>قطع الغيار المستخدمة (إن وجدت):</label>
+            <textarea id="spareParts" rows="3" placeholder="مثال: بلي 6308، ريلاي، زيت..."></textarea>
+
+            <div style="text-align: left; margin-top: 10px;">
                 <button type="button" class="btn btn-danger" onclick="closeStatusModal()">إلغاء</button>
-                <button type="button" class="btn btn-success" onclick="saveStatus()">تحديث الحالة</button>
+                <button type="button" class="btn btn-success" onclick="saveStatus()">حفظ التعديلات</button>
             </div>
         </div>
     </div>
@@ -127,32 +133,31 @@
         let allAssets = [], allEmployees = [], ticketsData = [], stationsMap = {};
 
         async function init() {
-            // جلب المحطات
-            const { data: stations } = await supabaseClient.from('stations').select('*');
-            const sSelect = document.getElementById('ticketStation');
-            sSelect.innerHTML = '<option value="" disabled selected>اختر المحطة</option>';
-            stations?.forEach(s => {
-                sSelect.innerHTML += `<option value="${s.id}">${s.station_name}</option>`;
-                stationsMap[s.id] = s.station_name;
-            });
+            try {
+                const { data: stations } = await supabaseClient.from('stations').select('*');
+                const sSelect = document.getElementById('ticketStation');
+                sSelect.innerHTML = '<option value="" disabled selected>-- اختر المحطة --</option>';
+                stations?.forEach(s => {
+                    sSelect.innerHTML += `<option value="${s.id}">${s.station_name}</option>`;
+                    stationsMap[s.id] = s.station_name;
+                });
 
-            // جلب الأصول (من الـ 7 جداول)
-            const tables = ['transformers', 'generators', 'electrical_panels', 'main_pumps', 'sub_pumps', 'other_assets', 'buildings'];
-            const results = await Promise.all(tables.map(t => supabaseClient.from(t).select('*')));
-            results.forEach(res => {
-                res.data?.forEach(item => {
-                    allAssets.push({ 
-                        name: item.asset_name || item.transformer_number || item.generator_number || item.pump_number || "معدة", 
-                        station_id: item.station_id 
+                const tables = ['transformers', 'generators', 'electrical_panels', 'main_pumps', 'sub_pumps', 'other_assets', 'buildings'];
+                const results = await Promise.all(tables.map(t => supabaseClient.from(t).select('*')));
+                results.forEach(res => {
+                    res.data?.forEach(item => {
+                        allAssets.push({ 
+                            name: item.asset_name || item.transformer_number || item.generator_number || item.pump_number || item.panel_name || "معدة", 
+                            station_id: item.station_id 
+                        });
                     });
                 });
-            });
 
-            // جلب الموظفين
-            const { data: emps } = await supabaseClient.from('employees').select('*');
-            allEmployees = emps || [];
+                const { data: emps } = await supabaseClient.from('employees').select('*');
+                allEmployees = emps || [];
 
-            loadTickets();
+                loadTickets();
+            } catch (e) { console.error("Init Error:", e); }
         }
 
         window.updateRelatedData = () => {
@@ -160,59 +165,80 @@
             const sName = stationsMap[sid];
 
             const aSel = document.getElementById('ticketAsset');
-            aSel.innerHTML = '<option value="">اختر المعدة</option>';
+            aSel.innerHTML = '<option value="">-- اختر المعدة --</option>';
             allAssets.filter(a => String(a.station_id) === String(sid)).forEach(a => aSel.innerHTML += `<option value="${a.name}">${a.name}</option>`);
 
             const eSel = document.getElementById('ticketEmployee');
-            eSel.innerHTML = '<option value="">اختر الموظف</option>';
+            eSel.innerHTML = '<option value="">-- اختر الموظف --</option>';
             allEmployees.filter(e => String(e.station_id) === String(sid) || e.station === sName).forEach(e => eSel.innerHTML += `<option value="${e.employee_name}">${e.employee_name}</option>`);
         };
 
         async function loadTickets() {
-            const { data } = await supabaseClient.from('maintenance_tickets').select('*').order('created_at', { ascending: false });
+            const { data, error } = await supabaseClient.from('maintenance_tickets').select('*').order('created_at', { ascending: false });
+            if (error) console.error(error);
             ticketsData = data || [];
             renderTable(ticketsData);
         }
 
         function renderTable(data) {
-            let html = `<table class="data-table"><thead><tr><th>التاريخ</th><th>المحطة</th><th>المعدة</th><th>الموظف</th><th>الوصف</th><th>الحالة</th><th>إجراء</th></tr></thead><tbody>`;
+            let html = `<table class="data-table">
+                <thead>
+                    <tr>
+                        <th>التاريخ</th>
+                        <th>المحطة</th>
+                        <th>المعدة</th>
+                        <th>النوع</th>
+                        <th>الموظف</th>
+                        <th>الوصف</th>
+                        <th>قطع الغيار</th>
+                        <th>الحالة</th>
+                        <th>إجراء</th>
+                    </tr>
+                </thead>
+                <tbody>`;
             
             data.forEach(t => {
                 let statusClass = t.status === 'تم الإصلاح' ? 'bg-done' : (t.status === 'جاري العمل' ? 'bg-work' : 'bg-wait');
+                let typeIcon = t.fault_type === 'كهرباء' ? '⚡' : '⚙️';
+                
                 html += `<tr>
                     <td>${new Date(t.created_at).toLocaleDateString('ar-EG')}</td>
-                    <td style="color:#00d4ff">${t.station_name}</td>
+                    <td style="color:#00d4ff; font-weight:bold;">${t.station_name}</td>
                     <td>${t.asset_name}</td>
+                    <td>${typeIcon} ${t.fault_type || 'غير محدد'}</td>
                     <td>${t.employee_name}</td>
-                    <td title="${t.fault_description}">${t.fault_description.substring(0,20)}...</td>
+                    <td title="${t.fault_description}">${t.fault_description ? t.fault_description.substring(0,15) + '...' : '---'}</td>
+                    <td style="color:#2ecc71; font-size:12px;">${t.spare_parts || '---'}</td>
                     <td><span class="badge ${statusClass}">${t.status}</span></td>
-                    <td><button class="btn btn-warning" style="padding:4px 10px; font-size:10px;" onclick="openStatusModal(${t.id}, '${t.status}')"><i class="fas fa-edit"></i> الحالة</button></td>
+                    <td>
+                        <button class="btn btn-warning" style="padding:4px 10px; font-size:11px;" onclick="openStatusModal(${t.id}, '${t.status}', '${t.spare_parts || ''}')">
+                            <i class="fas fa-edit"></i> تحديث
+                        </button>
+                    </td>
                 </tr>`;
             });
             document.getElementById('ticketsList').innerHTML = html + '</tbody></table>';
             
-            // تحديث العدادات
             document.getElementById('countTotal').innerText = data.length;
             document.getElementById('countPending').innerText = data.filter(x => x.status !== 'تم الإصلاح').length;
             document.getElementById('countDone').innerText = data.filter(x => x.status === 'تم الإصلاح').length;
         }
 
-        // نظام البحث
         window.filterTickets = () => {
             const val = document.getElementById('searchInput').value.toLowerCase();
             const filtered = ticketsData.filter(t => 
-                t.station_name.toLowerCase().includes(val) || 
-                t.asset_name.toLowerCase().includes(val) || 
-                t.employee_name.toLowerCase().includes(val) ||
-                t.fault_description.toLowerCase().includes(val)
+                (t.station_name?.toLowerCase().includes(val)) || 
+                (t.asset_name?.toLowerCase().includes(val)) || 
+                (t.spare_parts?.toLowerCase().includes(val)) ||
+                (t.employee_name?.toLowerCase().includes(val))
             );
             renderTable(filtered);
         };
 
-        // تغيير الحالة
-        window.openStatusModal = (id, currentStatus) => {
+        window.openStatusModal = (id, currentStatus, spare) => {
             document.getElementById('editTicketId').value = id;
             document.getElementById('newStatus').value = currentStatus;
+            document.getElementById('spareParts').value = (spare === 'null' || spare === 'undefined') ? '' : spare;
             document.getElementById('statusModal').classList.add('active');
         };
 
@@ -221,15 +247,23 @@
         window.saveStatus = async () => {
             const id = document.getElementById('editTicketId').value;
             const status = document.getElementById('newStatus').value;
-            const { error } = await supabaseClient.from('maintenance_tickets').update({ status: status }).eq('id', id);
+            const spare = document.getElementById('spareParts').value;
+
+            const { error } = await supabaseClient
+                .from('maintenance_tickets')
+                .update({ status: status, spare_parts: spare })
+                .eq('id', id);
+
             if (!error) {
                 closeStatusModal();
                 loadTickets();
-            }
+            } else { alert("خطأ في التحديث: " + error.message); }
         };
 
-        // إضافة بلاغ
-        document.getElementById('addTicketBtn').onclick = () => document.getElementById('ticketModal').classList.add('active');
+        document.getElementById('addTicketBtn').onclick = () => {
+            document.getElementById('ticketForm').reset();
+            document.getElementById('ticketModal').classList.add('active');
+        };
         window.closeModal = () => document.getElementById('ticketModal').classList.remove('active');
 
         document.getElementById('ticketForm').onsubmit = async (e) => {
@@ -239,13 +273,17 @@
                 station_id: s.value,
                 station_name: s.options[s.selectedIndex].text,
                 asset_name: document.getElementById('ticketAsset').value,
+                fault_type: document.getElementById('faultType').value,
                 employee_name: document.getElementById('ticketEmployee').value,
                 fault_description: document.getElementById('faultDesc').value,
                 status: 'قيد الانتظار'
             };
-            await supabaseClient.from('maintenance_tickets').insert([payload]);
-            closeModal();
-            loadTickets();
+
+            const { error } = await supabaseClient.from('maintenance_tickets').insert([payload]);
+            if (!error) {
+                closeModal();
+                loadTickets();
+            } else { alert("خطأ في الحفظ: " + error.message); }
         };
 
         init();
