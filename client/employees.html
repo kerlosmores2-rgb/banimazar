@@ -1,336 +1,177 @@
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>الموظفين</title>
 
-<script>
-const SUPABASE_URL = 'https://jvfbkoaeugkeoiccvnkq.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_n64Hnhuruc3Oeolj-Uwg9g_tu-otJlZ';
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-let employeesData = [];
-let stationsList = [];
-let currentEditId = null;
+<style>
+body {font-family: Cairo; background:#0f3b4f; color:#fff; padding:20px;}
+.btn {padding:8px 15px; border:none; border-radius:20px; cursor:pointer;}
+.btn-primary {background:#00d4ff;}
+.btn-danger {background:#dc3545; color:#fff;}
+.data-table {width:100%; border-collapse:collapse; margin-top:15px;}
+.data-table th,.data-table td{padding:10px; border-bottom:1px solid #444;}
+.modal {display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000a; justify-content:center; align-items:center;}
+.modal.active {display:flex;}
+.modal-content{background:#1e2a3a; padding:20px; border-radius:15px; width:400px;}
+</style>
+</head>
 
-// تحميل المحطات
-async function loadStations() {
-    const { data, error } = await supabaseClient
-        .from('stations')
-        .select('id, station_name')
-        .order('station_name');
+<body>
 
-    if (error) return;
+<h2>👷 إدارة الموظفين</h2>
 
-    stationsList = data;
+<button class="btn btn-primary" id="addEmployeeBtn">➕ إضافة موظف</button>
+<button class="btn" id="reportBtn">📊 تقرير</button>
 
-    const filter = document.getElementById('stationFilter');
-    const modal = document.getElementById('empStation');
+<div id="employeesList">جاري التحميل...</div>
 
-    filter.innerHTML = '<option value="">كل المحطات</option>';
-    modal.innerHTML = '<option value="">بدون محطة</option>';
+<!-- Modal -->
+<div id="employeeModal" class="modal">
+<div class="modal-content">
 
-    data.forEach(s => {
-        filter.innerHTML += `<option value="${s.id}">${s.station_name}</option>`;
-        modal.innerHTML += `<option value="${s.id}">${s.station_name}</option>`;
-    });
-}
+<h3 id="modalTitle">موظف</h3>
 
-// تحميل الموظفين
-async function loadEmployees() {
-    document.getElementById('employeesList').innerHTML = 'جاري التحميل...';
+<form id="employeeForm">
+<input type="hidden" id="employeeId">
 
-    let query = supabaseClient.from('employees').select('*');
+<input id="empName" placeholder="الاسم"><br><br>
+<input id="empCode" placeholder="الكود"><br><br>
+<input id="empDept" placeholder="القسم"><br><br>
+<input id="empPhone" placeholder="الهاتف"><br><br>
 
-    const station = stationFilter.value;
-    const dept = deptFilter.value;
-    const status = statusFilter.value;
+<button class="btn btn-primary">حفظ</button>
+<button type="button" onclick="closeModal()">إلغاء</button>
 
-    if (station) query = query.eq('station_id', station);
-    if (dept) query = query.eq('department', dept);
-    if (status) query = query.eq('status', status);
+</form>
 
-    const { data, error } = await query.order('id', { ascending: false });
+</div>
+</div>
 
-    if (error) {
-        employeesList.innerHTML = 'خطأ في التحميل';
-        return;
-    }
-
-    employeesData = data || [];
-    renderTable();
-}
-
-// عرض الجدول
-function renderTable() {
-    const container = document.getElementById('employeesList');
-
-    if (!employeesData.length) {
-        container.innerHTML = '<div class="no-data">لا يوجد موظفين</div>';
-        return;
-    }
-
-    let html = `
-    <table class="data-table">
-    <thead>
-    <tr>
-        <th>#</th>
-        <th>الاسم</th>
-        <th>الكود</th>
-        <th>المحطة</th>
-        <th>القسم</th>
-        <th>الوظيفة</th>
-        <th>الهاتف</th>
-        <th>الحالة</th>
-        <th>الإجراءات</th>
-    </tr>
-    </thead>
-    <tbody>`;
-
-    employeesData.forEach((e, i) => {
-        const station = stationsList.find(s => s.id == e.station_id);
-
-        html += `
-        <tr>
-            <td>${i+1}</td>
-            <td>${e.employee_name}</td>
-            <td>${e.employee_code || '-'}</td>
-            <td>${station?.station_name || '-'}</td>
-            <td>${e.department || '-'}</td>
-            <td>${e.job_title || '-'}</td>
-            <td>${e.phone || '-'}</td>
-            <td>${e.status || '-'}</td>
-            <td>
-                <button class="btn btn-sm btn-primary" onclick="editEmployee(${e.id})">تعديل</button>
-                <button class="btn btn-sm btn-danger" onclick="deleteEmployeeRow(${e.id})">حذف</button>
-            </td>
-        </tr>`;
-    });
-
-    html += '</tbody></table>';
-    container.innerHTML = html;
-}
-
-// إضافة
-document.getElementById('addEmployeeBtn').onclick = () => {
-    currentEditId = null;
-    employeeForm.reset();
-    employeeId.value = '';
-    modalTitle.innerText = 'إضافة موظف';
-    employeeModal.classList.add('active');
-};
-
-// تعديل
-window.editEmployee = (id) => {
-    const e = employeesData.find(x => x.id == id);
-    if (!e) return;
-
-    currentEditId = id;
-
-    employeeId.value = e.id;
-    empName.value = e.employee_name;
-    empCode.value = e.employee_code || '';
-    empStation.value = e.station_id || '';
-    empDept.value = e.department || '';
-    empJob.value = e.job_title || '';
-    empPhone.value = e.phone || '';
-    empEmail.value = e.email || '';
-    empHireDate.value = e.hire_date || '';
-    empStatus.value = e.status || 'active';
-    empNotes.value = e.notes || '';
-
-    modalTitle.innerText = 'تعديل موظف';
-    employeeModal.classList.add('active');
-};
-
-// حذف
-window.deleteEmployeeRow = async (id) => {
-    if (!confirm('حذف الموظف؟')) return;
-
-    const { error } = await supabaseClient
-        .from('employees')
-        .delete()
-        .eq('id', id);
-
-    if (!error) loadEmployees();
-};
-
-// حفظ
-employeeForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-
-    const data = {
-        employee_name: empName.value,
-        employee_code: empCode.value,
-        station_id: empStation.value || null,
-        department: empDept.value,
-        job_title: empJob.value,
-        phone: empPhone.value,
-        email: empEmail.value,
-        hire_date: empHireDate.value,
-        status: empStatus.value,
-        notes: empNotes.value
-    };
-
-    if (currentEditId) {
-        await supabaseClient.from('employees').update(data).eq('id', currentEditId);
-    } else {
-        await supabaseClient.from('employees').insert([data]);
-    }
-
-    closeEmployeeModal();
-    loadEmployees();
-});
-
-// فلاتر
-filterBtn.onclick = loadEmployees;
-
-// تشغيل
-loadStations();
-loadEmployees();
-    
-</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
 document.addEventListener("DOMContentLoaded", () => {
 
 const supabaseClient = supabase.createClient(
-    'https://jvfbkoaeugkeoiccvnkq.supabase.co',
-    'sb_publishable_n64Hnhuruc3Oeolj-Uwg9g_tu-otJlZ'
+'https://jvfbkoaeugkeoiccvnkq.supabase.co',
+'sb_publishable_n64Hnhuruc3Oeolj-Uwg9g_tu-otJlZ'
 );
 
 let employeesData = [];
-let stationsList = [];
 let currentEditId = null;
 
-// تحميل المحطات
-async function loadStations() {
-    const { data } = await supabaseClient.from('stations').select('*');
+async function loadEmployees(){
+employeesList.innerHTML='جاري التحميل...';
 
-    stationsList = data || [];
+const {data,error} = await supabaseClient.from('employees').select('*');
 
-    stationFilter.innerHTML = '<option value="">كل المحطات</option>';
-    empStation.innerHTML = '<option value="">بدون محطة</option>';
+if(error){ employeesList.innerHTML='خطأ'; return;}
 
-    stationsList.forEach(s => {
-        stationFilter.innerHTML += `<option value="${s.id}">${s.station_name}</option>`;
-        empStation.innerHTML += `<option value="${s.id}">${s.station_name}</option>`;
-    });
+employeesData=data||[];
+renderTable();
 }
 
-// تحميل الموظفين
-async function loadEmployees() {
-    employeesList.innerHTML = '<p>جاري التحميل...</p>';
-
-    let query = supabaseClient.from('employees').select('*');
-
-    if (stationFilter.value) query = query.eq('station_id', stationFilter.value);
-    if (deptFilter.value) query = query.eq('department', deptFilter.value);
-    if (statusFilter.value) query = query.eq('status', statusFilter.value);
-
-    const { data, error } = await query;
-
-    if (error) {
-        employeesList.innerHTML = 'خطأ';
-        return;
-    }
-
-    employeesData = data || [];
-    renderTable();
+function renderTable(){
+if(!employeesData.length){
+employeesList.innerHTML='لا يوجد موظفين';
+return;
 }
 
-// رسم الجدول
-function renderTable() {
-    if (!employeesData.length) {
-        employeesList.innerHTML = '<p>لا يوجد موظفين</p>';
-        return;
-    }
+let html='<table class="data-table"><tr><th>#</th><th>الاسم</th><th>القسم</th><th>الهاتف</th><th>الإجراءات</th></tr>';
 
-    let html = `
-    <table class="data-table">
-    <thead>
-    <tr>
-        <th>#</th>
-        <th>الاسم</th>
-        <th>الكود</th>
-        <th>القسم</th>
-        <th>الهاتف</th>
-        <th>الإجراءات</th>
-    </tr>
-    </thead>
-    <tbody>`;
+employeesData.forEach((e,i)=>{
+html+=`
+<tr>
+<td>${i+1}</td>
+<td>${e.employee_name}</td>
+<td>${e.department||'-'}</td>
+<td>${e.phone||'-'}</td>
+<td>
+<button onclick="editEmployee(${e.id})">تعديل</button>
+<button onclick="deleteEmployee(${e.id})">حذف</button>
+</td>
+</tr>`;
+});
 
-    employeesData.forEach((e, i) => {
-        html += `
-        <tr>
-            <td>${i+1}</td>
-            <td>${e.employee_name}</td>
-            <td>${e.employee_code || '-'}</td>
-            <td>${e.department || '-'}</td>
-            <td>${e.phone || '-'}</td>
-            <td>
-                <button onclick="editEmployee(${e.id})">تعديل</button>
-                <button onclick="deleteEmployeeRow(${e.id})">حذف</button>
-            </td>
-        </tr>`;
-    });
-
-    html += '</tbody></table>';
-    employeesList.innerHTML = html;
+html+='</table>';
+employeesList.innerHTML=html;
 }
 
-// زر الإضافة
-addEmployeeBtn.onclick = () => {
-    currentEditId = null;
-    employeeForm.reset();
-    employeeModal.classList.add('active');
+document.getElementById('addEmployeeBtn').onclick=()=>{
+currentEditId=null;
+employeeForm.reset();
+employeeModal.classList.add('active');
 };
 
-// تعديل
-window.editEmployee = (id) => {
-    const e = employeesData.find(x => x.id == id);
-    if (!e) return;
+window.editEmployee=(id)=>{
+const e=employeesData.find(x=>x.id==id);
+if(!e) return;
 
-    currentEditId = id;
+currentEditId=id;
 
-    empName.value = e.employee_name;
-    empCode.value = e.employee_code || '';
-    empDept.value = e.department || '';
-    empPhone.value = e.phone || '';
+empName.value=e.employee_name;
+empCode.value=e.employee_code||'';
+empDept.value=e.department||'';
+empPhone.value=e.phone||'';
 
-    employeeModal.classList.add('active');
+employeeModal.classList.add('active');
 };
 
-// حذف
-window.deleteEmployeeRow = async (id) => {
-    if (!confirm('حذف؟')) return;
+window.deleteEmployee=async(id)=>{
+if(!confirm('حذف؟')) return;
 
-    await supabaseClient.from('employees').delete().eq('id', id);
-    loadEmployees();
+await supabaseClient.from('employees').delete().eq('id',id);
+loadEmployees();
 };
 
-// حفظ
-employeeForm.onsubmit = async (e) => {
-    e.preventDefault();
+employeeForm.onsubmit=async(e)=>{
+e.preventDefault();
 
-    const data = {
-        employee_name: empName.value,
-        employee_code: empCode.value,
-        department: empDept.value,
-        phone: empPhone.value
-    };
-
-    if (currentEditId) {
-        await supabaseClient.from('employees').update(data).eq('id', currentEditId);
-    } else {
-        await supabaseClient.from('employees').insert([data]);
-    }
-
-    employeeModal.classList.remove('active');
-    loadEmployees();
+const data={
+employee_name:empName.value,
+employee_code:empCode.value,
+department:empDept.value,
+phone:empPhone.value
 };
 
-// تشغيل
-loadStations();
+if(currentEditId){
+await supabaseClient.from('employees').update(data).eq('id',currentEditId);
+}else{
+await supabaseClient.from('employees').insert([data]);
+}
+
+closeModal();
+loadEmployees();
+};
+
+window.closeModal=()=>employeeModal.classList.remove('active');
+
+document.getElementById('reportBtn').onclick=async()=>{
+const {data}=await supabaseClient.from('maintenance').select('assigned_employee_id');
+
+let count={};
+
+data.forEach(r=>{
+if(!r.assigned_employee_id) return;
+count[r.assigned_employee_id]=(count[r.assigned_employee_id]||0)+1;
+});
+
+let report='📊 تقرير الموظفين\n\n';
+
+employeesData.forEach(e=>{
+report+=`${e.employee_name} : ${count[e.id]||0} بلاغ\n`;
+});
+
+alert(report);
+};
+
 loadEmployees();
 
 });
 </script>
+
 </body>
+</html>
