@@ -1,177 +1,176 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<title>الموظفين</title>
-
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-<style>
-body {font-family: Cairo; background:#0f3b4f; color:#fff; padding:20px;}
-.btn {padding:8px 15px; border:none; border-radius:20px; cursor:pointer;}
-.btn-primary {background:#00d4ff;}
-.btn-danger {background:#dc3545; color:#fff;}
-.data-table {width:100%; border-collapse:collapse; margin-top:15px;}
-.data-table th,.data-table td{padding:10px; border-bottom:1px solid #444;}
-.modal {display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000a; justify-content:center; align-items:center;}
-.modal.active {display:flex;}
-.modal-content{background:#1e2a3a; padding:20px; border-radius:15px; width:400px;}
-</style>
+    <meta charset="UTF-8">
+    <title>الموظفين</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Cairo', sans-serif; background: #0f3b4f; color: #fff; padding: 20px; }
+        .btn { padding: 8px 15px; border: none; border-radius: 20px; cursor: pointer; margin: 5px; }
+        .btn-primary { background: #00d4ff; color: #000; font-weight: bold; }
+        .btn-danger { background: #dc3545; color: #fff; }
+        .data-table { width: 100%; border-collapse: collapse; margin-top: 15px; background: #164a63; border-radius: 10px; overflow: hidden; }
+        .data-table th, .data-table td { padding: 12px; border-bottom: 1px solid #ffffff22; text-align: center; }
+        .data-table th { background: #00d4ff33; color: #00d4ff; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); justify-content: center; align-items: center; z-index: 1000; }
+        .modal.active { display: flex; }
+        .modal-content { background: #1e2a3a; padding: 25px; border-radius: 15px; width: 400px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+        input, select { width: 100%; padding: 10px; margin-bottom: 15px; border-radius: 8px; border: 1px solid #444; background: #2c3e50; color: white; box-sizing: border-box; }
+    </style>
 </head>
 
 <body>
 
-<h2>👷 إدارة الموظفين</h2>
+    <h2>👷 إدارة الموظفين</h2>
 
-<button class="btn btn-primary" id="addEmployeeBtn">➕ إضافة موظف</button>
-<button class="btn" id="reportBtn">📊 تقرير</button>
+    <button class="btn btn-primary" id="addEmployeeBtn">➕ إضافة موظف</button>
+    <button class="btn" id="reportBtn" style="background: #28a745; color:white;">📊 تقرير</button>
 
-<div id="employeesList">جاري التحميل...</div>
+    <div id="employeesList">جاري التحميل...</div>
 
-<!-- Modal -->
-<div id="employeeModal" class="modal">
-<div class="modal-content">
+    <div id="employeeModal" class="modal">
+        <div class="modal-content">
+            <h3 id="modalTitle">بيانات الموظف</h3>
+            <form id="employeeForm">
+                <input type="hidden" id="employeeId">
+                
+                <input id="empName" placeholder="الاسم الكامل" required>
+                <input id="empCode" placeholder="كود الموظف">
 
-<h3 id="modalTitle">موظف</h3>
+                <label>الوظيفة:</label>
+                <select id="empDept" required>
+                    <option value="" disabled selected>اختر الوظيفة...</option>
+                    <option value="مدير محطة">مدير محطة</option>
+                    <option value="مهندس">مهندس</option>
+                    <option value="فني">فني</option>
+                    <option value="عامل">عامل</option>
+                    <option value="إداري">إداري</option>
+                    <option value="أمن">أمن</option>
+                    <option value="أمين مخزن">أمين مخزن</option>
+                    <option value="سائق">سائق</option>
+                </select>
 
-<form id="employeeForm">
-<input type="hidden" id="employeeId">
+                <label>المحطة:</label>
+                <select id="empStation" required>
+                    <option value="" disabled selected>جاري تحميل المحطات...</option>
+                </select>
 
-<input id="empName" placeholder="الاسم"><br><br>
-<input id="empCode" placeholder="الكود"><br><br>
-<input id="empDept" placeholder="القسم"><br><br>
-<input id="empPhone" placeholder="الهاتف"><br><br>
+                <input id="empPhone" placeholder="رقم الهاتف">
 
-<button class="btn btn-primary">حفظ</button>
-<button type="button" onclick="closeModal()">إلغاء</button>
+                <div style="text-align: left;">
+                    <button type="submit" class="btn btn-primary">حفظ</button>
+                    <button type="button" class="btn btn-danger" onclick="closeModal()">إلغاء</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
-</form>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const supabaseClient = supabase.createClient(
+                'https://jvfbkoaeugkeoiccvnkq.supabase.co',
+                'sb_publishable_n64Hnhuruc3Oeolj-Uwg9g_tu-otJlZ'
+            );
 
-</div>
-</div>
+            let employeesData = [];
+            let currentEditId = null;
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+            // 1. وظيفة جلب المحطات من قاعدة البيانات
+            async function loadStations() {
+                const stationSelect = document.getElementById('empStation');
+                // تأكد من أن اسم الجدول 'stations' واسم العمود 'station_name' مطابق للي عندك
+                const { data, error } = await supabaseClient.from('stations').select('station_name');
+                
+                if (error) {
+                    stationSelect.innerHTML = '<option value="">خطأ في تحميل المحطات</option>';
+                    return;
+                }
 
-<script>
-document.addEventListener("DOMContentLoaded", () => {
+                stationSelect.innerHTML = '<option value="" disabled selected>اختر المحطة...</option>';
+                data.forEach(s => {
+                    let opt = document.createElement('option');
+                    opt.value = s.station_name;
+                    opt.text = s.station_name;
+                    stationSelect.appendChild(opt);
+                });
+            }
 
-const supabaseClient = supabase.createClient(
-'https://jvfbkoaeugkeoiccvnkq.supabase.co',
-'sb_publishable_n64Hnhuruc3Oeolj-Uwg9g_tu-otJlZ'
-);
+            async function loadEmployees() {
+                const { data, error } = await supabaseClient.from('employees').select('*');
+                if (error) { document.getElementById('employeesList').innerHTML = 'خطأ'; return; }
+                employeesData = data || [];
+                renderTable();
+            }
 
-let employeesData = [];
-let currentEditId = null;
+            function renderTable() {
+                let html = '<table class="data-table"><tr><th>#</th><th>الاسم</th><th>الوظيفة</th><th>المحطة</th><th>الإجراءات</th></tr>';
+                employeesData.forEach((e, i) => {
+                    html += `<tr>
+                        <td>${i + 1}</td>
+                        <td>${e.employee_name}</td>
+                        <td>${e.department || '-'}</td>
+                        <td>${e.station || '-'}</td>
+                        <td>
+                            <button class="btn" style="background:#ffc107" onclick="editEmployee(${e.id})">تعديل</button>
+                            <button class="btn btn-danger" onclick="deleteEmployee(${e.id})">حذف</button>
+                        </td>
+                    </tr>`;
+                });
+                html += '</table>';
+                document.getElementById('employeesList').innerHTML = html;
+            }
 
-async function loadEmployees(){
-employeesList.innerHTML='جاري التحميل...';
+            // تشغيل الوظائف عند فتح الصفحة
+            loadStations(); 
+            loadEmployees();
 
-const {data,error} = await supabaseClient.from('employees').select('*');
+            // بقية الأكواد (إضافة، تعديل، حذف)
+            document.getElementById('addEmployeeBtn').onclick = () => {
+                currentEditId = null;
+                document.getElementById('employeeForm').reset();
+                document.getElementById('employeeModal').classList.add('active');
+            };
 
-if(error){ employeesList.innerHTML='خطأ'; return;}
+            window.editEmployee = (id) => {
+                const e = employeesData.find(x => x.id == id);
+                if (!e) return;
+                currentEditId = id;
+                document.getElementById('empName').value = e.employee_name;
+                document.getElementById('empCode').value = e.employee_code || '';
+                document.getElementById('empDept').value = e.department || '';
+                document.getElementById('empStation').value = e.station || '';
+                document.getElementById('empPhone').value = e.phone || '';
+                document.getElementById('employeeModal').classList.add('active');
+            };
 
-employeesData=data||[];
-renderTable();
-}
+            window.deleteEmployee = async (id) => {
+                if (!confirm('حذف؟')) return;
+                await supabaseClient.from('employees').delete().eq('id', id);
+                loadEmployees();
+            };
 
-function renderTable(){
-if(!employeesData.length){
-employeesList.innerHTML='لا يوجد موظفين';
-return;
-}
+            document.getElementById('employeeForm').onsubmit = async (e) => {
+                e.preventDefault();
+                const data = {
+                    employee_name: document.getElementById('empName').value,
+                    employee_code: document.getElementById('empCode').value,
+                    department: document.getElementById('empDept').value,
+                    station: document.getElementById('empStation').value,
+                    phone: document.getElementById('empPhone').value
+                };
 
-let html='<table class="data-table"><tr><th>#</th><th>الاسم</th><th>القسم</th><th>الهاتف</th><th>الإجراءات</th></tr>';
+                if (currentEditId) {
+                    await supabaseClient.from('employees').update(data).eq('id', currentEditId);
+                } else {
+                    await supabaseClient.from('employees').insert([data]);
+                }
+                closeModal();
+                loadEmployees();
+            };
 
-employeesData.forEach((e,i)=>{
-html+=`
-<tr>
-<td>${i+1}</td>
-<td>${e.employee_name}</td>
-<td>${e.department||'-'}</td>
-<td>${e.phone||'-'}</td>
-<td>
-<button onclick="editEmployee(${e.id})">تعديل</button>
-<button onclick="deleteEmployee(${e.id})">حذف</button>
-</td>
-</tr>`;
-});
-
-html+='</table>';
-employeesList.innerHTML=html;
-}
-
-document.getElementById('addEmployeeBtn').onclick=()=>{
-currentEditId=null;
-employeeForm.reset();
-employeeModal.classList.add('active');
-};
-
-window.editEmployee=(id)=>{
-const e=employeesData.find(x=>x.id==id);
-if(!e) return;
-
-currentEditId=id;
-
-empName.value=e.employee_name;
-empCode.value=e.employee_code||'';
-empDept.value=e.department||'';
-empPhone.value=e.phone||'';
-
-employeeModal.classList.add('active');
-};
-
-window.deleteEmployee=async(id)=>{
-if(!confirm('حذف؟')) return;
-
-await supabaseClient.from('employees').delete().eq('id',id);
-loadEmployees();
-};
-
-employeeForm.onsubmit=async(e)=>{
-e.preventDefault();
-
-const data={
-employee_name:empName.value,
-employee_code:empCode.value,
-department:empDept.value,
-phone:empPhone.value
-};
-
-if(currentEditId){
-await supabaseClient.from('employees').update(data).eq('id',currentEditId);
-}else{
-await supabaseClient.from('employees').insert([data]);
-}
-
-closeModal();
-loadEmployees();
-};
-
-window.closeModal=()=>employeeModal.classList.remove('active');
-
-document.getElementById('reportBtn').onclick=async()=>{
-const {data}=await supabaseClient.from('maintenance').select('assigned_employee_id');
-
-let count={};
-
-data.forEach(r=>{
-if(!r.assigned_employee_id) return;
-count[r.assigned_employee_id]=(count[r.assigned_employee_id]||0)+1;
-});
-
-let report='📊 تقرير الموظفين\n\n';
-
-employeesData.forEach(e=>{
-report+=`${e.employee_name} : ${count[e.id]||0} بلاغ\n`;
-});
-
-alert(report);
-};
-
-loadEmployees();
-
-});
-</script>
-
+            window.closeModal = () => document.getElementById('employeeModal').classList.remove('active');
+        });
+    </script>
 </body>
 </html>
