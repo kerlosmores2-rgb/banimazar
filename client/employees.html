@@ -2,19 +2,31 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>الموظفين</title>
+    <title>إدارة الموظفين - بحث متقدم</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body { font-family: 'Cairo', sans-serif; background: #0f3b4f; color: #fff; padding: 20px; }
         .btn { padding: 8px 15px; border: none; border-radius: 20px; cursor: pointer; margin: 5px; }
         .btn-primary { background: #00d4ff; color: #000; font-weight: bold; }
         .btn-danger { background: #dc3545; color: #fff; }
+        
+        /* تنسيق حقل البحث */
+        .search-container { margin: 20px 0; }
+        #searchInput { 
+            width: 100%; max-width: 500px; padding: 12px 20px; 
+            border-radius: 30px; border: 2px solid #00d4ff; 
+            background: #164a63; color: white; font-size: 16px;
+            outline: none;
+        }
+        #searchInput::placeholder { color: #aaa; }
+
         .data-table { width: 100%; border-collapse: collapse; margin-top: 15px; background: #164a63; border-radius: 10px; overflow: hidden; }
         .data-table th, .data-table td { padding: 12px; border-bottom: 1px solid #ffffff22; text-align: center; }
         .data-table th { background: #00d4ff33; color: #00d4ff; }
+        
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); justify-content: center; align-items: center; z-index: 1000; }
         .modal.active { display: flex; }
-        .modal-content { background: #1e2a3a; padding: 25px; border-radius: 15px; width: 400px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+        .modal-content { background: #1e2a3a; padding: 25px; border-radius: 15px; width: 400px; }
         input, select { width: 100%; padding: 10px; margin-bottom: 15px; border-radius: 8px; border: 1px solid #444; background: #2c3e50; color: white; box-sizing: border-box; }
     </style>
 </head>
@@ -23,8 +35,14 @@
 
     <h2>👷 إدارة الموظفين</h2>
 
-    <button class="btn btn-primary" id="addEmployeeBtn">➕ إضافة موظف</button>
-    <button class="btn" id="reportBtn" style="background: #28a745; color:white;">📊 تقرير</button>
+    <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+        <button class="btn btn-primary" id="addEmployeeBtn">➕ إضافة موظف</button>
+        <button class="btn" id="reportBtn" style="background: #28a745; color:white;">📊 تقرير</button>
+    </div>
+
+    <div class="search-container">
+        <input type="text" id="searchInput" placeholder="🔍 ابحث بالاسم، الكود، المحطة، أو الوظيفة...">
+    </div>
 
     <div id="employeesList">جاري التحميل...</div>
 
@@ -33,10 +51,9 @@
             <h3 id="modalTitle">بيانات الموظف</h3>
             <form id="employeeForm">
                 <input type="hidden" id="employeeId">
-                
                 <input id="empName" placeholder="الاسم الكامل" required>
                 <input id="empCode" placeholder="كود الموظف">
-
+                
                 <label>الوظيفة:</label>
                 <select id="empDept" required>
                     <option value="" disabled selected>اختر الوظيفة...</option>
@@ -73,39 +90,41 @@
                 'sb_publishable_n64Hnhuruc3Oeolj-Uwg9g_tu-otJlZ'
             );
 
-            let employeesData = [];
+            let employeesData = []; // هنا نخزن كل الموظفين
             let currentEditId = null;
 
-            // 1. وظيفة جلب المحطات من قاعدة البيانات
+            // جلب المحطات
             async function loadStations() {
                 const stationSelect = document.getElementById('empStation');
-                // تأكد من أن اسم الجدول 'stations' واسم العمود 'station_name' مطابق للي عندك
                 const { data, error } = await supabaseClient.from('stations').select('station_name');
-                
-                if (error) {
-                    stationSelect.innerHTML = '<option value="">خطأ في تحميل المحطات</option>';
+                if (!error) {
+                    stationSelect.innerHTML = '<option value="" disabled selected>اختر المحطة...</option>';
+                    data.forEach(s => {
+                        let opt = document.createElement('option');
+                        opt.value = s.station_name; opt.text = s.station_name;
+                        stationSelect.appendChild(opt);
+                    });
+                }
+            }
+
+            // جلب الموظفين
+            async function loadEmployees() {
+                const { data, error } = await supabaseClient.from('employees').select('*');
+                if (error) return;
+                employeesData = data || [];
+                renderTable(employeesData); // نعرض الكل في البداية
+            }
+
+            // وظيفة رسم الجدول (تقبل مصفوفة بيانات لعرضها)
+            function renderTable(dataToDisplay) {
+                const listDiv = document.getElementById('employeesList');
+                if (!dataToDisplay.length) {
+                    listDiv.innerHTML = '<p style="text-align:center;">لا توجد بيانات لعرضها</p>';
                     return;
                 }
 
-                stationSelect.innerHTML = '<option value="" disabled selected>اختر المحطة...</option>';
-                data.forEach(s => {
-                    let opt = document.createElement('option');
-                    opt.value = s.station_name;
-                    opt.text = s.station_name;
-                    stationSelect.appendChild(opt);
-                });
-            }
-
-            async function loadEmployees() {
-                const { data, error } = await supabaseClient.from('employees').select('*');
-                if (error) { document.getElementById('employeesList').innerHTML = 'خطأ'; return; }
-                employeesData = data || [];
-                renderTable();
-            }
-
-            function renderTable() {
                 let html = '<table class="data-table"><tr><th>#</th><th>الاسم</th><th>الوظيفة</th><th>المحطة</th><th>الإجراءات</th></tr>';
-                employeesData.forEach((e, i) => {
+                dataToDisplay.forEach((e, i) => {
                     html += `<tr>
                         <td>${i + 1}</td>
                         <td>${e.employee_name}</td>
@@ -118,14 +137,28 @@
                     </tr>`;
                 });
                 html += '</table>';
-                document.getElementById('employeesList').innerHTML = html;
+                listDiv.innerHTML = html;
             }
 
-            // تشغيل الوظائف عند فتح الصفحة
-            loadStations(); 
+            // --- ميزة البحث الفوري ---
+            document.getElementById('searchInput').oninput = function() {
+                const val = this.value.toLowerCase();
+                const filtered = employeesData.filter(emp => {
+                    return (
+                        (emp.employee_name && emp.employee_name.toLowerCase().includes(val)) ||
+                        (emp.employee_code && emp.employee_code.toLowerCase().includes(val)) ||
+                        (emp.station && emp.station.toLowerCase().includes(val)) ||
+                        (emp.department && emp.department.toLowerCase().includes(val))
+                    );
+                });
+                renderTable(filtered); // إعادة رسم الجدول بالنتائج المفلترة فقط
+            };
+
+            // تشغيل الوظائف الأساسية
+            loadStations();
             loadEmployees();
 
-            // بقية الأكواد (إضافة، تعديل، حذف)
+            // باقي العمليات (إضافة، تعديل، حذف)
             document.getElementById('addEmployeeBtn').onclick = () => {
                 currentEditId = null;
                 document.getElementById('employeeForm').reset();
@@ -159,17 +192,23 @@
                     station: document.getElementById('empStation').value,
                     phone: document.getElementById('empPhone').value
                 };
-
-                if (currentEditId) {
-                    await supabaseClient.from('employees').update(data).eq('id', currentEditId);
-                } else {
-                    await supabaseClient.from('employees').insert([data]);
-                }
+                if (currentEditId) await supabaseClient.from('employees').update(data).eq('id', currentEditId);
+                else await supabaseClient.from('employees').insert([data]);
+                
                 closeModal();
                 loadEmployees();
             };
 
             window.closeModal = () => document.getElementById('employeeModal').classList.remove('active');
+
+            document.getElementById('reportBtn').onclick = async () => {
+                const { data } = await supabaseClient.from('maintenance').select('assigned_employee_id');
+                let count = {};
+                data.forEach(r => { if(r.assigned_employee_id) count[r.assigned_employee_id] = (count[r.assigned_employee_id]||0)+1; });
+                let report = '📊 تقرير الموظفين\n\n';
+                employeesData.forEach(e => { report += `${e.employee_name}: ${count[e.id]||0} بلاغ\n`; });
+                alert(report);
+            };
         });
     </script>
 </body>
