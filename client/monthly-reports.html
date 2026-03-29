@@ -3,120 +3,111 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>إدارة تكاليف المحطات - بني مزار</title>
+    <title>منظومة التكاليف الشهرية - بني مزار</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap');
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Cairo', sans-serif; background: #0f3b4f; color: #fff; padding: 20px; }
+        body { font-family: 'Cairo', sans-serif; background: #0f3b4f; color: #fff; padding: 20px; line-height: 1.6; }
         
-        /* الهيدر الموحد */
-        .header-section { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 2px solid #00d4ff; padding-bottom: 15px; }
-        .header-section h2 { color: #00d4ff; display: flex; align-items: center; gap: 10px; }
+        .header-section { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px; }
+        .btn { padding: 10px 20px; border-radius: 20px; border: none; cursor: pointer; display: flex; align-items: center; gap: 8px; font-family: 'Cairo'; font-weight: bold; transition: 0.3s; text-decoration: none; }
+        .btn-add { background: #2ecc71; color: white; }
+        .btn-print { background: #f39c12; color: white; }
 
-        /* الحاويات (Containers) */
-        .card { background: #164a63; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); margin-bottom: 20px; }
-        .section-title { color: #f1c40f; margin-bottom: 15px; border-right: 4px solid #f1c40f; padding-right: 10px; font-size: 1.1rem; }
+        /* الكروت والجدول */
+        .card { background: #164a63; border-radius: 15px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; text-align: right; min-width: 800px; }
+        th { background: rgba(0, 212, 255, 0.1); color: #00d4ff; padding: 15px; border-bottom: 2px solid #00d4ff; }
+        td { padding: 12px 15px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        tr:hover { background: rgba(255,255,255,0.02); }
+
+        /* المودال (نافذة الإدخال) */
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
+        .modal.active { display: flex; }
+        .modal-content { background: #164a63; width: 100%; max-width: 800px; border-radius: 20px; padding: 25px; max-height: 90vh; overflow-y: auto; position: relative; }
         
-        /* الشبكة (Grid) */
-        .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
-        .grid-5 { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; color: #00d4ff; font-size: 0.9rem; }
+        input, select, textarea { width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #1e5f7a; background: #0f3b4f; color: #fff; font-family: 'Cairo'; }
+        input[readonly] { background: #0b2533; color: #2ecc71; border-style: dashed; }
 
-        /* المدخلات */
-        label { display: block; font-size: 0.85rem; color: #00d4ff; margin-bottom: 5px; }
-        input, select { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #333; background: #2c3e50; color: white; font-family: 'Cairo'; }
-        input[readonly] { background: rgba(0, 212, 255, 0.1); color: #2ecc71; font-weight: bold; border: 1px dashed #00d4ff; }
-
-        /* الأزرار */
-        .btn { padding: 10px 20px; border: none; border-radius: 25px; cursor: pointer; font-weight: bold; display: inline-flex; align-items: center; gap: 8px; font-family: 'Cairo'; transition: 0.3s; }
-        .btn-primary { background: #00d4ff; color: #000; }
-        .btn-success { background: #28a745; color: white; width: 100%; justify-content: center; font-size: 1.2rem; margin-top: 20px; }
-        .btn-print { background: #f39c12; color: #000; }
-
-        /* شريط الإجماليات */
-        .total-strip { background: rgba(0, 212, 255, 0.2); padding: 10px; border-radius: 8px; text-align: center; margin-top: 10px; font-weight: bold; border: 1px solid #00d4ff; }
-
-        /* إعدادات الطباعة */
-        @media print {
-            body { background: white !important; color: black !important; padding: 0; }
-            .btn, .no-print { display: none !important; }
-            .card { background: white !important; color: black !important; box-shadow: none; border: 1px solid #000; }
-            input, select { border: none !important; color: black !important; background: transparent !important; }
-            .section-title { color: black !important; border-right: 4px solid black; }
-            .header-section h2 { color: black !important; }
-        }
+        .section-tag { background: rgba(241, 196, 15, 0.1); color: #f1c40f; padding: 5px 15px; border-radius: 15px; display: inline-block; margin-bottom: 15px; font-weight: bold; font-size: 0.9rem; }
+        
+        @media print { .no-print { display: none !important; } body { background: white; color: black; } .card { box-shadow: none; border: 1px solid #000; } }
     </style>
 </head>
 <body>
 
     <div class="header-section no-print">
-        <h2><i class="fas fa-calculator"></i> منظومة تكاليف تشغيل المحطات</h2>
+        <h2><i class="fas fa-file-invoice-dollar"></i> تقارير التكاليف الشهرية</h2>
         <div style="display: flex; gap: 10px;">
-            <button class="btn btn-print" onclick="window.print()"><i class="fas fa-print"></i> طباعة التقرير</button>
-        </div>
-    </div>
-
-    <div class="card no-print">
-        <div class="grid-3">
-            <div>
-                <label>اختر المحطة:</label>
-                <select id="mainStation" onchange="loadAssets()"></select>
-            </div>
-            <div>
-                <label>شهر المحاسبة:</label>
-                <input type="month" id="accMonth" onchange="fetchPrevMonthData()">
-            </div>
+            <button class="btn btn-print" onclick="window.print()"><i class="fas fa-print"></i> طباعة</button>
+            <button class="btn btn-add" id="addReportBtn"><i class="fas fa-plus"></i> إضافة تقرير شهر جديد</button>
         </div>
     </div>
 
     <div class="card">
-        <h3 class="section-title">أولاً: إنتاج المياه التقديري (ساعات التشغيل)</h3>
-        <div class="grid-5" style="margin-bottom: 20px;">
-            <div><label>طلمبة رقم 1</label><select id="p1_select" onchange="updateFlow(1)"></select></div>
-            <div><label>التصرف (م3/س)</label><input type="number" id="p1_flow" readonly></div>
-            <div><label>ساعات التشغيل</label><input type="number" id="p1_hrs" oninput="calcWater()"></div>
-            <div><label>الكمية (م3)</label><input type="number" id="p1_total" readonly></div>
-        </div>
-        <div class="grid-5">
-            <div><label>طلمبة رقم 2</label><select id="p2_select" onchange="updateFlow(2)"></select></div>
-            <div><label>التصرف (م3/س)</label><input type="number" id="p2_flow" readonly></div>
-            <div><label>ساعات التشغيل</label><input type="number" id="p2_hrs" oninput="calcWater()"></div>
-            <div><label>الكمية (م3)</label><input type="number" id="p2_total" readonly></div>
-        </div>
-        <div class="total-strip">إجمالي كمية المياه المنتجة خلال الشهر: <span id="grandWater">0</span> م3</div>
+        <table id="costsTable">
+            <thead>
+                <tr>
+                    <th>المحطة</th>
+                    <th>الشهر</th>
+                    <th>إنتاج المياه (م3)</th>
+                    <th>فاتورة الكهرباء</th>
+                    <th>رصيد السولار</th>
+                    <th>الإجراءات</th>
+                </tr>
+            </thead>
+            <tbody id="costsBody">
+                </tbody>
+        </table>
     </div>
 
-    <div class="card">
-        <h3 class="section-title" style="color: #00d4ff; border-right-color: #00d4ff;">ثانياً: استهلاك القوى الكهربائية</h3>
-        <div class="grid-5" style="margin-bottom: 15px;">
-            <div><label>عداد (1)</label><b>الرئيسي</b></div>
-            <div><label>قراءة سابقة</label><input type="number" id="e1_prev" readonly></div>
-            <div><label>قراءة حالية</label><input type="number" id="e1_curr" oninput="calcElec()"></div>
-            <div><label>الاستهلاك</label><input type="number" id="e1_diff" readonly></div>
-            <div><label>الفاتورة (ج.م)</label><input type="number" id="e1_bill" oninput="calcElec()"></div>
-        </div>
-        <div class="grid-5">
-            <div><label>عداد (2)</label><b>الفرعي</b></div>
-            <div><label>قراءة سابقة</label><input type="number" id="e2_prev" readonly></div>
-            <div><label>قراءة حالية</label><input type="number" id="e2_curr" oninput="calcElec()"></div>
-            <div><label>الاستهلاك</label><input type="number" id="e2_diff" readonly></div>
-            <div><label>الفاتورة (ج.م)</label><input type="number" id="e2_bill" oninput="calcElec()"></div>
-        </div>
-        <div class="total-strip">إجمالي فاتورة الكهرباء: <span id="totalBills">0</span> ج.م</div>
-    </div>
+    <div class="modal" id="costModal">
+        <div class="modal-content">
+            <h3 style="margin-bottom: 20px; color: #00d4ff; border-bottom: 2px solid #00d4ff; padding-bottom: 10px;">نموذج إدخال التكاليف</h3>
+            <form id="costForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>المحطة</label>
+                        <select id="mStation" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label>الشهر</label>
+                        <input type="month" id="mMonth" required>
+                    </div>
+                </div>
 
-    <div class="card">
-        <h3 class="section-title" style="color: #e67e22; border-right-color: #e67e22;">ثالثاً: ميزانية السولار (المولد الاحتياطي)</h3>
-        <div class="grid-5">
-            <div><label>رصيد سابق</label><input type="number" id="sol_prev" readonly></div>
-            <div><label>سولار مضاف</label><input type="number" id="sol_added" oninput="calcSolar()"></div>
-            <div><label>ساعات (حمل)</label><input type="number" id="sol_h_load" oninput="calcSolar()"></div>
-            <div><label>ساعات (بدون)</label><input type="number" id="sol_h_idle" oninput="calcSolar()"></div>
-            <div><label>الرصيد المتبقي</label><input type="number" id="sol_final" readonly></div>
+                <div class="section-tag">بيانات المياه</div>
+                <div class="form-grid">
+                    <div class="form-group"><label>ساعات تشغيل طلمبة 1</label><input type="number" id="h1" class="calc" value="0"></div>
+                    <div class="form-group"><label>تصرف طلمبة 1</label><input type="number" id="f1" readonly></div>
+                    <div class="form-group"><label>إجمالي المياه (م3)</label><input type="number" id="totalW" readonly></div>
+                </div>
+
+                <div class="section-tag" style="color:#00d4ff; background:rgba(0,212,255,0.1)">بيانات الكهرباء</div>
+                <div class="form-grid">
+                    <div class="form-group"><label>قراءة سابقة</label><input type="number" id="e_prev" readonly></div>
+                    <div class="form-group"><label>قراءة حالية</label><input type="number" id="e_curr" class="calc" value="0"></div>
+                    <div class="form-group"><label>قيمة الفاتورة</label><input type="number" id="e_bill" value="0"></div>
+                </div>
+
+                <div class="section-tag" style="color:#e67e22; background:rgba(230,126,34,0.1)">بيانات السولار</div>
+                <div class="form-grid">
+                    <div class="form-group"><label>رصيد سابق</label><input type="number" id="s_prev" readonly></div>
+                    <div class="form-group"><label>كمية مضافة</label><input type="number" id="s_add" class="calc" value="0"></div>
+                    <div class="form-group"><label>الرصيد الحالي</label><input type="number" id="s_final" readonly></div>
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="submit" class="btn btn-add" style="flex: 2; justify-content: center;">حفظ واعتماد التقرير</button>
+                    <button type="button" class="btn" onclick="closeModal()" style="background:#e74c3c; flex: 1; justify-content: center;">إلغاء</button>
+                </div>
+            </form>
         </div>
     </div>
-
-    <button class="btn btn-success no-print" onclick="saveReport()"><i class="fas fa-save"></i> حفظ واعتماد التقرير الشهري</button>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
@@ -124,69 +115,63 @@
         const SUPABASE_KEY = 'sb_publishable_n64Hnhuruc3Oeolj-Uwg9g_tu-otJlZ';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        let pumpsData = [], gensData = [];
+        let stations = [], pumps = [];
 
         async function init() {
-            const { data } = await supabaseClient.from('stations').select('*');
-            const sel = document.getElementById('mainStation');
-            sel.innerHTML = '<option value="">-- اختر المحطة --</option>';
-            data.forEach(s => sel.innerHTML += `<option value="${s.id}">${s.station_name}</option>`);
+            // تحميل المحطات والطلمبات (Data Seeding)
+            const { data: st } = await supabaseClient.from('stations').select('*');
+            stations = st || [];
+            
+            const { data: pm } = await supabaseClient.from('main_pumps').select('*');
+            pumps = pm || [];
+
+            const sSelect = document.getElementById('mStation');
+            sSelect.innerHTML = '<option value="">اختر المحطة</option>';
+            stations.forEach(s => sSelect.innerHTML += `<option value="${s.id}">${s.station_name}</option>`);
+
+            loadReports();
+            setupEvents();
         }
 
-        async function loadAssets() {
-            const sid = document.getElementById('mainStation').value;
-            // جلب أصول المحطة المختارة
-            const p1 = await supabaseClient.from('main_pumps').select('*').eq('station_id', sid);
-            const p2 = await supabaseClient.from('sub_pumps').select('*').eq('station_id', sid);
-            const gen = await supabaseClient.from('generators').select('*').eq('station_id', sid);
-
-            pumpsData = [...(p1.data || []), ...(p2.data || [])];
-            gensData = gen.data || [];
-
-            ['p1_select', 'p2_select'].forEach(id => {
-                const s = document.getElementById(id);
-                s.innerHTML = '<option value="">اختر..</option>';
-                pumpsData.forEach(p => s.innerHTML += `<option value="${p.id}">${p.asset_name || p.pump_number}</option>`);
+        async function loadReports() {
+            const { data, error } = await supabaseClient.from('station_costs').select('*').order('accounting_month', { ascending: false });
+            const body = document.getElementById('costsBody');
+            body.innerHTML = '';
+            data?.forEach(r => {
+                body.innerHTML += `
+                    <tr>
+                        <td>${r.station_name}</td>
+                        <td>${r.accounting_month.substring(0, 7)}</td>
+                        <td style="color:#f1c40f">${r.total_water_produced || 0}</td>
+                        <td style="color:#00d4ff">${r.total_elec_cost || 0} ج.م</td>
+                        <td style="color:#e67e22">${r.solar_current_balance || 0} لتر</td>
+                        <td><button class="btn" style="background:#3498db; padding:5px 10px;" onclick="alert('سيتم فتح التفاصيل قريباً')"><i class="fas fa-eye"></i></button></td>
+                    </tr>`;
             });
         }
 
-        function updateFlow(num) {
-            const id = document.getElementById(`p${num}_select`).value;
-            const pump = pumpsData.find(x => String(x.id) === String(id));
-            document.getElementById(`p${num}_flow`).value = pump ? pump.flow_rate : 0;
-            calcWater();
+        function setupEvents() {
+            document.getElementById('addReportBtn').onclick = () => {
+                document.getElementById('costForm').reset();
+                document.getElementById('costModal').classList.add('active');
+            };
+
+            document.getElementById('mStation').onchange = (e) => {
+                const pump = pumps.find(p => String(p.station_id) === String(e.target.value));
+                document.getElementById('f1').value = pump ? pump.flow_rate : 0;
+                calculate();
+            };
+
+            document.getElementById('mMonth').onchange = fetchPrevious;
+
+            document.querySelectorAll('.calc').forEach(i => i.oninput = calculate);
+
+            document.getElementById('costForm').onsubmit = handleSave;
         }
 
-        function calcWater() {
-            const t1 = (parseFloat(document.getElementById('p1_hrs').value) || 0) * (parseFloat(document.getElementById('p1_flow').value) || 0);
-            const t2 = (parseFloat(document.getElementById('p2_hrs').value) || 0) * (parseFloat(document.getElementById('p2_flow').value) || 0);
-            document.getElementById('p1_total').value = t1.toFixed(2);
-            document.getElementById('p2_total').value = t2.toFixed(2);
-            document.getElementById('grandWater').innerText = (t1 + t2).toFixed(2);
-        }
-
-        function calcElec() {
-            const diff1 = (parseFloat(document.getElementById('e1_curr').value) || 0) - (parseFloat(document.getElementById('e1_prev').value) || 0);
-            const diff2 = (parseFloat(document.getElementById('e2_curr').value) || 0) - (parseFloat(document.getElementById('e2_prev').value) || 0);
-            document.getElementById('e1_diff').value = diff1;
-            document.getElementById('e2_diff').value = diff2;
-            document.getElementById('totalBills').innerText = (parseFloat(document.getElementById('e1_bill').value) || 0) + (parseFloat(document.getElementById('e2_bill').value) || 0);
-        }
-
-        function calcSolar() {
-            const prev = parseFloat(document.getElementById('sol_prev').value) || 0;
-            const added = parseFloat(document.getElementById('sol_added').value) || 0;
-            const hl = parseFloat(document.getElementById('sol_h_load').value) || 0;
-            const hi = parseFloat(document.getElementById('sol_h_idle').value) || 0;
-            const rate = gensData[0] ? gensData[0].consumption_rate : 7; // معدل افتراضي لو مفيش بيانات
-            
-            const consumed = (hl * rate) + (hi * (rate * 0.5));
-            document.getElementById('sol_final').value = (prev + added - consumed).toFixed(2);
-        }
-
-        async function fetchPrevMonthData() {
-            const sid = document.getElementById('mainStation').value;
-            const month = document.getElementById('accMonth').value;
+        async function fetchPrevious() {
+            const sid = document.getElementById('mStation').value;
+            const month = document.getElementById('mMonth').value;
             if(!sid || !month) return;
 
             let d = new Date(month + "-01");
@@ -195,28 +180,38 @@
 
             const { data } = await supabaseClient.from('station_costs').select('*').eq('station_id', sid).eq('accounting_month', prevStr).single();
             if(data) {
-                document.getElementById('e1_prev').value = data.elec1_curr;
-                document.getElementById('e2_prev').value = data.elec2_curr;
-                document.getElementById('sol_prev').value = data.solar_current_balance;
+                document.getElementById('e_prev').value = data.elec1_curr || 0;
+                document.getElementById('s_prev').value = data.solar_current_balance || 0;
             } else {
-                alert("لم يتم العثور على بيانات الشهر السابق. يرجى إدخال القراءات السابقة يدوياً.");
-                ['e1_prev', 'e2_prev', 'sol_prev'].forEach(id => document.getElementById(id).readOnly = false);
+                ['e_prev', 's_prev'].forEach(id => document.getElementById(id).readOnly = false);
             }
         }
 
-        async function saveReport() {
+        function calculate() {
+            const w = (parseFloat(document.getElementById('h1').value) || 0) * (parseFloat(document.getElementById('f1').value) || 0);
+            document.getElementById('totalW').value = w.toFixed(2);
+            
+            const sp = parseFloat(document.getElementById('s_prev').value) || 0;
+            const sa = parseFloat(document.getElementById('s_add').value) || 0;
+            document.getElementById('s_final').value = (sp + sa - 10).toFixed(2); // مثال طرح 10 لتر
+        }
+
+        async function handleSave(e) {
+            e.preventDefault();
+            const s = document.getElementById('mStation');
             const payload = {
-                station_id: document.getElementById('mainStation').value,
-                station_name: document.getElementById('mainStation').options[document.getElementById('mainStation').selectedIndex].text,
-                accounting_month: document.getElementById('accMonth').value + "-01",
-                elec1_curr: document.getElementById('e1_curr').value,
-                elec2_curr: document.getElementById('e2_curr').value,
-                solar_current_balance: document.getElementById('sol_final').value
-                // يمكنك إضافة باقي الحقول هنا للحفظ في قاعدة البيانات
+                station_id: s.value,
+                station_name: s.options[s.selectedIndex].text,
+                accounting_month: document.getElementById('mMonth').value + "-01",
+                total_water_produced: document.getElementById('totalW').value,
+                total_elec_cost: document.getElementById('e_bill').value,
+                solar_current_balance: document.getElementById('s_final').value
             };
             const { error } = await supabaseClient.from('station_costs').insert([payload]);
-            if(!error) alert("تم حفظ واعتماد التقرير بنجاح ✅");
+            if(!error) { closeModal(); loadReports(); }
         }
+
+        window.closeModal = () => document.getElementById('costModal').classList.remove('active');
 
         init();
     </script>
