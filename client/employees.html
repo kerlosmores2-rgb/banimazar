@@ -1,385 +1,187 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>نظام إدارة محطات الصرف الصحي - الموظفين</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Cairo', 'Tahoma', sans-serif;
-            background: linear-gradient(135deg, #0a2b3e 0%, #0f3b4f 50%, #144d64 100%);
-            min-height: 100vh;
-            color: #fff;
-        }
-        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
-        .main-layout { display: flex; gap: 25px; flex-wrap: wrap; }
-        .sidebar { width: 280px; background: rgba(10,40,55,0.9); backdrop-filter: blur(12px); border-radius: 25px; padding: 25px 0; border: 1px solid rgba(0,212,255,0.3); }
-        .sidebar-logo { text-align: center; padding: 0 20px 20px; border-bottom: 1px solid rgba(0,212,255,0.3); margin-bottom: 20px; }
-        .sidebar-logo i { font-size: 2.5rem; color: #00d4ff; background: rgba(0,212,255,0.15); padding: 12px; border-radius: 20px; }
-        .sidebar .nav-item { display: flex; align-items: center; gap: 15px; padding: 12px 25px; color: #ddd; cursor: pointer; transition: 0.3s; border-right: 3px solid transparent; }
-        .sidebar .nav-item i { width: 28px; }
-        .sidebar .nav-item:hover, .sidebar .nav-item.active { background: rgba(0,212,255,0.1); color: #00d4ff; border-right-color: #00d4ff; }
-        .sidebar .logout-item { margin-top: 30px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px; color: #ff6b6b; }
-        .content { flex: 1; background: rgba(255,255,255,0.05); backdrop-filter: blur(5px); border-radius: 25px; padding: 25px; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); }
-        .header h1 { color: #00d4ff; font-size: 1.5rem; }
-        .user-info { display: flex; align-items: center; gap: 12px; background: rgba(0,212,255,0.15); padding: 8px 18px; border-radius: 50px; }
-        .btn { padding: 8px 20px; border: none; border-radius: 25px; cursor: pointer; transition: 0.3s; display: inline-flex; align-items: center; gap: 8px; }
-        .btn-primary { background: #00d4ff; color: #1a1a2e; }
-        .btn-danger { background: #dc3545; color: white; }
-        .btn-sm { padding: 5px 12px; font-size: 0.8rem; }
-        .station-select { background: rgba(255,255,255,0.1); border: 1px solid rgba(0,212,255,0.3); border-radius: 30px; padding: 8px 15px; color: #fff; margin-bottom: 20px; width: 200px; }
-        .filters { display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 20px; align-items: flex-end; }
-        .data-table { width: 100%; border-collapse: collapse; margin-top: 20px; overflow-x: auto; display: block; }
-        .data-table th, .data-table td { padding: 12px; text-align: right; border-bottom: 1px solid rgba(255,255,255,0.1); white-space: nowrap; }
-        .data-table th { background: rgba(0,212,255,0.15); color: #00d4ff; }
-        .status-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; }
-        .status-active { background: rgba(40,167,69,0.2); color: #28a745; }
-        .status-inactive { background: rgba(108,117,125,0.2); color: #adb5bd; }
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center; }
-        .modal.active { display: flex; }
-        .modal-content { background: #1e2a3a; border-radius: 20px; width: 90%; max-width: 600px; max-height: 85vh; overflow-y: auto; padding: 25px; }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; }
-        .modal-header h3 { color: #00d4ff; }
-        .modal-close { font-size: 1.5rem; cursor: pointer; color: #dc3545; }
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; font-size: 0.85rem; }
-        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; color: #fff; }
-        .copyright { text-align: center; padding: 20px; margin-top: 30px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 0.7rem; color: rgba(255,255,255,0.5); }
-        .menu-toggle { display: none; position: fixed; top: 15px; right: 15px; z-index: 1001; background: #00d4ff; border: none; border-radius: 50%; width: 45px; height: 45px; cursor: pointer; }
-        @media (max-width: 768px) { .menu-toggle { display: flex; align-items: center; justify-content: center; } .sidebar { position: fixed; top: 0; right: -300px; width: 280px; height: 100vh; z-index: 1000; transition: right 0.3s; } .sidebar.open { right: 0; } .content { margin-top: 50px; } }
-        .loading-spinner { text-align: center; padding: 40px; }
-        .no-data { text-align: center; padding: 40px; color: rgba(255,255,255,0.5); }
-    </style>
-</head>
-<body>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-<button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
-
-<div class="container">
-    <div class="main-layout">
-        <div class="sidebar" id="sidebar">
-            <div class="sidebar-logo"><i class="fas fa-water"></i><h3>نظام إدارة محطات الصرف الصحي</h3><p>بني مزار - المنيا</p></div>
-            <div class="nav-item" data-page="dashboard"><i class="fas fa-tachometer-alt"></i> الرئيسية</div>
-            <div class="nav-item" data-page="stations"><i class="fas fa-building"></i> المحطات</div>
-            <div class="nav-item" data-page="assets"><i class="fas fa-microchip"></i> الأصول</div>
-            <div class="nav-item" data-page="maintenance"><i class="fas fa-tools"></i> بلاغات الصيانة</div>
-            <div class="nav-item" data-page="inspection"><i class="fas fa-clipboard-list"></i> تقارير المرور</div>
-            <div class="nav-item" data-page="reports"><i class="fas fa-chart-line"></i> التقارير التشغيلية</div>
-            <div class="nav-item" data-page="penalty"><i class="fas fa-exclamation-triangle"></i> غرامات معامل القدرة</div>
-            <div class="nav-item active" data-page="employees"><i class="fas fa-users"></i> الموظفين</div>
-            <div class="nav-item logout-item" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</div>
-        </div>
-
-        <div class="content">
-            <div class="header">
-                <h1><i class="fas fa-users"></i> إدارة الموظفين</h1>
-                <div class="user-info"><i class="fas fa-user-circle"></i> <span id="userName"></span></div>
-            </div>
-
-            <div style="margin-bottom: 20px;">
-                <button class="btn btn-primary" id="addEmployeeBtn"><i class="fas fa-plus"></i> إضافة موظف جديد</button>
-                <button class="btn" id="reportBtn" style="margin-right: 10px;"><i class="fas fa-chart-bar"></i> تقرير الموظفين</button>
-            </div>
-
-            <div class="filters">
-                <select id="stationFilter" class="station-select">
-                    <option value="">كل المحطات</option>
-                </select>
-                <select id="deptFilter" class="station-select">
-                    <option value="">كل الأقسام</option>
-                    <option value="كهرباء">كهرباء</option>
-                    <option value="ميكانيكا">ميكانيكا</option>
-                    <option value="إدارة">إدارة</option>
-                    <option value="تشغيل">تشغيل</option>
-                    <option value="أمن">أمن</option>
-                </select>
-                <select id="statusFilter" class="station-select">
-                    <option value="">كل الحالات</option>
-                    <option value="active">نشط</option>
-                    <option value="inactive">غير نشط</option>
-                    <option value="on_leave">إجازة</option>
-                </select>
-                <button class="btn btn-primary" id="filterBtn"><i class="fas fa-search"></i> بحث</button>
-            </div>
-
-            <div id="employeesList">
-                <div class="loading-spinner"><i class="fas fa-spinner fa-spin fa-2x"></i><p>جاري تحميل البيانات...</p></div>
-            </div>
-
-            <div class="copyright">
-                <p>تم إعداد وتصميم هذا النظام بمعرفة</p>
-                <p style="color:#00d4ff;">فني / كيرلس موريس يعقوب</p>
-                <p>نائب مدير الفرع: مهندس / منصور رجب عبدالله</p>
-                <p>مدير عام الفرع: مهندسة / زينب أحمد عبدالمنعم</p>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal إضافة/تعديل موظف -->
-<div id="employeeModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3 id="modalTitle">إضافة موظف جديد</h3>
-            <span class="modal-close" onclick="closeEmployeeModal()">&times;</span>
-        </div>
-        <form id="employeeForm">
-            <input type="hidden" id="employeeId">
-            <div class="form-group">
-                <label>اسم الموظف <span style="color:#dc3545;">*</span></label>
-                <input type="text" id="empName" required>
-            </div>
-            <div class="form-group">
-                <label>كود الموظف</label>
-                <input type="text" id="empCode">
-            </div>
-            <div class="form-group">
-                <label>المحطة</label>
-                <select id="empStation"></select>
-            </div>
-            <div class="form-group">
-                <label>القسم</label>
-                <select id="empDept">
-                    <option value="كهرباء">كهرباء</option>
-                    <option value="ميكانيكا">ميكانيكا</option>
-                    <option value="إدارة">إدارة</option>
-                    <option value="تشغيل">تشغيل</option>
-                    <option value="أمن">أمن</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>المسمى الوظيفي</label>
-                <input type="text" id="empJob">
-            </div>
-            <div class="form-group">
-                <label>رقم الهاتف</label>
-                <input type="tel" id="empPhone">
-            </div>
-            <div class="form-group">
-                <label>البريد الإلكتروني</label>
-                <input type="email" id="empEmail">
-            </div>
-            <div class="form-group">
-                <label>تاريخ التعيين</label>
-                <input type="date" id="empHireDate">
-            </div>
-            <div class="form-group">
-                <label>الحالة</label>
-                <select id="empStatus">
-                    <option value="active">نشط</option>
-                    <option value="inactive">غير نشط</option>
-                    <option value="on_leave">إجازة</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>ملاحظات</label>
-                <textarea id="empNotes" rows="2"></textarea>
-            </div>
-            <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
-                <button type="button" class="btn" onclick="closeEmployeeModal()">إلغاء</button>
-                <button type="submit" class="btn btn-primary">حفظ</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<script src="js/api.js"></script>
 <script>
-    if (!authToken) window.location.href = 'index.html';
-    if (currentUser) document.getElementById('userName').innerText = currentUser.full_name || currentUser.username;
+const SUPABASE_URL = 'https://jvfbkoaeugkeoiccvnkq.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_n64Hnhuruc3Oeolj-Uwg9g_tu-otJlZ';
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    const menuToggle = document.getElementById('menuToggle');
-    const sidebar = document.getElementById('sidebar');
-    menuToggle?.addEventListener('click', () => sidebar.classList.toggle('open'));
+let employeesData = [];
+let stationsList = [];
+let currentEditId = null;
 
-    document.querySelectorAll('.nav-item').forEach(item => {
-        item.addEventListener('click', () => {
-            const page = item.getAttribute('data-page');
-            if (page && page !== 'logout') window.location.href = `${page}.html`;
-            if (item.id === 'logoutBtn') logout();
-        });
+// تحميل المحطات
+async function loadStations() {
+    const { data, error } = await supabaseClient
+        .from('stations')
+        .select('id, station_name')
+        .order('station_name');
+
+    if (error) return;
+
+    stationsList = data;
+
+    const filter = document.getElementById('stationFilter');
+    const modal = document.getElementById('empStation');
+
+    filter.innerHTML = '<option value="">كل المحطات</option>';
+    modal.innerHTML = '<option value="">بدون محطة</option>';
+
+    data.forEach(s => {
+        filter.innerHTML += `<option value="${s.id}">${s.station_name}</option>`;
+        modal.innerHTML += `<option value="${s.id}">${s.station_name}</option>`;
+    });
+}
+
+// تحميل الموظفين
+async function loadEmployees() {
+    document.getElementById('employeesList').innerHTML = 'جاري التحميل...';
+
+    let query = supabaseClient.from('employees').select('*');
+
+    const station = stationFilter.value;
+    const dept = deptFilter.value;
+    const status = statusFilter.value;
+
+    if (station) query = query.eq('station_id', station);
+    if (dept) query = query.eq('department', dept);
+    if (status) query = query.eq('status', status);
+
+    const { data, error } = await query.order('id', { ascending: false });
+
+    if (error) {
+        employeesList.innerHTML = 'خطأ في التحميل';
+        return;
+    }
+
+    employeesData = data || [];
+    renderTable();
+}
+
+// عرض الجدول
+function renderTable() {
+    const container = document.getElementById('employeesList');
+
+    if (!employeesData.length) {
+        container.innerHTML = '<div class="no-data">لا يوجد موظفين</div>';
+        return;
+    }
+
+    let html = `
+    <table class="data-table">
+    <thead>
+    <tr>
+        <th>#</th>
+        <th>الاسم</th>
+        <th>الكود</th>
+        <th>المحطة</th>
+        <th>القسم</th>
+        <th>الوظيفة</th>
+        <th>الهاتف</th>
+        <th>الحالة</th>
+        <th>الإجراءات</th>
+    </tr>
+    </thead>
+    <tbody>`;
+
+    employeesData.forEach((e, i) => {
+        const station = stationsList.find(s => s.id == e.station_id);
+
+        html += `
+        <tr>
+            <td>${i+1}</td>
+            <td>${e.employee_name}</td>
+            <td>${e.employee_code || '-'}</td>
+            <td>${station?.station_name || '-'}</td>
+            <td>${e.department || '-'}</td>
+            <td>${e.job_title || '-'}</td>
+            <td>${e.phone || '-'}</td>
+            <td>${e.status || '-'}</td>
+            <td>
+                <button class="btn btn-sm btn-primary" onclick="editEmployee(${e.id})">تعديل</button>
+                <button class="btn btn-sm btn-danger" onclick="deleteEmployeeRow(${e.id})">حذف</button>
+            </td>
+        </tr>`;
     });
 
-    let stationsList = [];
-    let employeesData = [];
+    html += '</tbody></table>';
+    container.innerHTML = html;
+}
 
-    async function loadStationsForSelect() {
-        try {
-            const result = await getStations();
-            if (result.success) {
-                stationsList = result.stations;
-                const select = document.getElementById('stationFilter');
-                select.innerHTML = '<option value="">كل المحطات</option>';
-                const modalSelect = document.getElementById('empStation');
-                modalSelect.innerHTML = '<option value="">بدون محطة</option>';
-                stationsList.forEach(s => {
-                    select.innerHTML += `<option value="${s.id}">${s.station_name}</option>`;
-                    modalSelect.innerHTML += `<option value="${s.id}">${s.station_name}</option>`;
-                });
-            }
-        } catch (error) { console.error(error); }
-    }
+// إضافة
+document.getElementById('addEmployeeBtn').onclick = () => {
+    currentEditId = null;
+    employeeForm.reset();
+    employeeId.value = '';
+    modalTitle.innerText = 'إضافة موظف';
+    employeeModal.classList.add('active');
+};
 
-    async function loadEmployees() {
-        const params = {};
-        const stationId = document.getElementById('stationFilter').value;
-        const department = document.getElementById('deptFilter').value;
-        const status = document.getElementById('statusFilter').value;
-        if (stationId) params.station_id = stationId;
-        if (department) params.department = department;
-        if (status) params.status = status;
+// تعديل
+window.editEmployee = (id) => {
+    const e = employeesData.find(x => x.id == id);
+    if (!e) return;
 
-        document.getElementById('employeesList').innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i><p>جاري التحميل...</p></div>';
-        try {
-            const result = await getEmployees(params);
-            if (result.success) {
-                employeesData = result.employees;
-                renderEmployeesTable();
-            } else {
-                document.getElementById('employeesList').innerHTML = `<div class="no-data">${result.message}</div>`;
-            }
-        } catch (error) {
-            document.getElementById('employeesList').innerHTML = '<div class="no-data">خطأ في تحميل البيانات</div>';
-        }
-    }
+    currentEditId = id;
 
-    function renderEmployeesTable() {
-        const container = document.getElementById('employeesList');
-        if (!employeesData.length) {
-            container.innerHTML = '<div class="no-data"><i class="fas fa-database"></i> لا توجد موظفين</div>';
-            return;
-        }
-        let html = `<table class="data-table"><thead>发展<th>#</th><th>الاسم</th><th>الكود</th><th>المحطة</th><th>القسم</th><th>المسمى الوظيفي</th><th>الهاتف</th><th>الحالة</th><th>الإجراءات</th> </thead><tbody>`;
-        employeesData.forEach((e, idx) => {
-            const statusClass = e.status === 'active' ? 'status-active' : 'status-inactive';
-            const statusText = e.status === 'active' ? 'نشط' : e.status === 'inactive' ? 'غير نشط' : 'إجازة';
-            html += `发展
-                <td>${idx+1}</td>
-                <td><i class="fas fa-user"></i> ${e.employee_name}</td>
-                <td>${e.employee_code || '---'}</td>
-                <td>${e.station_name || '---'}</td>
-                <td>${e.department || '---'}</td>
-                <td>${e.job_title || '---'}</td>
-                <td>${e.phone || '---'}</td>
-                <td><span class="status-badge ${statusClass}">${statusText}</span></td>
-                <td>
-                    <button class="btn btn-sm btn-primary" onclick="editEmployee(${e.id})"><i class="fas fa-edit"></i> تعديل</button>
-                    <button class="btn btn-sm btn-danger" onclick="deleteEmployee(${e.id})"><i class="fas fa-trash"></i> حذف</button>
-                </td>
-             </tr>`;
-        });
-        html += `</tbody></table>`;
-        container.innerHTML = html;
-    }
+    employeeId.value = e.id;
+    empName.value = e.employee_name;
+    empCode.value = e.employee_code || '';
+    empStation.value = e.station_id || '';
+    empDept.value = e.department || '';
+    empJob.value = e.job_title || '';
+    empPhone.value = e.phone || '';
+    empEmail.value = e.email || '';
+    empHireDate.value = e.hire_date || '';
+    empStatus.value = e.status || 'active';
+    empNotes.value = e.notes || '';
 
-    window.editEmployee = async (id) => {
-        try {
-            const result = await getEmployee(id);
-            if (result.success) {
-                const e = result.employee;
-                document.getElementById('employeeId').value = e.id;
-                document.getElementById('empName').value = e.employee_name;
-                document.getElementById('empCode').value = e.employee_code || '';
-                document.getElementById('empStation').value = e.station_id || '';
-                document.getElementById('empDept').value = e.department || 'كهرباء';
-                document.getElementById('empJob').value = e.job_title || '';
-                document.getElementById('empPhone').value = e.phone || '';
-                document.getElementById('empEmail').value = e.email || '';
-                document.getElementById('empHireDate').value = e.hire_date || '';
-                document.getElementById('empStatus').value = e.status || 'active';
-                document.getElementById('empNotes').value = e.notes || '';
-                document.getElementById('modalTitle').innerText = 'تعديل بيانات موظف';
-                document.getElementById('employeeModal').classList.add('active');
-            }
-        } catch (error) { alert('خطأ في تحميل بيانات الموظف'); }
+    modalTitle.innerText = 'تعديل موظف';
+    employeeModal.classList.add('active');
+};
+
+// حذف
+window.deleteEmployeeRow = async (id) => {
+    if (!confirm('حذف الموظف؟')) return;
+
+    const { error } = await supabaseClient
+        .from('employees')
+        .delete()
+        .eq('id', id);
+
+    if (!error) loadEmployees();
+};
+
+// حفظ
+employeeForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const data = {
+        employee_name: empName.value,
+        employee_code: empCode.value,
+        station_id: empStation.value || null,
+        department: empDept.value,
+        job_title: empJob.value,
+        phone: empPhone.value,
+        email: empEmail.value,
+        hire_date: empHireDate.value,
+        status: empStatus.value,
+        notes: empNotes.value
     };
 
-    window.deleteEmployee = async (id) => {
-        if (confirm('هل أنت متأكد من حذف هذا الموظف؟')) {
-            try {
-                const result = await deleteEmployee(id);
-                if (result.success) {
-                    loadEmployees();
-                } else {
-                    alert(result.message || 'لا يمكن حذف الموظف');
-                }
-            } catch (error) {
-                alert('خطأ في الحذف');
-            }
-        }
-    };
+    if (currentEditId) {
+        await supabaseClient.from('employees').update(data).eq('id', currentEditId);
+    } else {
+        await supabaseClient.from('employees').insert([data]);
+    }
 
-    document.getElementById('addEmployeeBtn').addEventListener('click', () => {
-        document.getElementById('employeeForm').reset();
-        document.getElementById('employeeId').value = '';
-        document.getElementById('modalTitle').innerText = 'إضافة موظف جديد';
-        document.getElementById('employeeModal').classList.add('active');
-    });
-
-    document.getElementById('employeeForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const id = document.getElementById('employeeId').value;
-        const data = {
-            employee_name: document.getElementById('empName').value,
-            employee_code: document.getElementById('empCode').value,
-            station_id: document.getElementById('empStation').value || null,
-            department: document.getElementById('empDept').value,
-            job_title: document.getElementById('empJob').value,
-            phone: document.getElementById('empPhone').value,
-            email: document.getElementById('empEmail').value,
-            hire_date: document.getElementById('empHireDate').value,
-            status: document.getElementById('empStatus').value,
-            notes: document.getElementById('empNotes').value
-        };
-        try {
-            let result;
-            if (id) {
-                result = await updateEmployee(id, data);
-            } else {
-                result = await createEmployee(data);
-            }
-            if (result.success) {
-                closeEmployeeModal();
-                loadEmployees();
-            } else {
-                alert(result.message || 'حدث خطأ');
-            }
-        } catch (error) {
-            alert('خطأ في الاتصال بالخادم');
-        }
-    });
-
-    function closeEmployeeModal() { document.getElementById('employeeModal').classList.remove('active'); }
-    window.closeEmployeeModal = closeEmployeeModal;
-
-    document.getElementById('filterBtn').addEventListener('click', loadEmployees);
-    document.getElementById('reportBtn').addEventListener('click', async () => {
-        try {
-            const result = await getEmployeesDetailedReport();
-            if (result.success && result.employees?.length) {
-                let report = `تقرير الموظفين\n${'='.repeat(50)}\n`;
-                report += `إجمالي الموظفين: ${result.summary.total_employees}\n`;
-                report += `الموظفين النشطين: ${result.summary.active_employees}\n`;
-                report += `إجمالي البلاغات: ${result.summary.total_reports}\n\n`;
-                report += `تفاصيل الموظفين:\n`;
-                result.employees.forEach(e => {
-                    report += `\n${e.employee_name} (${e.department || 'بدون قسم'})\n`;
-                    report += `  - البلاغات: ${e.total_reports || 0}\n`;
-                    report += `  - بلاغات مغلقة: ${e.completed_reports || 0}\n`;
-                    report += `  - قطع غيار مستخدمة: ${e.total_spare_parts_used || 0}\n`;
-                });
-                alert(report);
-            } else {
-                alert('لا توجد بيانات');
-            }
-        } catch (error) { alert('خطأ في تحميل التقرير'); }
-    });
-
-    loadStationsForSelect();
+    closeEmployeeModal();
     loadEmployees();
+});
+
+// فلاتر
+filterBtn.onclick = loadEmployees;
+
+// تشغيل
+loadStations();
+loadEmployees();
 </script>
-</body>
-</html>
