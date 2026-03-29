@@ -1112,6 +1112,29 @@ body {
     font-size: 0.8rem;
 }
 
+//==============مربع البحث ==============================
+<style>
+    /* ... أكواد أخرى هنا ... */
+
+    .search-container { margin: 20px 0; }
+
+    /* امسح الجزء القديم لـ #searchInput وضع هذا مكانه */
+    #searchInput { 
+        width: 100%; 
+        max-width: 500px; 
+        padding: 12px 20px; 
+        border-radius: 30px; 
+        border: 2px solid #00d4ff; 
+        background: #ffffff;      
+        color: #000;              
+        font-size: 16px;
+        margin: 20px 0;
+        display: block;           
+    }
+
+    /* ... باقي الأكواد ... */
+</style>
+
 /* ============================================
    Mobile Menu
    ============================================ */
