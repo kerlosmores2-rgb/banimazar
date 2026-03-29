@@ -2,331 +2,237 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>نظام إدارة محطات الصرف الصحي - تقارير المرور</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تقارير مرور المدير - بني مزار</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap');
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Cairo', 'Tahoma', sans-serif;
-            background: linear-gradient(135deg, #0a2b3e 0%, #0f3b4f 50%, #144d64 100%);
-            min-height: 100vh;
-            color: #fff;
-        }
-        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
-        .main-layout { display: flex; gap: 25px; flex-wrap: wrap; }
-        .sidebar { width: 280px; background: rgba(10,40,55,0.9); backdrop-filter: blur(12px); border-radius: 25px; padding: 25px 0; border: 1px solid rgba(0,212,255,0.3); }
-        .sidebar-logo { text-align: center; padding: 0 20px 20px; border-bottom: 1px solid rgba(0,212,255,0.3); margin-bottom: 20px; }
-        .sidebar-logo i { font-size: 2.5rem; color: #00d4ff; background: rgba(0,212,255,0.15); padding: 12px; border-radius: 20px; }
-        .sidebar .nav-item { display: flex; align-items: center; gap: 15px; padding: 12px 25px; color: #ddd; cursor: pointer; transition: 0.3s; border-right: 3px solid transparent; }
-        .sidebar .nav-item i { width: 28px; }
-        .sidebar .nav-item:hover, .sidebar .nav-item.active { background: rgba(0,212,255,0.1); color: #00d4ff; border-right-color: #00d4ff; }
-        .sidebar .logout-item { margin-top: 30px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px; color: #ff6b6b; }
-        .content { flex: 1; background: rgba(255,255,255,0.05); backdrop-filter: blur(5px); border-radius: 25px; padding: 25px; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); }
-        .header h1 { color: #00d4ff; font-size: 1.5rem; }
-        .user-info { display: flex; align-items: center; gap: 12px; background: rgba(0,212,255,0.15); padding: 8px 18px; border-radius: 50px; }
-        .btn { padding: 8px 20px; border: none; border-radius: 25px; cursor: pointer; transition: 0.3s; display: inline-flex; align-items: center; gap: 8px; }
-        .btn-primary { background: #00d4ff; color: #1a1a2e; }
-        .btn-danger { background: #dc3545; color: white; }
-        .btn-sm { padding: 5px 12px; font-size: 0.8rem; }
-        .station-select { background: rgba(255,255,255,0.1); border: 1px solid rgba(0,212,255,0.3); border-radius: 30px; padding: 8px 15px; color: #fff; margin-bottom: 20px; width: 250px; }
-        .data-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        .data-table th, .data-table td { padding: 12px; text-align: right; border-bottom: 1px solid rgba(255,255,255,0.1); }
-        .data-table th { background: rgba(0,212,255,0.15); color: #00d4ff; }
-        .status-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; }
-        .status-good { background: rgba(40,167,69,0.2); color: #28a745; }
-        .status-bad { background: rgba(220,53,69,0.2); color: #dc3545; }
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center; }
-        .modal.active { display: flex; }
-        .modal-content { background: #1e2a3a; border-radius: 20px; width: 90%; max-width: 800px; max-height: 85vh; overflow-y: auto; padding: 25px; }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; }
-        .modal-header h3 { color: #00d4ff; }
-        .modal-close { font-size: 1.5rem; cursor: pointer; color: #dc3545; }
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; font-size: 0.85rem; }
-        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; color: #fff; }
-        .asset-row { background: rgba(0,212,255,0.05); border-radius: 12px; padding: 12px; margin-bottom: 10px; }
-        .asset-row h4 { color: #00d4ff; margin-bottom: 10px; }
-        .asset-row .row { display: flex; gap: 15px; flex-wrap: wrap; }
-        .asset-row .row > div { flex: 1; min-width: 200px; }
-        .copyright { text-align: center; padding: 20px; margin-top: 30px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 0.7rem; color: rgba(255,255,255,0.5); }
-        .menu-toggle { display: none; position: fixed; top: 15px; right: 15px; z-index: 1001; background: #00d4ff; border: none; border-radius: 50%; width: 45px; height: 45px; cursor: pointer; }
-        @media (max-width: 768px) { .menu-toggle { display: flex; align-items: center; justify-content: center; } .sidebar { position: fixed; top: 0; right: -300px; width: 280px; height: 100vh; z-index: 1000; transition: right 0.3s; } .sidebar.open { right: 0; } .content { margin-top: 50px; } }
-        .loading-spinner { text-align: center; padding: 40px; }
-        .no-data { text-align: center; padding: 40px; color: rgba(255,255,255,0.5); }
+        body { font-family: 'Cairo', sans-serif; background: #0f3b4f; color: #fff; padding: 20px; }
+        
+        .header-section { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #00d4ff; padding-bottom: 15px; }
+        .btn { padding: 8px 18px; border: none; border-radius: 20px; cursor: pointer; font-weight: bold; display: inline-flex; align-items: center; gap: 8px; font-family: 'Cairo'; }
+        .btn-primary { background: #00d4ff; color: #000; }
+        .btn-success { background: #28a745; color: #fff; }
+        .btn-danger { background: #dc3545; color: #fff; }
+
+        /* شريط البحث */
+        .search-area { margin-bottom: 20px; display: flex; gap: 10px; }
+        .search-area input { flex: 1; padding: 10px; border-radius: 10px; border: none; background: #164a63; color: white; }
+
+        /* نموذج التفتيش */
+        .inspection-card { background: #164a63; padding: 20px; border-radius: 15px; margin-bottom: 20px; border: 1px solid #00d4ff; }
+        .checklist-table { width: 100%; border-collapse: collapse; margin-top: 15px; background: #1e2a3a; border-radius: 10px; overflow: hidden; }
+        .checklist-table th, .checklist-table td { padding: 12px; border: 1px solid #ffffff11; text-align: center; }
+        
+        /* الراديو بوتون (يعمل/لا يعمل) */
+        .status-toggle { display: flex; gap: 10px; justify-content: center; }
+        .status-toggle label { cursor: pointer; padding: 4px 10px; border-radius: 5px; font-size: 12px; }
+        .radio-working:checked + span { background: #28a745; color: white; padding: 2px 8px; border-radius: 5px; }
+        .radio-broken:checked + span { background: #dc3545; color: white; padding: 2px 8px; border-radius: 5px; }
+
+        /* جدول التقارير السابقة */
+        .reports-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
+        .report-item { background: #164a63; padding: 15px; border-radius: 10px; position: relative; border-right: 5px solid #00d4ff; }
+        
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; overflow-y: auto; padding: 20px; }
+        .modal.active { display: flex; justify-content: center; }
+        .modal-content { background: #0f3b4f; padding: 25px; border-radius: 20px; width: 100%; max-width: 900px; height: fit-content; }
+
+        input, select, textarea { width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #333; background: #2c3e50; color: white; font-family: 'Cairo'; }
     </style>
 </head>
 <body>
 
-<button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
-
-<div class="container">
-    <div class="main-layout">
-        <div class="sidebar" id="sidebar">
-            <div class="sidebar-logo"><i class="fas fa-water"></i><h3>نظام إدارة محطات الصرف الصحي</h3><p>بني مزار - المنيا</p></div>
-            <div class="nav-item" data-page="dashboard"><i class="fas fa-tachometer-alt"></i> الرئيسية</div>
-            <div class="nav-item" data-page="stations"><i class="fas fa-building"></i> المحطات</div>
-            <div class="nav-item" data-page="assets"><i class="fas fa-microchip"></i> الأصول</div>
-            <div class="nav-item" data-page="maintenance"><i class="fas fa-tools"></i> بلاغات الصيانة</div>
-            <div class="nav-item active" data-page="inspection"><i class="fas fa-clipboard-list"></i> تقارير المرور</div>
-            <div class="nav-item" data-page="reports"><i class="fas fa-chart-line"></i> التقارير التشغيلية</div>
-            <div class="nav-item" data-page="penalty"><i class="fas fa-exclamation-triangle"></i> غرامات معامل القدرة</div>
-            <div class="nav-item" data-page="employees"><i class="fas fa-users"></i> الموظفين</div>
-            <div class="nav-item logout-item" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</div>
-        </div>
-
-        <div class="content">
-            <div class="header">
-                <h1><i class="fas fa-clipboard-list"></i> تقارير المرور الميداني</h1>
-                <div class="user-info"><i class="fas fa-user-circle"></i> <span id="userName"></span></div>
-            </div>
-
-            <div style="margin-bottom: 20px;">
-                <select id="stationSelect" class="station-select">
-                    <option value="">اختر المحطة أولاً</option>
-                </select>
-                <button class="btn btn-primary" id="addInspectionBtn" style="margin-right: 10px;"><i class="fas fa-plus"></i> تقرير مرور جديد</button>
-            </div>
-
-            <div id="inspectionsList">
-                <div class="loading-spinner"><i class="fas fa-spinner fa-spin fa-2x"></i><p>جاري تحميل التقارير...</p></div>
-            </div>
-
-            <div class="copyright">
-                <p>تم إعداد وتصميم هذا النظام بمعرفة</p>
-                <p style="color:#00d4ff;">فني / كيرلس موريس يعقوب</p>
-                <p>نائب مدير الفرع: مهندس / منصور رجب عبدالله</p>
-                <p>مدير عام الفرع: مهندسة / زينب أحمد عبدالمنعم</p>
-            </div>
-        </div>
+    <div class="header-section">
+        <h2><i class="fas fa-clipboard-check"></i> تقارير مرور المواقع</h2>
+        <button class="btn btn-primary" onclick="openModal()"><i class="fas fa-plus"></i> إضافة تقرير مرور جديد</button>
     </div>
-</div>
 
-<!-- Modal إضافة تقرير مرور -->
-<div id="inspectionModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3 id="modalTitle">تقرير مرور جديد</h3>
-            <span class="modal-close" onclick="closeInspectionModal()">&times;</span>
-        </div>
-        <form id="inspectionForm">
-            <div class="form-group">
-                <label>تاريخ المرور <span style="color:#dc3545;">*</span></label>
-                <input type="date" id="inspectionDate" required>
-            </div>
-            <div class="form-group">
-                <label>ملاحظات عامة</label>
-                <textarea id="overallNotes" rows="2" placeholder="ملاحظات عامة عن الزيارة..."></textarea>
-            </div>
-            <div class="form-group">
-                <label>تاريخ المرور القادم (مقترح)</label>
-                <input type="date" id="nextInspectionDate">
-            </div>
-            <div id="assetsContainer"></div>
-            <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
-                <button type="button" class="btn" onclick="closeInspectionModal()">إلغاء</button>
-                <button type="submit" class="btn btn-primary">حفظ التقرير</button>
-            </div>
-        </form>
+    <div class="search-area">
+        <input type="text" id="searchInput" placeholder="بحث باسم المحطة أو المدير..." onkeyup="filterReports()">
     </div>
-</div>
 
-<script src="js/api.js"></script>
-<script>
-    if (!authToken) window.location.href = 'index.html';
-    if (currentUser) document.getElementById('userName').innerText = currentUser.full_name || currentUser.username;
+    <div id="reportsList" class="reports-grid">
+        </div>
 
-    const menuToggle = document.getElementById('menuToggle');
-    const sidebar = document.getElementById('sidebar');
-    menuToggle?.addEventListener('click', () => sidebar.classList.toggle('open'));
-
-    document.querySelectorAll('.nav-item').forEach(item => {
-        item.addEventListener('click', () => {
-            const page = item.getAttribute('data-page');
-            if (page && page !== 'logout') window.location.href = `${page}.html`;
-            if (item.id === 'logoutBtn') logout();
-        });
-    });
-
-    let stationsList = [];
-    let currentStationId = null;
-    let inspectionsData = [];
-    let stationAssets = [];
-
-    async function loadStationsSelect() {
-        try {
-            const result = await getStations();
-            if (result.success) {
-                stationsList = result.stations;
-                const select = document.getElementById('stationSelect');
-                select.innerHTML = '<option value="">اختر المحطة أولاً</option>';
-                stationsList.forEach(s => {
-                    select.innerHTML += `<option value="${s.id}">${s.station_name} (${s.station_code || s.id})</option>`;
-                });
-            }
-        } catch (error) { console.error(error); }
-    }
-
-    async function loadInspections() {
-        if (!currentStationId) {
-            document.getElementById('inspectionsList').innerHTML = '<div class="no-data"><i class="fas fa-info-circle"></i> الرجاء اختيار محطة أولاً</div>';
-            return;
-        }
-        document.getElementById('inspectionsList').innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i><p>جاري التحميل...</p></div>';
-        try {
-            const result = await getInspectionReports(currentStationId);
-            if (result.success) {
-                inspectionsData = result.reports;
-                renderInspectionsTable();
-            } else {
-                document.getElementById('inspectionsList').innerHTML = `<div class="no-data">${result.message}</div>`;
-            }
-        } catch (error) {
-            document.getElementById('inspectionsList').innerHTML = '<div class="no-data">خطأ في تحميل التقارير</div>';
-        }
-    }
-
-    function renderInspectionsTable() {
-        const container = document.getElementById('inspectionsList');
-        if (!inspectionsData.length) {
-            container.innerHTML = `<div class="no-data"><i class="fas fa-database"></i> لا توجد تقارير مرور مسجلة</div>`;
-            return;
-        }
-        let html = `<table class="data-table"><thead>发展<th>#</th><th>رقم التقرير</th><th>تاريخ المرور</th><th>المتابع</th><th>ملاحظات</th><th>الإجراءات</th></tr></thead><tbody>`;
-        inspectionsData.forEach((r, idx) => {
-            html += `<tr>
-                <td>${idx+1}</td>
-                <td>${r.report_number || '---'}</td>
-                <td>${r.inspection_date || '---'}</td>
-                <td>${r.inspector_name || r.inspector_full_name || '---'}</td>
-                <td>${(r.overall_notes || '').substring(0, 50)}</td>
-                <td>
-                    <button class="btn btn-sm btn-primary" onclick="viewInspection(${r.id})"><i class="fas fa-eye"></i> عرض</button>
-                </td>
-            </tr>`;
-        });
-        html += `</tbody></table>`;
-        container.innerHTML = html;
-    }
-
-    window.viewInspection = (id) => {
-        const report = inspectionsData.find(r => r.id == id);
-        if (report) {
-            alert(`تقرير مرور رقم: ${report.report_number}\nالتاريخ: ${report.inspection_date}\nالمتابع: ${report.inspector_name || report.inspector_full_name}\nالملاحظات: ${report.overall_notes || 'لا يوجد'}`);
-        }
-    };
-
-    async function loadAssetsForInspection() {
-        if (!currentStationId) return;
-        try {
-            const result = await getAllAssetsForInspection(currentStationId);
-            if (result.success) {
-                stationAssets = result.assets;
-                renderAssetsForm();
-            }
-        } catch (error) {
-            console.error(error);
-        }
-    }
-
-    function renderAssetsForm() {
-        const container = document.getElementById('assetsContainer');
-        if (!stationAssets.length) {
-            container.innerHTML = '<div class="no-data">لا توجد أصول مسجلة في هذه المحطة</div>';
-            return;
-        }
-        let html = '<h4 style="margin: 15px 0 10px 0;"><i class="fas fa-list"></i> حالة الأصول</h4>';
-        stationAssets.forEach(asset => {
-            html += `
-                <div class="asset-row">
-                    <h4><i class="fas fa-cog"></i> ${asset.name} <span style="font-size:0.7rem;">(${asset.category})</span></h4>
-                    <div class="row">
-                        <div>
-                            <label>الحالة:</label>
-                            <select class="asset-status" data-asset-id="${asset.id}" data-asset-name="${asset.name}" data-asset-category="${asset.category}">
-                                <option value="1">يعمل</option>
-                                <option value="0">لا يعمل</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label>وصف الأصل:</label>
-                            <input type="text" class="asset-desc" data-asset-id="${asset.id}" placeholder="وصف مختصر...">
-                        </div>
-                        <div>
-                            <label>ملاحظات:</label>
-                            <input type="text" class="asset-notes" data-asset-id="${asset.id}" placeholder="ملاحظات...">
-                        </div>
+    <div id="reportModal" class="modal">
+        <div class="modal-content">
+            <h3 style="color:#00d4ff; margin-bottom:15px;">نموذج معاينة محطة</h3>
+            <form id="inspectionForm">
+                <input type="hidden" id="editReportId">
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+                    <div>
+                        <label>تاريخ المرور:</label>
+                        <input type="date" id="visitDate" required>
+                    </div>
+                    <div>
+                        <label>المحطة:</label>
+                        <select id="visitStation" onchange="generateChecklist()" required></select>
+                    </div>
+                    <div>
+                        <label>المدير المسؤول:</label>
+                        <select id="visitManager" required></select>
                     </div>
                 </div>
-            `;
-        });
-        container.innerHTML = html;
-    }
 
-    document.getElementById('stationSelect').addEventListener('change', (e) => {
-        currentStationId = e.target.value;
-        if (currentStationId) loadInspections();
-    });
+                <label>ملاحظات عامة على الموقع:</label>
+                <textarea id="generalNotes" rows="2" placeholder="النظافة، الإنارة، الحالة العامة..."></textarea>
 
-    document.getElementById('addInspectionBtn').addEventListener('click', async () => {
-        if (!currentStationId) { alert('الرجاء اختيار المحطة أولاً'); return; }
-        document.getElementById('inspectionForm').reset();
-        document.getElementById('inspectionDate').value = new Date().toISOString().split('T')[0];
-        document.getElementById('modalTitle').innerText = 'تقرير مرور جديد';
-        await loadAssetsForInspection();
-        document.getElementById('inspectionModal').classList.add('active');
-    });
+                <div id="assetsChecklistArea">
+                    <p style="text-align: center; color: #888; padding: 20px;">اختر المحطة أولاً لإظهار قائمة الأصول...</p>
+                </div>
 
-    document.getElementById('inspectionForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const station = stationsList.find(s => s.id == currentStationId);
-        const reportData = {
-            station_id: currentStationId,
-            station_name: station?.station_name,
-            station_code: station?.station_code,
-            inspection_date: document.getElementById('inspectionDate').value,
-            inspector_id: currentUser?.id || null,
-            inspector_name: currentUser?.full_name || currentUser?.username,
-            overall_notes: document.getElementById('overallNotes').value,
-            next_inspection_date: document.getElementById('nextInspectionDate').value
-        };
-        try {
-            const reportResult = await createInspectionReport(reportData);
-            if (reportResult.success) {
-                const details = [];
-                document.querySelectorAll('.asset-status').forEach(select => {
-                    const assetId = select.getAttribute('data-asset-id');
-                    const assetName = select.getAttribute('data-asset-name');
-                    const assetCategory = select.getAttribute('data-asset-category');
-                    const desc = document.querySelector(`.asset-desc[data-asset-id="${assetId}"]`)?.value || '';
-                    const notes = document.querySelector(`.asset-notes[data-asset-id="${assetId}"]`)?.value || '';
-                    details.push({
-                        asset_category: assetCategory,
-                        asset_name: assetName,
-                        asset_id: assetId,
-                        is_working: select.value === '1',
-                        asset_description: desc,
-                        notes: notes
-                    });
-                });
-                if (details.length) {
-                    await addInspectionDetails(reportResult.report_id, details);
-                }
-                closeInspectionModal();
-                loadInspections();
-            } else {
-                alert(reportResult.message || 'حدث خطأ');
-            }
-        } catch (error) {
-            alert('خطأ في حفظ التقرير');
+                <div style="text-align: left; margin-top: 20px;">
+                    <button type="button" class="btn btn-danger" onclick="closeModal()">إغلاق</button>
+                    <button type="submit" class="btn btn-success">حفظ التقرير نهائياً</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const SUPABASE_URL = 'https://jvfbkoaeugkeoiccvnkq.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_n64Hnhuruc3Oeolj-Uwg9g_tu-otJlZ';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let allAssets = [], allManagers = [], reportsData = [];
+
+        async function init() {
+            // جلب المحطات
+            const { data: stations } = await supabaseClient.from('stations').select('*');
+            const sSelect = document.getElementById('visitStation');
+            sSelect.innerHTML = '<option value="">اختر المحطة</option>';
+            stations?.forEach(s => sSelect.innerHTML += `<option value="${s.id}">${s.station_name}</option>`);
+
+            // جلب الأصول (من الـ 7 جداول)
+            const tables = ['transformers', 'generators', 'electrical_panels', 'main_pumps', 'sub_pumps', 'other_assets', 'buildings'];
+            const res = await Promise.all(tables.map(t => supabaseClient.from(t).select('*')));
+            allAssets = [];
+            res.forEach(r => r.data?.forEach(item => {
+                let name = item.asset_name || item.transformer_number || item.generator_number || item.pump_number || "أصل";
+                allAssets.push({ name, station_id: item.station_id });
+            }));
+
+            // جلب المديرين (من جدول الموظفين)
+            const { data: emps } = await supabaseClient.from('employees').select('employee_name');
+            const mSelect = document.getElementById('visitManager');
+            mSelect.innerHTML = '<option value="">اختر المدير</option>';
+            emps?.forEach(e => mSelect.innerHTML += `<option value="${e.employee_name}">${e.employee_name}</option>`);
+
+            loadReports();
         }
-    });
 
-    function closeInspectionModal() { document.getElementById('inspectionModal').classList.remove('active'); }
-    window.closeInspectionModal = closeInspectionModal;
+        // توليد قائمة الأصول فور اختيار المحطة
+        window.generateChecklist = () => {
+            const sid = document.getElementById('visitStation').value;
+            const filtered = allAssets.filter(a => String(a.station_id) === String(sid));
+            
+            let html = `<h4>قائمة فحص الأصول (${filtered.length})</h4>
+                        <table class="checklist-table">
+                            <thead><tr><th>الأصل/المعدة</th><th>الحالة</th><th>ملاحظات فنية</th></tr></thead><tbody>`;
+            
+            filtered.forEach((a, index) => {
+                html += `<tr>
+                    <td>${a.name}</td>
+                    <td>
+                        <div class="status-toggle">
+                            <label><input type="radio" name="st_${index}" value="يعمل" checked class="radio-working"> <span>يعمل</span></label>
+                            <label><input type="radio" name="st_${index}" value="لا يعمل" class="radio-broken"> <span>عطل</span></label>
+                        </div>
+                    </td>
+                    <td><input type="text" class="asset-note" placeholder="ملاحظة..." style="margin:0; font-size:12px;"></td>
+                </tr>`;
+            });
+            document.getElementById('assetsChecklistArea').innerHTML = html + '</tbody></table>';
+        };
 
-    loadStationsSelect();
-</script>
+        async function loadReports() {
+            const { data } = await supabaseClient.from('inspection_reports').select('*').order('visit_date', { ascending: false });
+            reportsData = data || [];
+            renderReports();
+        }
+
+        function renderReports() {
+            let html = '';
+            reportsData.forEach(r => {
+                html += `
+                <div class="report-item">
+                    <div style="display:flex; justify-content:space-between;">
+                        <b>📍 محطة: ${r.station_name}</b>
+                        <span>📅 ${r.visit_date}</span>
+                    </div>
+                    <div style="font-size:13px; color:#00d4ff;">بإشراف المدير: ${r.manager_name}</div>
+                    <div style="margin-top:10px; font-size:12px; color:#ccc;">${r.notes || 'لا يوجد ملاحظات عامة'}</div>
+                    <div style="margin-top:10px;">
+                        <button class="btn btn-primary" style="padding:4px 10px; font-size:11px;" onclick="editReport(${r.id})">تعديل</button>
+                        <button class="btn btn-danger" style="padding:4px 10px; font-size:11px;" onclick="deleteReport(${r.id})">حذف</button>
+                    </div>
+                </div>`;
+            });
+            document.getElementById('reportsList').innerHTML = html || '<p style="text-align:center;">لا توجد تقارير مسجلة</p>';
+        }
+
+        // حفظ التقرير
+        document.getElementById('inspectionForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const sid = document.getElementById('visitStation').value;
+            const sName = document.getElementById('visitStation').options[document.getElementById('visitStation').selectedIndex].text;
+            
+            // جمع بيانات الأصول من الجدول
+            const checklist = [];
+            const rows = document.querySelectorAll('.checklist-table tbody tr');
+            rows.forEach((row, i) => {
+                checklist.push({
+                    asset: row.cells[0].innerText,
+                    status: row.querySelector(`input[name="st_${i}"]:checked`).value,
+                    note: row.querySelector('.asset-note').value
+                });
+            });
+
+            const payload = {
+                visit_date: document.getElementById('visitDate').value,
+                station_id: sid,
+                station_name: sName,
+                manager_name: document.getElementById('visitManager').value,
+                notes: document.getElementById('generalNotes').value,
+                checklist_data: checklist // سيتم حفظها كـ JSON
+            };
+
+            const reportId = document.getElementById('editReportId').value;
+            let result;
+            if(reportId) {
+                result = await supabaseClient.from('inspection_reports').update(payload).eq('id', reportId);
+            } else {
+                result = await supabaseClient.from('inspection_reports').insert([payload]);
+            }
+
+            if (!result.error) {
+                closeModal();
+                loadReports();
+            } else {
+                alert("خطأ: تأكد من إنشاء جدول inspection_reports في سوبابيز");
+            }
+        };
+
+        window.openModal = () => {
+            document.getElementById('inspectionForm').reset();
+            document.getElementById('editReportId').value = '';
+            document.getElementById('assetsChecklistArea').innerHTML = '<p style="text-align:center; padding:20px;">اختر المحطة أولاً...</p>';
+            document.getElementById('reportModal').classList.add('active');
+        };
+
+        window.closeModal = () => document.getElementById('reportModal').classList.remove('active');
+
+        window.deleteReport = async (id) => {
+            if(confirm("هل أنت متأكد من حذف هذا التقرير؟")) {
+                await supabaseClient.from('inspection_reports').delete().eq('id', id);
+                loadReports();
+            }
+        };
+
+        init();
+    </script>
 </body>
 </html>
