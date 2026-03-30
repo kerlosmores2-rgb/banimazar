@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>نظام إدارة محطات الصرف الصحي - لوحة التحكم</title>
+    <title>نظام إدارة محطات الصرف الصحي - لوحة التحكم الشاملة</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
@@ -19,9 +19,6 @@
             color: #fff;
         }
 
-        /* ============================================
-           Container & Layout
-           ============================================ */
         .container {
             max-width: 1400px;
             margin: 0 auto;
@@ -46,9 +43,24 @@
             height: fit-content;
             border: 1px solid rgba(0, 212, 255, 0.3);
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            max-height: 90vh;
+            overflow-y: auto;
         }
 
-        /* شعار القائمة */
+        .sidebar::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: #00d4ff;
+            border-radius: 10px;
+        }
+
         .sidebar-logo {
             text-align: center;
             padding: 0 20px 20px 20px;
@@ -75,23 +87,22 @@
             color: rgba(255, 255, 255, 0.6);
         }
 
-        /* عناصر القائمة */
         .sidebar .nav-item {
             display: flex;
             align-items: center;
             gap: 15px;
-            padding: 14px 25px;
+            padding: 12px 20px;
             color: #ddd;
-            text-decoration: none;
             transition: all 0.3s;
             border-right: 3px solid transparent;
             cursor: pointer;
-            margin: 5px 0;
+            margin: 2px 0;
+            font-size: 0.85rem;
         }
 
         .sidebar .nav-item i {
-            width: 28px;
-            font-size: 1.2rem;
+            width: 24px;
+            font-size: 1rem;
             text-align: center;
         }
 
@@ -108,9 +119,9 @@
         }
 
         .sidebar .logout-item {
-            margin-top: 30px;
+            margin-top: 20px;
             border-top: 1px solid rgba(255, 255, 255, 0.1);
-            padding-top: 20px;
+            padding-top: 15px;
             color: #ff6b6b;
         }
 
@@ -130,6 +141,7 @@
             border-radius: 25px;
             padding: 25px;
             min-height: 500px;
+            overflow-x: auto;
         }
 
         .header {
@@ -157,24 +169,195 @@
             border-radius: 50px;
         }
 
-        .user-info i {
-            font-size: 1.2rem;
+        /* ============================================
+           أزرار وعناصر التحكم
+           ============================================ */
+        .btn {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+        }
+
+        .btn-primary {
+            background: #00d4ff;
+            color: #1a1a2e;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            color: #1a1a2e;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-sm {
+            padding: 5px 12px;
+            font-size: 0.7rem;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid #00d4ff;
             color: #00d4ff;
+            padding: 6px 18px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .btn-outline:hover {
+            background: #00d4ff;
+            color: #1a1a2e;
         }
 
         /* ============================================
-           بطاقات الإحصائيات
+           الجداول
+           ============================================ */
+        .table-responsive {
+            overflow-x: auto;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 600px;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 12px;
+            text-align: right;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.85rem;
+        }
+
+        .data-table th {
+            background: rgba(0, 212, 255, 0.15);
+            color: #00d4ff;
+            font-weight: 600;
+        }
+
+        /* ============================================
+           النماذج
+           ============================================ */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 0.85rem;
+            color: #00d4ff;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            color: #fff;
+            font-size: 0.85rem;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #00d4ff;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        /* ============================================
+           المودال
+           ============================================ */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #1e2a3a;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 85vh;
+            overflow-y: auto;
+            padding: 25px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 10px;
+        }
+
+        .modal-header h3 {
+            color: #00d4ff;
+        }
+
+        .modal-close {
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #dc3545;
+        }
+
+        /* ============================================
+           بطاقات وإحصائيات
            ============================================ */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 20px;
             margin-bottom: 30px;
         }
 
         .stat-card {
             background: rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(10px);
             border-radius: 20px;
             padding: 20px;
             transition: all 0.3s;
@@ -186,30 +369,25 @@
         .stat-card:hover {
             transform: translateY(-5px);
             background: rgba(0, 212, 255, 0.15);
-            border-color: #00d4ff;
         }
 
         .stat-card .stat-icon {
             font-size: 2rem;
             color: #00d4ff;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
         }
 
         .stat-card .stat-value {
-            font-size: 1.8rem;
+            font-size: 1.5rem;
             font-weight: bold;
             color: #fff;
         }
 
         .stat-card .stat-label {
             color: rgba(255, 255, 255, 0.7);
-            font-size: 0.85rem;
-            margin-top: 5px;
+            font-size: 0.8rem;
         }
 
-        /* ============================================
-           بطاقات المحطات
-           ============================================ */
         .stations-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -234,21 +412,7 @@
         .station-card h4 {
             color: #00d4ff;
             margin-bottom: 12px;
-            font-size: 1.1rem;
         }
-
-        .station-status {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.7rem;
-            margin-top: 10px;
-        }
-
-        .status-active { background: rgba(40, 167, 69, 0.2); color: #28a745; }
-        .status-maintenance { background: rgba(255, 193, 7, 0.2); color: #ffc107; }
-        .status-inactive { background: rgba(108, 117, 125, 0.2); color: #adb5bd; }
-        .status-emergency { background: rgba(220, 53, 69, 0.2); color: #dc3545; }
 
         .station-info {
             margin: 8px 0;
@@ -261,50 +425,55 @@
             color: #00d4ff;
         }
 
-        /* ============================================
-           عناصر إضافية
-           ============================================ */
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+        }
+
+        .status-active {
+            background: rgba(40, 167, 69, 0.2);
+            color: #28a745;
+        }
+
+        .status-maintenance {
+            background: rgba(255, 193, 7, 0.2);
+            color: #ffc107;
+        }
+
+        .status-inactive {
+            background: rgba(108, 117, 125, 0.2);
+            color: #adb5bd;
+        }
+
+        .status-emergency {
+            background: rgba(220, 53, 69, 0.2);
+            color: #dc3545;
+        }
+
+        .status-completed {
+            background: rgba(40, 167, 69, 0.2);
+            color: #28a745;
+        }
+
+        .status-pending {
+            background: rgba(255, 193, 7, 0.2);
+            color: #ffc107;
+        }
+
         .section-title {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin: 25px 0 15px 0;
+            flex-wrap: wrap;
+            gap: 10px;
         }
 
         .section-title h3 {
             color: #00d4ff;
-            font-size: 1.2rem;
-        }
-
-        .btn-outline {
-            background: transparent;
-            border: 1px solid #00d4ff;
-            color: #00d4ff;
-            padding: 6px 18px;
-            border-radius: 25px;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-
-        .btn-outline:hover {
-            background: #00d4ff;
-            color: #1a1a2e;
-        }
-
-        .quick-stats {
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-            margin-bottom: 25px;
-        }
-
-        .quick-stat-item {
-            background: rgba(0, 212, 255, 0.1);
-            border-radius: 15px;
-            padding: 12px 20px;
-            flex: 1;
-            min-width: 130px;
-            text-align: center;
+            font-size: 1.1rem;
         }
 
         .welcome-section {
@@ -315,27 +484,45 @@
             border-right: 4px solid #00d4ff;
         }
 
-        .welcome-section h2 {
-            color: #00d4ff;
-            font-size: 1.3rem;
-            margin-bottom: 8px;
-        }
-
         .loading-spinner {
             text-align: center;
-            padding: 40px;
+            padding: 60px;
             color: #00d4ff;
         }
 
         .no-data {
             text-align: center;
-            padding: 40px;
+            padding: 60px;
             color: rgba(255, 255, 255, 0.5);
         }
 
-        /* ============================================
-           زر القائمة للجوال
-           ============================================ */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: #28a745;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 10px;
+            z-index: 1100;
+            animation: slideIn 0.3s ease;
+        }
+
+        .toast.error {
+            background: #dc3545;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(-100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
         .menu-toggle {
             display: none;
             position: fixed;
@@ -350,18 +537,14 @@
             font-size: 1.2rem;
             color: #1a1a2e;
             cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         }
 
-        /* ============================================
-           حقوق الملكية
-           ============================================ */
         .copyright {
             text-align: center;
             padding: 20px;
             margin-top: 40px;
             border-top: 1px solid rgba(255, 255, 255, 0.1);
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             color: rgba(255, 255, 255, 0.6);
             line-height: 1.8;
         }
@@ -369,19 +552,15 @@
         .copyright .designer {
             color: #00d4ff;
             font-weight: 500;
-            font-size: 0.85rem;
         }
 
-        /* ============================================
-           Responsive
-           ============================================ */
         @media (max-width: 768px) {
             .menu-toggle {
                 display: flex;
                 align-items: center;
                 justify-content: center;
             }
-            
+
             .sidebar {
                 position: fixed;
                 top: 0;
@@ -390,25 +569,17 @@
                 height: 100vh;
                 z-index: 1000;
                 transition: right 0.3s ease;
-                overflow-y: auto;
                 border-radius: 0;
-                background: rgba(10, 40, 55, 0.95);
             }
-            
+
             .sidebar.open {
                 right: 0;
             }
-            
+
             .content {
-                width: 100%;
                 margin-top: 50px;
             }
-            
-            .header {
-                flex-direction: column;
-                text-align: center;
-            }
-            
+
             .stats-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
@@ -416,10 +587,6 @@
 
         @media (max-width: 480px) {
             .stats-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .stations-grid {
                 grid-template-columns: 1fr;
             }
         }
@@ -433,56 +600,57 @@
 
 <div class="container">
     <div class="main-layout">
-        <!-- القائمة الجانبية - Sidebar -->
         <div class="sidebar" id="sidebar">
             <div class="sidebar-logo">
                 <i class="fas fa-water"></i>
                 <h3>نظام إدارة محطات الصرف الصحي</h3>
                 <p>بني مزار - المنيا</p>
             </div>
+
+            <!-- القسم الرئيسي -->
+            <div class="nav-item active" data-page="dashboard"><i class="fas fa-tachometer-alt"></i> الرئيسية</div>
             
-            <div class="nav-item active" data-page="dashboard">
-                <i class="fas fa-tachometer-alt"></i>
-                <span>الرئيسية</span>
-            </div>
-            <div class="nav-item" data-page="stations">
-                <i class="fas fa-building"></i>
-                <span>المحطات</span>
-            </div>
-            <div class="nav-item" data-page="assets">
-                <i class="fas fa-microchip"></i>
-                <span>الأصول</span>
-            </div>
-            <div class="nav-item" data-page="maintenance">
-                <i class="fas fa-tools"></i>
-                <span>بلاغات الصيانة</span>
-            </div>
-            <div class="nav-item" data-page="inspection">
-                <i class="fas fa-clipboard-list"></i>
-                <span>تقارير المرور</span>
-            </div>
-            <div class="nav-item" data-page="reports">
-                <i class="fas fa-chart-line"></i>
-                <span>التقارير التشغيلية</span>
-            </div>
-            <div class="nav-item" data-page="penalty">
-                <i class="fas fa-exclamation-triangle"></i>
-                <span>غرامات معامل القدرة</span>
-            </div>
-            <div class="nav-item" data-page="employees">
-                <i class="fas fa-users"></i>
-                <span>الموظفين</span>
-            </div>
-            <div class="nav-item logout-item" id="logoutBtn">
-                <i class="fas fa-sign-out-alt"></i>
-                <span>تسجيل الخروج</span>
-            </div>
+            <!-- البيانات الأساسية -->
+            <div class="nav-item" data-page="stations"><i class="fas fa-building"></i> المحطات</div>
+            <div class="nav-item" data-page="feeders"><i class="fas fa-bolt"></i> المغذيات</div>
+            <div class="nav-item" data-page="generators"><i class="fas fa-industry"></i> المولدات</div>
+            <div class="nav-item" data-page="electrical_panels"><i class="fas fa-charging-station"></i> اللوحات الكهربائية</div>
+            <div class="nav-item" data-page="main_pumps"><i class="fas fa-water-pump"></i> المضخات الرئيسية</div>
+            <div class="nav-item" data-page="sub_pumps"><i class="fas fa-pump-soap"></i> المضخات الفرعية</div>
+            <div class="nav-item" data-page="other_assets"><i class="fas fa-cogs"></i> الأصول الأخرى</div>
+            <div class="nav-item" data-page="buildings"><i class="fas fa-building"></i> المباني</div>
+            <div class="nav-item" data-page="mechanical_equipment"><i class="fas fa-microchip"></i> المعدات الميكانيكية</div>
+            <div class="nav-item" data-page="station_details"><i class="fas fa-info-circle"></i> تفاصيل المحطات</div>
+            
+            <!-- الصيانة والتشغيل -->
+            <div class="nav-item" data-page="maintenance_reports"><i class="fas fa-tools"></i> بلاغات الصيانة</div>
+            <div class="nav-item" data-page="spare_parts_used"><i class="fas fa-cogs"></i> قطع الغيار المستخدمة</div>
+            <div class="nav-item" data-page="electricity_meters"><i class="fas fa-bolt"></i> عدادات الكهرباء</div>
+            <div class="nav-item" data-page="water_meters"><i class="fas fa-tint"></i> عدادات المياه</div>
+            <div class="nav-item" data-page="diesel_consumption"><i class="fas fa-oil-can"></i> استهلاك السولار</div>
+            <div class="nav-item" data-page="water_lifted"><i class="fas fa-water"></i> المياه المرفوعة</div>
+            <div class="nav-item" data-page="generator_oil_consumption"><i class="fas fa-oil-can"></i> استهلاك زيت المولدات</div>
+            
+            <!-- التقارير والمرور -->
+            <div class="nav-item" data-page="monthly_reports"><i class="fas fa-calendar-alt"></i> التقارير الشهرية</div>
+            <div class="nav-item" data-page="inspection_reports"><i class="fas fa-clipboard-list"></i> تقارير المرور</div>
+            <div class="nav-item" data-page="inspection_report_details"><i class="fas fa-list-ul"></i> تفاصيل تقارير المرور</div>
+            
+            <!-- معامل القدرة والغرامات -->
+            <div class="nav-item" data-page="power_factor_panels"><i class="fas fa-charging-station"></i> لوحات معامل القدرة</div>
+            <div class="nav-item" data-page="power_factor_monthly"><i class="fas fa-chart-line"></i> معامل القدرة الشهري</div>
+            <div class="nav-item" data-page="penalty_notifications"><i class="fas fa-exclamation-triangle"></i> إشعارات الغرامات</div>
+            
+            <!-- الموارد البشرية -->
+            <div class="nav-item" data-page="employees"><i class="fas fa-users"></i> الموظفين</div>
+            <div class="nav-item" data-page="users"><i class="fas fa-user-lock"></i> المستخدمين</div>
+            
+            <div class="nav-item logout-item" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</div>
         </div>
 
-        <!-- المحتوى الرئيسي -->
         <div class="content">
             <div class="header">
-                <h1><i class="fas fa-chalkboard-user"></i> لوحة التحكم</h1>
+                <h1><i class="fas fa-chalkboard-user"></i> لوحة التحكم الشاملة</h1>
                 <div class="user-info">
                     <i class="fas fa-user-circle"></i>
                     <span id="userName">مرحباً بك</span>
@@ -496,215 +664,1080 @@
                 </div>
             </div>
 
-            <!-- حقوق الملكية - التعديل المطلوب -->
             <div class="copyright">
                 <p>تم إعداد وتصميم هذا النظام بمعرفة</p>
                 <p class="designer">فني / كيرلس موريس يعقوب</p>
                 <p>نائب مدير الفرع: مهندس / منصور رجب عبدالله</p>
                 <p>مدير عام الفرع: مهندسة / زينب أحمد عبدالمنعم</p>
-                <p style="margin-top: 10px;">© 2024 - 2025 شركة مياه الشرب والصرف الصحي - بني مزار</p>
             </div>
         </div>
     </div>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://kerlosmores2-rgb.github.io/banimazar/client/js/api.js"></script>
 
-<script src="js/api.js"></script>
 <script>
-    // التحقق من تسجيل الدخول
-    if (!authToken) {
-        window.location.href = 'index.html';
+    // ============================================
+    // المتغيرات العامة
+    // ============================================
+    let stationsList = [];
+    let currentTable = null;
+    let currentEditId = null;
+    let currentPage = 'dashboard';
+
+    // ============================================
+    // دوال مساعدة
+    // ============================================
+    function showToast(message, isError = false) {
+        const toast = document.createElement('div');
+        toast.className = `toast ${isError ? 'error' : ''}`;
+        toast.innerHTML = `<i class="fas ${isError ? 'fa-exclamation-circle' : 'fa-check-circle'}"></i> ${message}`;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
     }
 
-    // عرض اسم المستخدم
-    if (currentUser) {
-        document.getElementById('userName').innerHTML = `مرحباً ${currentUser.full_name || currentUser.username}`;
-    }
-
-    const menuToggle = document.getElementById('menuToggle');
-    const sidebar = document.getElementById('sidebar');
-    const navItems = document.querySelectorAll('.nav-item');
-    const logoutBtn = document.getElementById('logoutBtn');
-    const pageContent = document.getElementById('pageContent');
-
-    menuToggle.addEventListener('click', () => {
-        sidebar.classList.toggle('open');
-    });
-
-    navItems.forEach(item => {
-        item.addEventListener('click', () => {
-            if (window.innerWidth <= 768) {
-                sidebar.classList.remove('open');
+    async function safeApiCall(apiFunction, ...args) {
+        try {
+            if (typeof apiFunction === 'function') {
+                return await apiFunction(...args);
             }
-        });
-    });
-
-    logoutBtn.addEventListener('click', () => {
-        logout();
-    });
-
-    function loadPage(page) {
-        pageContent.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin fa-2x"></i><p>جاري تحميل الصفحة...</p></div>';
-        
-        if (page === 'dashboard') {
-            loadDashboard();
-        } else if (page === 'stations') {
-            loadStationsPage();
-        } else if (page === 'assets') {
-            loadAssetsPage();
-        } else if (page === 'maintenance') {
-            loadMaintenancePage();
-        } else if (page === 'inspection') {
-            loadInspectionPage();
-        } else if (page === 'reports') {
-            loadReportsPage();
-        } else if (page === 'penalty') {
-            loadPenaltyPage();
-        } else if (page === 'employees') {
-            loadEmployeesPage();
+            return { success: false, message: 'دالة API غير متوفرة', data: [] };
+        } catch (error) {
+            console.error('API Error:', error);
+            return { success: false, message: error.message, data: [] };
         }
     }
 
-    function setActiveNav(page) {
-        navItems.forEach(item => {
-            const itemPage = item.getAttribute('data-page');
-            if (itemPage === page) {
-                item.classList.add('active');
-            } else if (itemPage !== 'logout') {
-                item.classList.remove('active');
-            }
-        });
+    async function loadStationsList() {
+        const result = await safeApiCall(getStations);
+        if (result.success && result.stations) {
+            stationsList = result.stations;
+        }
+        return stationsList;
     }
 
-    async function loadDashboard() {
+    function getStationsOptions(selectedId = null) {
+        let options = '<option value="">اختر المحطة</option>';
+        stationsList.forEach(s => {
+            options += `<option value="${s.id}" ${selectedId == s.id ? 'selected' : ''}>${s.station_name}</option>`;
+        });
+        return options;
+    }
+
+    function getStationName(stationId) {
+        const station = stationsList.find(s => s.id == stationId);
+        return station ? station.station_name : stationId || '-';
+    }
+
+    // ============================================
+    // تعريفات الجداول (28 جدول)
+    // ============================================
+    const tableConfigs = {
+        stations: {
+            title: 'المحطات',
+            api: { get: getStations, create: createStation, update: updateStation, delete: deleteStation },
+            columns: [
+                { field: 'station_name', label: 'اسم المحطة' },
+                { field: 'station_code', label: 'الكود' },
+                { field: 'location', label: 'الموقع' },
+                { field: 'capacity', label: 'السعة (م³/يوم)' },
+                { field: 'status', label: 'الحالة', type: 'status' }
+            ],
+            fields: `
+                <div class="form-row">
+                    <div class="form-group"><label>اسم المحطة *</label><input type="text" id="station_name" required></div>
+                    <div class="form-group"><label>كود المحطة</label><input type="text" id="station_code"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>الموقع</label><input type="text" id="location"></div>
+                    <div class="form-group"><label>السعة (م³/يوم)</label><input type="number" id="capacity" step="0.01"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>خط العرض</label><input type="text" id="latitude"></div>
+                    <div class="form-group"><label>خط الطول</label><input type="text" id="longitude"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>الحالة</label><select id="status"><option value="active">نشطة</option><option value="maintenance">تحت الصيانة</option><option value="inactive">متوقفة</option><option value="emergency">طوارئ</option></select></div>
+                    <div class="form-group"><label>تاريخ التشغيل</label><input type="date" id="operation_date"></div>
+                </div>
+                <div class="form-group"><label>ملاحظات</label><textarea id="notes" rows="2"></textarea></div>
+            `
+        },
+        feeders: {
+            title: 'المغذيات',
+            api: { get: getFeeders, create: createFeeder, update: updateFeeder, delete: deleteFeeder },
+            columns: [
+                { field: 'feeder_name', label: 'اسم المغذي' },
+                { field: 'voltage_kv', label: 'الجهد (ك.ف)' },
+                { field: 'current_a', label: 'التيار (أمبير)' },
+                { field: 'station_id', label: 'المحطة', type: 'station' }
+            ],
+            fields: `
+                <div class="form-row">
+                    <div class="form-group"><label>اسم المغذي *</label><input type="text" id="feeder_name" required></div>
+                    <div class="form-group"><label>المحطة</label><select id="station_id">${getStationsOptions()}</select></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>الجهد (ك.ف)</label><input type="number" id="voltage_kv" step="0.01"></div>
+                    <div class="form-group"><label>التيار (أمبير)</label><input type="number" id="current_a" step="0.01"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>القدرة (ك.و)</label><input type="number" id="power_kw" step="0.01"></div>
+                    <div class="form-group"><label>معامل القدرة</label><input type="number" id="power_factor" step="0.01"></div>
+                </div>
+                <div class="form-group"><label>ملاحظات</label><textarea id="notes" rows="2"></textarea></div>
+            `
+        },
+        generators: {
+            title: 'المولدات',
+            api: { get: getGenerators, create: createGenerator, update: updateGenerator, delete: deleteGenerator },
+            columns: [
+                { field: 'generator_name', label: 'اسم المولد' },
+                { field: 'rated_power_kva', label: 'القدرة (KVA)' },
+                { field: 'fuel_type', label: 'نوع الوقود' },
+                { field: 'status', label: 'الحالة', type: 'status' }
+            ],
+            fields: `
+                <div class="form-row">
+                    <div class="form-group"><label>اسم المولد *</label><input type="text" id="generator_name" required></div>
+                    <div class="form-group"><label>المحطة</label><select id="station_id">${getStationsOptions()}</select></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>القدرة المقدرة (KVA)</label><input type="number" id="rated_power_kva" step="0.01"></div>
+                    <div class="form-group"><label>نوع الوقود</label><select id="fuel_type"><option value="diesel">ديزل</option><option value="gas">غاز</option></select></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>الموديل</label><input type="text" id="model"></div>
+                    <div class="form-group"><label>الشركة المصنعة</label><input type="text" id="manufacturer"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>سنة التصنيع</label><input type="number" id="manufacture_year"></div>
+                    <div class="form-group"><label>الحالة</label><select id="status"><option value="active">نشط</option><option value="maintenance">صيانة</option><option value="inactive">متوقف</option></select></div>
+                </div>
+                <div class="form-group"><label>ملاحظات</label><textarea id="notes" rows="2"></textarea></div>
+            `
+        },
+        electrical_panels: {
+            title: 'اللوحات الكهربائية',
+            api: { get: getPanels, create: createPanel, update: updatePanel, delete: deletePanel },
+            columns: [
+                { field: 'panel_name', label: 'اسم اللوحة' },
+                { field: 'panel_type', label: 'النوع' },
+                { field: 'status', label: 'الحالة', type: 'status' }
+            ],
+            fields: `
+                <div class="form-row">
+                    <div class="form-group"><label>اسم اللوحة *</label><input type="text" id="panel_name" required></div>
+                    <div class="form-group"><label>المحطة</label><select id="station_id">${getStationsOptions()}</select></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>نوع اللوحة</label><select id="panel_type"><option value="main">رئيسية</option><option value="distribution">توزيع</option><option value="control">تحكم</option></select></div>
+                    <div class="form-group"><label>الجهد المقنن (فولت)</label><input type="number" id="rated_voltage"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>التيار المقنن (أمبير)</label><input type="number" id="rated_current"></div>
+                    <div class="form-group"><label>الحالة</label><select id="status"><option value="active">نشط</option><option value="maintenance">صيانة</option></select></div>
+                </div>
+                <div class="form-group"><label>ملاحظات</label><textarea id="notes" rows="2"></textarea></div>
+            `
+        },
+        main_pumps: {
+            title: 'المضخات الرئيسية',
+            api: { get: getMainPumps, create: createMainPump, update: updateMainPump, delete: deleteMainPump },
+            columns: [
+                { field: 'pump_number', label: 'رقم المضخة' },
+                { field: 'flow_rate_m3h', label: 'التصرف (م³/س)' },
+                { field: 'head_m', label: 'الرفع (م)' },
+                { field: 'status', label: 'الحالة', type: 'status' }
+            ],
+            fields: `
+                <div class="form-row">
+                    <div class="form-group"><label>رقم المضخة *</label><input type="text" id="pump_number" required></div>
+                    <div class="form-group"><label>المحطة</label><select id="station_id">${getStationsOptions()}</select></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>التصرف (م³/ساعة)</label><input type="number" id="flow_rate_m3h" step="0.01"></div>
+                    <div class="form-group"><label>الرفع (متر)</label><input type="number" id="head_m" step="0.01"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>قدرة المحرك (حصان)</label><input type="number" id="motor_power_hp" step="0.01"></div>
+                    <div class="form-group"><label>سرعة الدوران (دورة/دقيقة)</label><input type="number" id="speed_rpm"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>الحالة</label><select id="status"><option value="active">نشط</option><option value="maintenance">صيانة</option><option value="inactive">متوقف</option></select></div>
+                    <div class="form-group"><label>تاريخ التركيب</label><input type="date" id="installation_date"></div>
+                </div>
+                <div class="form-group"><label>ملاحظات</label><textarea id="notes" rows="2"></textarea></div>
+            `
+        },
+        sub_pumps: {
+            title: 'المضخات الفرعية',
+            api: { get: getSubPumps, create: createSubPump, update: updateSubPump, delete: deleteSubPump },
+            columns: [
+                { field: 'pump_number', label: 'رقم المضخة' },
+                { field: 'flow_rate_m3h', label: 'التصرف (م³/س)' },
+                { field: 'status', label: 'الحالة', type: 'status' }
+            ],
+            fields: `
+                <div class="form-row">
+                    <div class="form-group"><label>رقم المضخة *</label><input type="text" id="pump_number" required></div>
+                    <div class="form-group"><label>المحطة</label><select id="station_id">${getStationsOptions()}</select></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>التصرف (م³/ساعة)</label><input type="number" id="flow_rate_m3h" step="0.01"></div>
+                    <div class="form-group"><label>قدرة المحرك (حصان)</label><input type="number" id="motor_power_hp" step="0.01"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>النوع</label><input type="text" id="pump_type"></div>
+                    <div class="form-group"><label>الحالة</label><select id="status"><option value="active">نشط</option><option value="maintenance">صيانة</option></select></div>
+                </div>
+                <div class="form-group"><label>ملاحظات</label><textarea id="notes" rows="2"></textarea></div>
+            `
+        },
+        other_assets: {
+            title: 'الأصول الأخرى',
+            api: { get: getOtherAssets, create: createOtherAsset, update: updateOtherAsset, delete: deleteOtherAsset },
+            columns: [
+                { field: 'asset_name', label: 'اسم الأصل' },
+                { field: 'asset_type', label: 'النوع' },
+                { field: 'station_id', label: 'المحطة', type: 'station' }
+            ],
+            fields: `
+                <div class="form-row">
+                    <div class="form-group"><label>اسم الأصل *</label><input type="text" id="asset_name" required></div>
+                    <div class="form-group"><label>المحطة</label><select id="station_id">${getStationsOptions()}</select></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>نوع الأصل</label><input type="text" id="asset_type"></div>
+                    <div class="form-group"><label>الموديل</label><input type="text" id="model"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>الشركة المصنعة</label><input type="text" id="manufacturer"></div>
+                    <div class="form-group"><label>سنة التصنيع</label><input type="number" id="manufacture_year"></div>
+                </div>
+                <div class="form-group"><label>ملاحظات</label><textarea id="notes" rows="2"></textarea></div>
+            `
+        },
+        buildings: {
+            title: 'المباني',
+            api: { get: getBuildings, create: createBuilding, update: updateBuilding, delete: deleteBuilding },
+            columns: [
+                { field: 'building_name', label: 'اسم المبنى' },
+                { field: 'building_type', label: 'النوع' },
+                { field: 'area_m2', label: 'المساحة (م²)' }
+            ],
+            fields: `
+                <div class="form-row">
+                    <div class="form-group"><label>اسم المبنى *</label><input type="text" id="building_name" required></div>
+                    <div class="form-group"><label>المحطة</label><select id="station_id">${getStationsOptions()}</select></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>نوع المبنى</label><input type="text" id="building_type"></div>
+                    <div class="form-group"><label>المساحة (م²)</label><input type="number" id="area_m2" step="0.01"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>عدد الطوابق</label><input type="number" id="floors_count"></div>
+                    <div class="form-group"><label>تاريخ الإنشاء</label><input type="date" id="construction_date"></div>
+                </div>
+                <div class="form-group"><label>ملاحظات</label><textarea id="notes" rows="2"></textarea></div>
+            `
+        },
+        mechanical_equipment: {
+            title: 'المعدات الميكانيكية',
+            api: { get: getMechanical, create: createMechanicalEquipment, update: updateMechanicalEquipment, delete: deleteMechanicalEquipment },
+            columns: [
+                { field: 'equipment_name', label: 'اسم المعدة' },
+                { field: 'equipment_type', label: 'النوع' },
+                { field: 'station_id', label: 'المحطة', type: 'station' }
+            ],
+            fields: `
+                <div class="form-row">
+                    <div class="form-group"><label>اسم المعدة *</label><input type="text" id="equipment_name" required></div>
+                    <div class="form-group"><label>المحطة</label><select id="station_id">${getStationsOptions()}</select></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>نوع المعدة</label><input type="text" id="equipment_type"></div>
+                    <div class="form-group"><label>الموديل</label><input type="text" id="model"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>الشركة المصنعة</label><input type="text" id="manufacturer"></div>
+                    <div class="form-group"><label>سنة التصنيع</label><input type="number" id="manufacture_year"></div>
+                </div>
+                <div class="form-group"><label>ملاحظات</label><textarea id="notes" rows="2"></textarea></div>
+            `
+        },
+        station_details: {
+            title: 'تفاصيل المحطات',
+            api: { get: getStationDetails, create: createStationDetail, update: updateStationDetail, delete: deleteStationDetail },
+            columns: [
+                { field: 'detail_type', label: 'نوع التفصيل' },
+                { field: 'detail_value', label: 'القيمة' },
+                { field: 'station_id', label: 'المحطة', type: 'station' }
+            ],
+            fields: `
+                <div class="form-row">
+                    <div class="form-group"><label>المحطة</label><select id="station_id">${getStationsOptions()}</select></div>
+                    <div class="form-group"><label>نوع التفصيل</label><input type="text" id="detail_type" required></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>القيمة</label><input type="text" id="detail_value" required></div>
+                    <div class="form-group"><label>الوحدة</label><input type="text" id="unit"></div>
+                </div>
+                <div class="form-group"><label>ملاحظات</label><textarea id="notes" rows="2"></textarea></div>
+            `
+        },
+        maintenance_reports: {
+            title: 'بلاغات الصيانة',
+            api: { get: getMaintenanceReports, create: createMaintenanceReport, update: updateMaintenanceReport, delete: deleteMaintenanceReport },
+            columns: [
+                { field: 'report_number', label: 'رقم البلاغ' },
+                { field: 'report_date', label: 'التاريخ' },
+                { field: 'asset_name', label: 'الأصل' },
+                { field: 'fault_type', label: 'نوع العطل' },
+                { field: 'status', label: 'الحالة', type: 'status' }
+            ],
+            fields: `
+                <div class="form-row">
+                    <div class="form-group"><label>المحطة</label><select id="station_id">${getStationsOptions()}</select></div>
+                    <div class="form-group"><label>اسم الأصل المعطل</label><input type="text" id="asset_name" required></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>نوع العطل</label><select id="fault_type"><option value="كهرباء">كهرباء</option><option value="ميكانيكا">ميكانيكا</option><option value="تحكم">تحكم</option><option value="آخر">آخر</option></select></div>
+                    <div class="form-group"><label>تاريخ البلاغ</label><input type="date" id="report_date"></div>
+                </div>
+                <div class="form-group"><label>وصف العطل</label><textarea id="fault_description" rows="3" required></textarea></div>
+                <div class="form-row">
+                    <div class="form-group"><label>الحالة</label><select id="status"><option value="pending">معلق</option><option value="in_progress">قيد الإصلاح</option><option value="completed">مكتمل</option></select></div>
+                    <div class="form-group"><label>تاريخ الإغلاق</label><input type="date" id="completed_date"></div>
+                </div>
+                <div class="form-group"><label>الإجراء المتخذ</label><textarea id="action_taken" rows="2"></textarea></div>
+            `
+        },
+        spare_parts_used: {
+            title: 'قطع الغيار المستخدمة',
+            api: { get: getSparePartsUsed, create: createSparePartUsed, update: updateSparePartUsed, delete: deleteSparePartUsed },
+            columns: [
+                { field: 'part_name', label: 'اسم القطعة' },
+                { field: 'quantity', label: 'الكمية' },
+                { field: 'maintenance_report_id', label: 'رقم البلاغ' }
+            ],
+            fields: `
+                <div class="form-row">
+                    <div class="form-group"><label>اسم القطعة *</label><input type="text" id="part_name" required></div>
+                    <div class="form-group"><label>الكمية</label><input type="number" id="quantity" step="0.01" required></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>رقم بلاغ الصيانة</label><input type="number" id="maintenance_report_id"></div>
+                    <div class="form-group"><label>السعر (ج.م)</label><input type="number" id="price" step="0.01"></div>
+                </div>
+                <div class="form-group"><label>ملاحظات</label><textarea id="notes" rows="2"></textarea></div>
+            `
+        },
+        electricity_meters: {
+            title: 'عدادات الكهرباء',
+            api: { get: getElectricityMeters, create: createElectricityMeter, update: updateElectricityMeter, delete: deleteElectricityMeter },
+            columns: [
+                { field: 'meter_number', label: 'رقم العداد' },
+                { field: 'reading_value', label: 'القراءة' },
+                { field: 'reading_date', label: 'التاريخ' }
+            ],
+            fields: `
+                <div class="form-row">
+                    <div class="form-group"><label>رقم العداد *</label><input type="text" id="meter_number" required></div>
+                    <div class="form-group"><label>المحطة</label><select id="station_id">${getStationsOptions()}</select></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>القراءة الحالية</label><input type="number" id="reading_value" step="0.01" required></div>
+                    <div class="form-group"><label>تاريخ القراءة</label><input type="date" id="reading_date"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>القراءة السابقة</label><input type="number" id="previous_reading" step="0.01"></div>
+                    <div class="form-group"><label>الاستهلاك (ك.و.س)</label><input type="number" id="consumption_kwh" step="0.01"></div>
+                </div>
+                <div class="form-group"><label>ملاحظات</label><textarea id="notes" rows="2"></textarea></div>
+            `
+        },
+        water_meters: {
+            title: 'عدادات المياه',
+            api: { get: getWaterMeters, create: createWaterMeter, update: updateWaterMeter, delete: deleteWaterMeter },
+            columns: [
+                { field: 'meter_number', label: 'رقم العداد' },
+                { field: 'reading_value', label: 'القراءة (م³)' },
+                { field: 'reading_date', label: 'التاريخ' }
+            ],
+            fields: `
+                <div class="form-row">
+                    <div class="form-group"><label>رقم العداد *</label><input type="text" id="meter_number" required></div>
+                    <div class="form-group"><label>المحطة</label><select id="station_id">${getStationsOptions()}</select></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>القراءة الحالية (م³)</label><input type="number" id="reading_value" step="0.01" required></div>
+                    <div class="form-group"><label>تاريخ القراءة</label><input type="date" id="reading_date"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>القراءة السابقة (م³)</label><input type="number" id="previous_reading" step="0.01"></div>
+                    <div class="form-group"><label>الاستهلاك (م³)</label><input type="number" id="consumption_m3" step="0.01"></div>
+                </div>
+                <div class="form-group"><label>ملاحظات</label><textarea id="notes" rows="2"></textarea></div>
+            `
+        },
+        diesel_consumption: {
+            title: 'استهلاك السولار',
+            api: { get: getDieselConsumption, create: createDieselConsumption, update: updateDieselConsumption, delete: deleteDieselConsumption },
+            columns: [
+                { field: 'consumption_liters', label: 'الاستهلاك (لتر)' },
+                { field: 'consumption_date', label: 'التاريخ' },
+                { field: 'station_id', label: 'المحطة', type: 'station' }
+            ],
+            fields: `
+                <div class="form-row">
+                    <div class="form-group"><label>المحطة</label><select id="station_id">${getStationsOptions()}</select></div>
+                    <div class="form-group"><label>المولد</label><select id="generator_id"><option value="">اختر المولد</option></select></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>الاستهلاك (لتر)</label><input type="number" id="consumption_liters" step="0.01" required></div>
+                    <div class="form-group"><label>تاريخ الاستهلاك</label><input type="date" id="consumption_date"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>قراءة العداد قبل</label><input type="number" id="meter_before" step="0.01"></div>
+                    <div class="form-group"><label>قراءة العداد بعد</label><input type="number" id="meter_after" step="0.01"></div>
+                </div>
+                <div class="form-group"><label>ملاحظات</label><textarea id="notes" rows="2"></textarea></div>
+            `
+        },
+        water_lifted: {
+            title: 'المياه المرفوعة',
+            api: { get: getWaterLifted, create: createWaterLifted, update: updateWaterLifted, delete: deleteWaterLifted },
+            columns: [
+                { field: 'lifted_amount_m3', label: 'الكمية (م³)' },
+                { field: 'lifted_date', label: 'التاريخ' },
+                { field: 'station_id', label: 'المحطة', type: 'station' }
+            ],
+            fields: `
+                <div class="form-row">
+                    <div class="form-group"><label>المحطة</label><select id="station_id">${getStationsOptions()}</select></div>
+                    <div class="form-group"><label>الكمية المرفوعة (م³)</label><input type="number" id="lifted_amount_m3" step="0.01" required></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>تاريخ الرفع</label><input type="date" id="lifted_date"></div>
+                    <div class="form-group"><label>ساعات التشغيل</label><input type="number" id="operating_hours" step="0.5"></div>
+                </div>
+                <div class="form-group"><label>ملاحظات</label><textarea id="notes" rows="2"></textarea></div>
+            `
+        },
+        generator_oil_consumption: {
+            title: 'استهلاك زيت المولدات',
+            api: { get: getGeneratorOilConsumption, create: createGeneratorOilConsumption, update: updateGeneratorOilConsumption, delete: deleteGeneratorOilConsumption },
+            columns: [
+                { field: 'oil_liters', label: 'الاستهلاك (لتر)' },
+                { field: 'consumption_date', label: 'التاريخ' },
+                { field: 'generator_id', label: 'المولد' }
+            ],
+            fields: `
+                <div class="form-row">
+                    <div class="form-group"><label>المولد</label><select id="generator_id"><option value="">اختر المولد</option></select></div>
+                    <div class="form-group"><label>الاستهلاك (لتر)</label><input type="number" id="oil_liters" step="0.01" required></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>تاريخ الاستهلاك</label><input type="date" id="consumption_date"></div>
+                    <div class="form-group"><label>نوع الزيت</label><input type="text" id="oil_type"></div>
+                </div>
+                <div class="form-group"><label>ملاحظات</label><textarea id="notes" rows="2"></textarea></div>
+            `
+        },
+        monthly_reports: {
+            title: 'التقارير الشهرية',
+            api: { get: getMonthlyReports, create: createMonthlyReport, update: updateMonthlyReport, delete: deleteMonthlyReport },
+            columns: [
+                { field: 'report_month', label: 'الشهر' },
+                { field: 'total_electricity_kwh', label: 'إجمالي الكهرباء' },
+                { field: 'total_diesel_liters', label: 'إجمالي السولار' }
+            ],
+            fields: `
+                <div class="form-row">
+                    <div class="form-group"><label>المحطة</label><select id="station_id">${getStationsOptions()}</select></div>
+                    <div class="form-group"><label>شهر التقرير</label><input type="month" id="report_month" required></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>إجمالي استهلاك الكهرباء (ك.و.س)</label><input type="number" id="total_electricity_kwh" step="0.01"></div>
+                    <div class="form-group"><label>إجمالي استهلاك السولار (لتر)</label><input type="number" id="total_diesel_liters" step="0.01"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>إجمالي المياه المرفوعة (م³)</label><input type="number" id="total_water_lifted_m3" step="0.01"></div>
+                    <div class="form-group"><label>متوسط معامل القدرة</label><input type="number" id="avg_power_factor" step="0.01"></div>
+                </div>
+                <div class="form-group"><label>ملاحظات</label><textarea id="notes" rows="2"></textarea></div>
+            `
+        },
+        inspection_reports: {
+            title: 'تقارير المرور',
+            api: { get: getInspectionReports, create: createInspectionReport, update: updateInspectionReport, delete: deleteInspectionReport },
+            columns: [
+                { field: 'report_number', label: 'رقم التقرير' },
+                { field: 'inspection_date', label: 'التاريخ' },
+                { field: 'inspector_name', label: 'المفتش' }
+            ],
+            fields: `
+                <div class="form-row">
+                    <div class="form-group"><label>المحطة</label><select id="station_id">${getStationsOptions()}</select></div>
+                    <div class="form-group"><label>تاريخ المرور</label><input type="date" id="inspection_date" required></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>اسم المفتش</label><input type="text" id="inspector_name"></div>
+                    <div class="form-group"><label>رقم التقرير</label><input type="text" id="report_number"></div>
+                </div>
+                <div class="form-group"><label>الملاحظات العامة</label><textarea id="overall_notes" rows="3"></textarea></div>
+                <div class="form-group"><label>التوصيات</label><textarea id="recommendations" rows="2"></textarea></div>
+            `
+        },
+        inspection_report_details: {
+            title: 'تفاصيل تقارير المرور',
+            api: { get: getInspectionReportDetails, create: createInspectionReportDetail, update: updateInspectionReportDetail, delete: deleteInspectionReportDetail },
+            columns: [
+                { field: 'check_point', label: 'نقطة التفتيش' },
+                { field: 'result', label: 'النتيجة' },
+                { field: 'inspection_report_id', label: 'رقم التقرير' }
+            ],
+            fields: `
+                <div class="form-row">
+                    <div class="form-group"><label>رقم تقرير المرور</label><input type="number" id="inspection_report_id" required></div>
+                    <div class="form-group"><label>نقطة التفتيش</label><input type="text" id="check_point" required></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>النتيجة</label><select id="result"><option value="مطابق">مطابق</option><option value="غير مطابق">غير مطابق</option><option value="تحت المراجعة">تحت المراجعة</option></select></div>
+                    <div class="form-group"><label>الملاحظات</label><input type="text" id="notes"></div>
+                </div>
+            `
+        },
+        power_factor_panels: {
+            title: 'لوحات معامل القدرة',
+            api: { get: getPowerFactorPanels, create: createPowerFactorPanel, update: updatePowerFactorPanel, delete: deletePowerFactorPanel },
+            columns: [
+                { field: 'panel_name', label: 'اسم اللوحة' },
+                { field: 'rated_power_kvar', label: 'القدرة (KVAR)' },
+                { field: 'current_power_factor', label: 'معامل القدرة' },
+                { field: 'status', label: 'الحالة', type: 'status' }
+            ],
+            fields: `
+                <div class="form-row">
+                    <div class="form-group"><label>اسم اللوحة *</label><input type="text" id="panel_name" required></div>
+                    <div class="form-group"><label>المحطة</label><select id="station_id">${getStationsOptions()}</select></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>القدرة المقدرة (KVAR)</label><input type="number" id="rated_power_kvar" step="0.01"></div>
+                    <div class="form-group"><label>معامل القدرة المستهدف</label><input type="number" id="target_power_factor" step="0.01" value="0.92"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>معامل القدرة الحالي</label><input type="number" id="current_power_factor" step="0.01"></div>
+                    <div class="form-group"><label>الحالة</label><select id="status"><option value="active">نشط</option><option value="maintenance">صيانة</option></select></div>
+                </div>
+                <div class="form-group"><label>ملاحظات</label><textarea id="notes" rows="2"></textarea></div>
+            `
+        },
+        power_factor_monthly: {
+            title: 'معامل القدرة الشهري',
+            api: { get: getPowerFactorMonthly, create: createPowerFactorMonthly, update: updatePowerFactorMonthly, delete: deletePowerFactorMonthly },
+            columns: [
+                { field: 'month', label: 'الشهر' },
+                { field: 'power_factor', label: 'معامل القدرة' },
+                { field: 'penalty_amount', label: 'قيمة الغرامة' }
+            ],
+            fields: `
+                <div class="form-row">
+                    <div class="form-group"><label>المحطة</label><select id="station_id">${getStationsOptions()}</select></div>
+                    <div class="form-group"><label>الشهر</label><input type="month" id="month" required></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>متوسط معامل القدرة</label><input type="number" id="power_factor" step="0.01" required></div>
+                    <div class="form-group"><label>قيمة الغرامة (ج.م)</label><input type="number" id="penalty_amount" step="0.01"></div>
+                </div>
+                <div class="form-group"><label>ملاحظات</label><textarea id="notes" rows="2"></textarea></div>
+            `
+        },
+        penalty_notifications: {
+            title: 'إشعارات الغرامات',
+            api: { get: getPenaltyNotifications, create: createPenaltyNotification, update: updatePenaltyNotification, delete: deletePenaltyNotification },
+            columns: [
+                { field: 'notification_date', label: 'التاريخ' },
+                { field: 'penalty_amount', label: 'قيمة الغرامة' },
+                { field: 'status', label: 'الحالة', type: 'status' }
+            ],
+            fields: `
+                <div class="form-row">
+                    <div class="form-group"><label>المحطة</label><select id="station_id">${getStationsOptions()}</select></div>
+                    <div class="form-group"><label>تاريخ الإشعار</label><input type="date" id="notification_date" required></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>قيمة الغرامة (ج.م)</label><input type="number" id="penalty_amount" step="0.01" required></div>
+                    <div class="form-group"><label>سبب الغرامة</label><input type="text" id="penalty_reason"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>الحالة</label><select id="status"><option value="pending">معلق</option><option value="paid">مدفوع</option><option value="cancelled">ملغي</option></select></div>
+                    <div class="form-group"><label>تاريخ السداد</label><input type="date" id="paid_date"></div>
+                </div>
+                <div class="form-group"><label>ملاحظات</label><textarea id="notes" rows="2"></textarea></div>
+            `
+        },
+        employees: {
+            title: 'الموظفين',
+            api: { get: getEmployees, create: createEmployee, update: updateEmployee, delete: deleteEmployee },
+            columns: [
+                { field: 'employee_name', label: 'الاسم' },
+                { field: 'employee_code', label: 'الكود' },
+                { field: 'department', label: 'القسم' },
+                { field: 'job_title', label: 'الوظيفة' },
+                { field: 'status', label: 'الحالة', type: 'status' }
+            ],
+            fields: `
+                <div class="form-row">
+                    <div class="form-group"><label>اسم الموظف *</label><input type="text" id="employee_name" required></div>
+                    <div class="form-group"><label>كود الموظف</label><input type="text" id="employee_code"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>المحطة</label><select id="station_id">${getStationsOptions()}</select></div>
+                    <div class="form-group"><label>القسم</label><select id="department"><option value="كهرباء">كهرباء</option><option value="ميكانيكا">ميكانيكا</option><option value="تشغيل">تشغيل</option><option value="إدارة">إدارة</option></select></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>المسمى الوظيفي</label><input type="text" id="job_title"></div>
+                    <div class="form-group"><label>رقم الهاتف</label><input type="tel" id="phone"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>البريد الإلكتروني</label><input type="email" id="email"></div>
+                    <div class="form-group"><label>تاريخ التعيين</label><input type="date" id="hire_date"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>الحالة</label><select id="status"><option value="active">نشط</option><option value="inactive">غير نشط</option><option value="on_leave">إجازة</option></select></div>
+                    <div class="form-group"><label>الراتب الأساسي</label><input type="number" id="base_salary" step="0.01"></div>
+                </div>
+                <div class="form-group"><label>ملاحظات</label><textarea id="notes" rows="2"></textarea></div>
+            `
+        },
+        users: {
+            title: 'المستخدمين',
+            api: { get: getUsers, create: createUser, update: updateUser, delete: deleteUser },
+            columns: [
+                { field: 'username', label: 'اسم المستخدم' },
+                { field: 'full_name', label: 'الاسم الكامل' },
+                { field: 'role', label: 'الدور' },
+                { field: 'status', label: 'الحالة', type: 'status' }
+            ],
+            fields: `
+                <div class="form-row">
+                    <div class="form-group"><label>اسم المستخدم *</label><input type="text" id="username" required></div>
+                    <div class="form-group"><label>الاسم الكامل *</label><input type="text" id="full_name" required></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>البريد الإلكتروني</label><input type="email" id="email"></div>
+                    <div class="form-group"><label>الدور</label><select id="role"><option value="admin">مدير</option><option value="manager">مشرف</option><option value="user">مستخدم</option><option value="viewer">مشاهد</option></select></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>كلمة المرور</label><input type="password" id="password" ${currentEditId ? '' : 'required'}></div>
+                    <div class="form-group"><label>الحالة</label><select id="status"><option value="active">نشط</option><option value="inactive">غير نشط</option><option value="blocked">محظور</option></select></div>
+                </div>
+                <div class="form-group"><label>ملاحظات</label><textarea id="notes" rows="2"></textarea></div>
+            `
+        }
+    };
+
+    // ============================================
+    // دوال عرض الجداول
+    // ============================================
+    async function loadTableData(tableName) {
+        const config = tableConfigs[tableName];
+        if (!config) {
+            document.getElementById('pageContent').innerHTML = `<div class="no-data">الجدول ${tableName} غير موجود</div>`;
+            return;
+        }
+
+        currentTable = tableName;
+        const pageContent = document.getElementById('pageContent');
+        pageContent.innerHTML = `<div class="loading-spinner"><i class="fas fa-spinner fa-spin fa-2x"></i><p>جاري تحميل ${config.title}...</p></div>`;
+
         try {
-            const stats = await getStationStats();
-            const stations = await getStations();
-            
+            const result = await safeApiCall(config.api.get);
+            let data = [];
+            if (result.success) {
+                if (result.stations) data = result.stations;
+                else if (result.pumps) data = result.pumps;
+                else if (result.generators) data = result.generators;
+                else if (result.panels) data = result.panels;
+                else if (result.equipment) data = result.equipment;
+                else if (result.reports) data = result.reports;
+                else if (result.meters) data = result.meters;
+                else if (result.employees) data = result.employees;
+                else if (result.users) data = result.users;
+                else if (result.data) data = result.data;
+                else data = result[tableName] || [];
+            }
+
+            if (!data || data.length === 0) {
+                pageContent.innerHTML = `
+                    <div class="section-title">
+                        <h3><i class="fas fa-table"></i> ${config.title}</h3>
+                        <button class="btn btn-primary" onclick="openAddModal('${tableName}')"><i class="fas fa-plus"></i> إضافة جديد</button>
+                    </div>
+                    <div class="no-data">
+                        <i class="fas fa-database fa-3x mb-3"></i>
+                        <p>لا توجد بيانات في ${config.title}</p>
+                        <button class="btn btn-primary mt-3" onclick="openAddModal('${tableName}')">إضافة أول سجل</button>
+                    </div>`;
+                return;
+            }
+
             let html = `
-                <div class="welcome-section">
-                    <h2><i class="fas fa-hand-peace"></i> مرحباً بك في نظام إدارة محطات الصرف الصحي</h2>
-                    <p>نظام متكامل لإدارة وتشغيل وصيانة محطات الصرف الصحي بفرع بني مزار</p>
+                <div class="section-title">
+                    <h3><i class="fas fa-table"></i> ${config.title}</h3>
+                    <button class="btn btn-primary" onclick="openAddModal('${tableName}')"><i class="fas fa-plus"></i> إضافة جديد</button>
+                </div>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>`;
+            
+            config.columns.forEach(col => {
+                html += `<th>${col.label}</th>`;
+            });
+            html += `<th>الإجراءات</th></tr></thead><tbody>`;
+
+            data.forEach(item => {
+                html += `<tr>`;
+                config.columns.forEach(col => {
+                    let value = item[col.field] !== undefined && item[col.field] !== null ? item[col.field] : '-';
+                    if (col.type === 'status') {
+                        const statusMap = {
+                            'active': 'status-active', 'maintenance': 'status-maintenance',
+                            'inactive': 'status-inactive', 'emergency': 'status-emergency',
+                            'completed': 'status-completed', 'pending': 'status-pending',
+                            'in_progress': 'status-maintenance'
+                        };
+                        const statusText = {
+                            'active': 'نشط', 'maintenance': 'صيانة', 'inactive': 'غير نشط',
+                            'emergency': 'طوارئ', 'completed': 'مكتمل', 'pending': 'معلق',
+                            'in_progress': 'قيد التنفيذ'
+                        };
+                        html += `<td><span class="status-badge ${statusMap[value] || 'status-active'}">${statusText[value] || value}</span></td>`;
+                    } else if (col.type === 'station') {
+                        html += `<td>${getStationName(value)}</td>`;
+                    } else {
+                        html += `<td>${value}</td>`;
+                    }
+                });
+                html += `
+                    <td>
+                        <button class="btn btn-sm btn-primary" onclick="openEditModal('${tableName}', ${item.id})"><i class="fas fa-edit"></i> تعديل</button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteItem('${tableName}', ${item.id})"><i class="fas fa-trash"></i> حذف</button>
+                    </td>
+                </tr>`;
+            });
+            html += `</tbody></table></div>`;
+            pageContent.innerHTML = html;
+
+        } catch (error) {
+            console.error('Error loading table:', error);
+            pageContent.innerHTML = `<div class="no-data">حدث خطأ في تحميل البيانات: ${error.message}</div>`;
+        }
+    }
+
+    // ============================================
+    // دوال المودال والإضافة والتعديل
+    // ============================================
+    function updateFormFieldsWithData(tableName, data) {
+        const config = tableConfigs[tableName];
+        if (!config) return;
+        
+        const fieldsHtml = config.fields;
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = fieldsHtml;
+        
+        Object.keys(data).forEach(key => {
+            const input = tempDiv.querySelector(`#${key}`);
+            if (input && data[key] !== undefined && data[key] !== null) {
+                input.value = data[key];
+            }
+        });
+        
+        return tempDiv.innerHTML;
+    }
+
+    window.openAddModal = (tableName) => {
+        currentTable = tableName;
+        currentEditId = null;
+        const config = tableConfigs[tableName];
+        if (!config) return;
+
+        const modalHtml = `
+            <div id="dataModal" class="modal active">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3><i class="fas fa-plus-circle"></i> إضافة ${config.title}</h3>
+                        <span class="modal-close" onclick="closeModal()">&times;</span>
+                    </div>
+                    <form id="modalForm">
+                        ${config.fields}
+                        <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+                            <button type="button" class="btn btn-secondary" onclick="closeModal()">إلغاء</button>
+                            <button type="submit" class="btn btn-primary">حفظ</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        `;
+        
+        let modal = document.getElementById('dataModal');
+        if (modal) modal.remove();
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        
+        document.getElementById('modalForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = {};
+            const inputs = document.querySelectorAll('#modalForm input, #modalForm select, #modalForm textarea');
+            inputs.forEach(input => {
+                if (input.id) {
+                    formData[input.id] = input.value;
+                }
+            });
+            
+            const config = tableConfigs[currentTable];
+            const result = await safeApiCall(config.api.create, formData);
+            
+            if (result.success) {
+                closeModal();
+                showToast(`تم إضافة ${config.title} بنجاح`);
+                loadTableData(currentTable);
+            } else {
+                showToast(result.message || 'حدث خطأ', true);
+            }
+        });
+    };
+
+    window.openEditModal = async (tableName, id) => {
+        currentTable = tableName;
+        currentEditId = id;
+        const config = tableConfigs[tableName];
+        if (!config) return;
+
+        const result = await safeApiCall(config.api.get);
+        let data = [];
+        if (result.success) {
+            if (result.stations) data = result.stations;
+            else if (result.pumps) data = result.pumps;
+            else if (result.generators) data = result.generators;
+            else if (result.panels) data = result.panels;
+            else if (result.equipment) data = result.equipment;
+            else if (result.reports) data = result.reports;
+            else if (result.meters) data = result.meters;
+            else if (result.employees) data = result.employees;
+            else if (result.users) data = result.users;
+            else data = result[tableName] || [];
+        }
+        
+        const item = data.find(i => i.id == id);
+        if (!item) {
+            showToast('لم يتم العثور على العنصر', true);
+            return;
+        }
+
+        const modalHtml = `
+            <div id="dataModal" class="modal active">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3><i class="fas fa-edit"></i> تعديل ${config.title}</h3>
+                        <span class="modal-close" onclick="closeModal()">&times;</span>
+                    </div>
+                    <form id="modalForm">
+                        ${updateFormFieldsWithData(tableName, item)}
+                        <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+                            <button type="button" class="btn btn-secondary" onclick="closeModal()">إلغاء</button>
+                            <button type="submit" class="btn btn-primary">تحديث</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        `;
+        
+        let modal = document.getElementById('dataModal');
+        if (modal) modal.remove();
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        
+        document.getElementById('modalForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = {};
+            const inputs = document.querySelectorAll('#modalForm input, #modalForm select, #modalForm textarea');
+            inputs.forEach(input => {
+                if (input.id) {
+                    formData[input.id] = input.value;
+                }
+            });
+            
+            const result = await safeApiCall(config.api.update, id, formData);
+            
+            if (result.success) {
+                closeModal();
+                showToast(`تم تحديث ${config.title} بنجاح`);
+                loadTableData(currentTable);
+            } else {
+                showToast(result.message || 'حدث خطأ', true);
+            }
+        });
+    };
+
+    window.deleteItem = async (tableName, id) => {
+        if (confirm(`هل أنت متأكد من حذف هذا العنصر من ${tableConfigs[tableName]?.title}؟`)) {
+            const config = tableConfigs[tableName];
+            const result = await safeApiCall(config.api.delete, id);
+            if (result.success) {
+                showToast('تم الحذف بنجاح');
+                loadTableData(tableName);
+            } else {
+                showToast(result.message || 'حدث خطأ', true);
+            }
+        }
+    };
+
+    window.closeModal = () => {
+        const modal = document.getElementById('dataModal');
+        if (modal) modal.remove();
+    };
+
+
+    async function loadDashboard() {
+        const pageContent = document.getElementById('pageContent');
+        if (!pageContent) return;
+        
+        // إظهار علامة التحميل
+        pageContent.innerHTML = `
+            <div class="loading-spinner" style="text-align:center; padding:50px;">
+                <i class="fas fa-spinner fa-spin fa-3x" style="color:#00d2ff;"></i>
+                <p style="margin-top:15px;">جاري استلام بيانات المحطات من السيرفر...</p>
+            </div>`;
+
+        try {
+            // 1. جلب البيانات من الدوال المعرفة في نافذة window
+            const stationsRes = await safeApiCall(window.getStations).catch(err => ({ success: false }));
+            const employeesRes = await safeApiCall(window.getEmployees).catch(err => ({ success: false }));
+            const reportsRes = await safeApiCall(window.getMaintenanceReports).catch(err => ({ success: false }));
+            const pfRes = await safeApiCall(window.getPowerFactorPanels).catch(err => ({ success: false }));
+
+            // 2. معالجة البيانات بأمان (تجنب الـ undefined)
+            const stations = (stationsRes && stationsRes.success) ? (stationsRes.stations || []) : [];
+            const employees = (employeesRes && employeesRes.success) ? (employeesRes.employees || []) : [];
+            const reports = (reportsRes && reportsRes.success) ? (reportsRes.reports || []) : [];
+            const pfPanels = (pfRes && pfRes.success) ? (pfRes.panels || []) : [];
+
+            // 3. حسابات الإحصائيات (تحويل أي Error لـ 0)
+            const activeStationsCount = stations.filter(s => s && s.status === 'active').length;
+            const totalCapacitySum = stations.reduce((sum, s) => sum + (parseFloat(s.capacity) || 0), 0);
+
+            // 4. بناء واجهة لوحة التحكم
+            let html = `
+                <div class="welcome-section" style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 15px; margin-bottom: 25px; border-right: 5px solid #00d2ff;">
+                    <h2><i class="fas fa-chart-line"></i> نظام إدارة محطات بني مزار الرقمي</h2>
+                    <p>الحالة العامة للمنظومة الآن</p>
                 </div>
                 
-                <div class="stats-grid">
-                    <div class="stat-card" onclick="loadPage('stations')">
-                        <div class="stat-icon"><i class="fas fa-building"></i></div>
-                        <div class="stat-value">${stats.stats?.totalStations || 0}</div>
+                <div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+                    <div class="stat-card" style="background:#1a4a63; padding:20px; border-radius:12px; text-align:center;">
+                        <div class="stat-icon" style="font-size:2rem; color:#00d2ff;"><i class="fas fa-building"></i></div>
+                        <div class="stat-value" style="font-size:1.8rem; font-weight:bold; margin:10px 0;">${stations.length}</div>
                         <div class="stat-label">إجمالي المحطات</div>
                     </div>
-                    <div class="stat-card" onclick="loadPage('stations')">
-                        <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
-                        <div class="stat-value">${stats.stats?.activeStations || 0}</div>
-                        <div class="stat-label">محطات نشطة</div>
+                    <div class="stat-card" style="background:#1a4a63; padding:20px; border-radius:12px; text-align:center;">
+                        <div class="stat-icon" style="font-size:2rem; color:#2ecc71;"><i class="fas fa-check-circle"></i></div>
+                        <div class="stat-value" style="font-size:1.8rem; font-weight:bold; margin:10px 0;">${activeStationsCount}</div>
+                        <div class="stat-label">محطات تعمل</div>
                     </div>
-                    <div class="stat-card" onclick="loadPage('stations')">
-                        <div class="stat-icon"><i class="fas fa-tools"></i></div>
-                        <div class="stat-value">${stats.stats?.maintenanceStations || 0}</div>
-                        <div class="stat-label">تحت الصيانة</div>
+                    <div class="stat-card" style="background:#1a4a63; padding:20px; border-radius:12px; text-align:center;">
+                        <div class="stat-icon" style="font-size:2rem; color:#f1c40f;"><i class="fas fa-users"></i></div>
+                        <div class="stat-value" style="font-size:1.8rem; font-weight:bold; margin:10px 0;">${employees.length}</div>
+                        <div class="stat-label">طاقم العمل</div>
                     </div>
-                    <div class="stat-card" onclick="loadPage('reports')">
-                        <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
-                        <div class="stat-value">${(stats.stats?.totalCapacity || 0).toLocaleString()}</div>
-                        <div class="stat-label">السعة الكلية (م³/يوم)</div>
+                    <div class="stat-card" style="background:#1a4a63; padding:20px; border-radius:12px; text-align:center;">
+                        <div class="stat-icon" style="font-size:2rem; color:#e74c3c;"><i class="fas fa-tools"></i></div>
+                        <div class="stat-value" style="font-size:1.8rem; font-weight:bold; margin:10px 0;">${reports.length}</div>
+                        <div class="stat-label">بلاغات مفتوحة</div>
                     </div>
                 </div>
             `;
-            
-            if (stations.stations && stations.stations.length > 0) {
-                html += `
-                    <div class="section-title">
-                        <h3><i class="fas fa-list"></i> قائمة المحطات</h3>
-                        <button class="btn-outline" onclick="loadPage('stations')"><i class="fas fa-arrow-left"></i> عرض الكل</button>
-                    </div>
-                    <div class="stations-grid">
-                `;
-                
-                stations.stations.slice(0, 4).forEach(station => {
-                    let statusClass = '';
-                    let statusText = '';
-                    switch(station.status) {
-                        case 'active': statusClass = 'status-active'; statusText = 'نشطة'; break;
-                        case 'maintenance': statusClass = 'status-maintenance'; statusText = 'صيانة'; break;
-                        case 'inactive': statusClass = 'status-inactive'; statusText = 'متوقفة'; break;
-                        case 'emergency': statusClass = 'status-emergency'; statusText = 'طوارئ'; break;
-                        default: statusClass = 'status-active'; statusText = 'نشطة';
-                    }
-                    
+
+            // إضافة جدول المحطات الأخير
+            if (stations.length > 0) {
+                html += `<h3 style="margin: 25px 0 15px;"><i class="fas fa-list"></i> آخر المحطات المضافة</h3><div class="stations-grid">`;
+                stations.slice(0, 4).forEach(s => {
                     html += `
-                        <div class="station-card" onclick="loadPage('stations')">
-                            <h4><i class="fas fa-water"></i> ${station.station_name}</h4>
-                            <div class="station-info"><i class="fas fa-code-branch"></i> الكود: ${station.station_code || '---'}</div>
-                            <div class="station-info"><i class="fas fa-map-marker-alt"></i> الموقع: ${station.location || 'غير محدد'}</div>
-                            <div class="station-info"><i class="fas fa-tachometer-alt"></i> السعة: ${station.capacity || 0} م³/يوم</div>
-                            <span class="station-status ${statusClass}">${statusText}</span>
-                        </div>
-                    `;
+                        <div class="station-card" style="background:rgba(255,255,255,0.1); padding:15px; border-radius:10px; margin-bottom:10px;">
+                            <strong>${s.station_name || 'محطة غير مسمى'}</strong>
+                            <p style="font-size:0.8rem; color:#ccc;">السعة: ${s.capacity || 0} م³/يوم</p>
+                        </div>`;
                 });
                 html += `</div>`;
             } else {
-                html += `<div class="no-data"><i class="fas fa-database"></i> لا توجد محطات مسجلة حتى الآن</div>`;
+                html += `
+                    <div style="text-align:center; padding:30px; background:rgba(255,255,255,0.05); border-radius:15px; margin-top:20px;">
+                        <i class="fas fa-database fa-2x" style="color:#666;"></i>
+                        <p>قاعدة البيانات فارغة حالياً. ابدأ بإضافة أول محطة.</p>
+                    </div>`;
             }
-            
-            html += `
-                <div class="section-title">
-                    <h3><i class="fas fa-chart-simple"></i> إحصائيات سريعة</h3>
-                </div>
-                <div class="quick-stats">
-                    <div class="quick-stat-item">
-                        <i class="fas fa-pump-water"></i>
-                        <div>${stats.stats?.totalPumps || 0}</div>
-                        <small>إجمالي المضخات</small>
-                    </div>
-                    <div class="quick-stat-item">
-                        <i class="fas fa-bolt"></i>
-                        <div>0</div>
-                        <small>استهلاك الكهرباء (kWh)</small>
-                    </div>
-                    <div class="quick-stat-item">
-                        <i class="fas fa-oil-can"></i>
-                        <div>0</div>
-                        <small>استهلاك السولار (لتر)</small>
-                    </div>
-                </div>
-            `;
-            
+
             pageContent.innerHTML = html;
-            
-        } catch (error) {
-            console.error('Error loading dashboard:', error);
-            pageContent.innerHTML = `<div class="no-data"><i class="fas fa-exclamation-circle"></i> حدث خطأ في تحميل البيانات</div>`;
+
+        } catch (err) {
+            console.error("Dashboard Render Error:", err);
+            pageContent.innerHTML = `<div class="no-data">عذراً، حدث خطأ أثناء عرض البيانات.</div>`;
         }
     }
+    
+    
+    // ============================================
+    // دوال التنقل بين الصفحات
+    // ============================================
+    function setActiveNav(page) {
+        const navItems = document.querySelectorAll('.nav-item');
+        navItems.forEach(item => {
+            item.classList.toggle('active', item.getAttribute('data-page') === page);
+        });
+    }
 
-    function loadStationsPage() { pageContent.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i><p>جاري تحميل صفحة المحطات...</p></div>'; }
-    function loadAssetsPage() { pageContent.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i><p>جاري تحميل صفحة الأصول...</p></div>'; }
-    function loadMaintenancePage() { pageContent.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i><p>جاري تحميل صفحة البلاغات...</p></div>'; }
-    function loadInspectionPage() { pageContent.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i><p>جاري تحميل صفحة تقارير المرور...</p></div>'; }
-    function loadReportsPage() { pageContent.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i><p>جاري تحميل صفحة التقارير...</p></div>'; }
-    function loadPenaltyPage() { pageContent.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i><p>جاري تحميل صفحة الغرامات...</p></div>'; }
-    function loadEmployeesPage() { pageContent.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i><p>جاري تحميل صفحة الموظفين...</p></div>'; }
+    async function loadPage(page) {
+        currentPage = page;
+        if (page === 'dashboard') {
+            await loadDashboard();
+        } else if (tableConfigs[page]) {
+            await loadTableData(page);
+        } else {
+            document.getElementById('pageContent').innerHTML = `
+                <div class="no-data">
+                    <i class="fas fa-info-circle fa-3x mb-3"></i>
+                    <p>صفحة ${page} قيد التطوير</p>
+                </div>`;
+        }
+    }
+// ============================================
+// ============================================
+    // تهيئة الصفحة - النسخة المضمونة
+    // ============================================
+    window.addEventListener('load', async () => {
+        // 1. ربط العميل فوراً
+        window.supabaseClient = supabaseClient;
 
-    window.loadPage = loadPage;
-    window.loadStationsPage = loadStationsPage;
-    window.loadAssetsPage = loadAssetsPage;
-    window.loadMaintenancePage = loadMaintenancePage;
-    window.loadInspectionPage = loadInspectionPage;
-    window.loadReportsPage = loadReportsPage;
-    window.loadPenaltyPage = loadPenaltyPage;
-    window.loadEmployeesPage = loadEmployeesPage;
+        // 2. الانتظار ثانية واحدة للتأكد من تحميل كل دوال api.js في الـ window
+        await new Promise(resolve => setTimeout(resolve, 500));
 
-    navItems.forEach(item => {
-        const page = item.getAttribute('data-page');
-        if (page && page !== 'logout') {
-            item.addEventListener('click', () => {
-                setActiveNav(page);
-                loadPage(page);
-            });
+        // 3. التحقق من وجود الدوال الأساسية
+        if (typeof window.getStations !== 'function') {
+            console.error("❌ الدوال غير معرفة في window");
+            // محاولة ربط يدوي إذا فشل الربط التلقائي
+            if (typeof getStations === 'function') window.getStations = getStations;
+        }
+
+        // 4. تشغيل النظام
+        try {
+            await loadPage('dashboard');
+        } catch (error) {
+            console.error("Dashboard Load Error:", error);
+            document.getElementById('pageContent').innerHTML = `
+                <div class="no-data">
+                    <i class="fas fa-sync fa-spin"></i>
+                    <p>جاري تهيئة الاتصال بقاعدة البيانات... برجاء إعادة تحميل الصفحة</p>
+                </div>`;
         }
     });
-
-    loadPage('dashboard');
-</script>
-
-</body>
-</html>
