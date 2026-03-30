@@ -3,65 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>منظومة تكاليف محطات بني مزار - النسخة النهائية</title>
+    <title>منظومة تكاليف محطات بني مزار - الإصدار الشامل</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
         :root { --primary: #00d4ff; --secondary: #164a63; --bg: #0f3b4f; --success: #2ecc71; --warning: #f1c40f; --danger: #e74c3c; }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', sans-serif; }
         body { background: var(--bg); color: #fff; padding: 20px; }
-
-        .pricing-bar { background: rgba(0,212,255,0.1); padding: 15px; border-radius: 12px; margin-bottom: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; border: 1px solid var(--primary); align-items: center; }
-        .pricing-bar input { width: 80px; background: #0b2533; color: var(--success); border: 1px solid var(--primary); text-align: center; border-radius: 5px; padding: 3px; }
-
+        .pricing-bar { background: rgba(0,212,255,0.1); padding: 15px; border-radius: 12px; margin-bottom: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; border: 1px solid var(--primary); }
+        .pricing-bar input { width: 70px; background: #0b2533; color: var(--success); border: 1px solid var(--primary); text-align: center; border-radius: 5px; }
         .card { background: var(--secondary); border-radius: 15px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; text-align: right; min-width: 900px; }
-        th { padding: 12px; border-bottom: 2px solid var(--primary); color: var(--primary); font-size: 0.9rem; }
-        td { padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 0.9rem; }
-
+        table { width: 100%; border-collapse: collapse; text-align: right; min-width: 1000px; }
+        th { padding: 12px; border-bottom: 2px solid var(--primary); color: var(--primary); font-size: 0.85rem; }
+        td { padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 0.85rem; }
         .modal { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.9); display:none; align-items:center; justify-content:center; z-index:1000; padding: 10px; }
-        .modal.active { display:flex; }
-        .modal-content { background: var(--secondary); width:100%; max-width:950px; padding:25px; border-radius:20px; max-height:95vh; overflow-y:auto; border: 1px solid var(--primary); }
-
-        .group-box { background: rgba(255,255,255,0.03); border: 1px solid rgba(0,212,255,0.2); padding: 15px; border-radius: 12px; margin-bottom: 15px; }
-        .group-title { color: var(--warning); font-weight: bold; margin-bottom: 10px; border-bottom: 1px solid rgba(241,196,15,0.3); padding-bottom: 5px; }
-
-        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
-        .input-group { display: flex; flex-direction: column; gap: 4px; }
-        label { font-size: 0.8rem; color: #aaa; }
-        input, select { padding: 8px; border-radius: 6px; border: 1px solid #1e5f7a; background: #0f3b4f; color: #fff; }
-        input[readonly] { background: #0b2533; color: var(--primary); border-style: dashed; }
-        
-        .btn { padding: 8px 16px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 6px; transition: 0.3s; }
-        .btn-edit { background: #3498db; color: white; }
-        .btn-delete { background: var(--danger); color: white; }
-        .btn-add { background: var(--success); color: white; }
-        .actions { display: flex; gap: 8px; }
-
-        @media print { .no-print { display: none; } }
+        .modal-content { background: var(--secondary); width:100%; max-width:1000px; padding:20px; border-radius:20px; max-height:95vh; overflow-y:auto; border: 1px solid var(--primary); }
+        .group-box { background: rgba(255,255,255,0.03); border: 1px solid rgba(0,212,255,0.2); padding: 12px; border-radius: 10px; margin-bottom: 15px; }
+        .group-title { color: var(--warning); font-weight: bold; margin-bottom: 10px; font-size: 0.9rem; border-right: 3px solid var(--warning); padding-right: 8px; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+        .input-group { display: flex; flex-direction: column; gap: 3px; }
+        label { font-size: 0.75rem; color: #ccc; }
+        input, select { padding: 7px; border-radius: 5px; border: 1px solid #1e5f7a; background: #0f3b4f; color: #fff; font-size: 0.85rem; }
+        input[readonly] { background: #0b2533; color: var(--primary); }
+        .btn { padding: 8px 15px; border-radius: 6px; border: none; cursor: pointer; font-weight: bold; }
+        .total-val { color: var(--success); font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <div class="pricing-bar no-print">
+    <div class="pricing-bar">
         <div><label>سعر ك.و:</label> <input type="number" id="cfg_elec" step="0.01" onchange="saveCfg()"></div>
         <div><label>سعر السولار:</label> <input type="number" id="cfg_solar" step="0.01" onchange="saveCfg()"></div>
-        <div><label>سعر المتر مياه:</label> <input type="number" id="cfg_water" step="0.01" onchange="saveCfg()"></div>
-        <div style="flex-grow: 1;"></div>
-        <button class="btn btn-add" onclick="openModal()"><i class="fas fa-plus"></i> إضافة تقرير شهر جديد</button>
+        <div><label>سعر م3 مياه:</label> <input type="number" id="cfg_water" step="0.01" onchange="saveCfg()"></div>
+        <button class="btn" style="background:var(--success); color:white" onclick="openModal()"><i class="fas fa-plus"></i> إضافة تقرير</button>
     </div>
 
     <div class="card">
-        <table>
+        <table id="mainTable">
             <thead>
                 <tr>
                     <th>المحطة</th>
                     <th>الشهر</th>
-                    <th>مياه مرفوعة (م3)</th>
-                    <th>استهلاك ك.و</th>
-                    <th>رصيد السولار</th>
-                    <th>التكلفة الإجمالية</th>
-                    <th class="no-print">إجراءات</th>
+                    <th>مياه مرفوعة</th>
+                    <th>ك.و (المحولين)</th>
+                    <th>مستهلك سولار</th>
+                    <th>فاتورة مياه</th>
+                    <th>إجمالي التكلفة</th>
+                    <th>إجراءات</th>
                 </tr>
             </thead>
             <tbody id="tableBody"></tbody>
@@ -70,29 +58,24 @@
 
     <div class="modal" id="entryModal">
         <div class="modal-content">
-            <h3 style="margin-bottom: 20px; color: var(--primary);">إدخال بيانات التكاليف</h3>
             <form id="mainForm">
-                <input type="hidden" id="editId">
-                
-                <div class="group-box">
-                    <div class="group-title">البيانات الأساسية</div>
-                    <div class="form-grid">
-                        <div class="input-group"><label>المحطة</label><select id="f_station" required onchange="fetchDependencies()"></select></div>
-                        <div class="input-group"><label>شهر المحاسبة</label><input type="month" id="f_month" required onchange="fetchDependencies()"></div>
-                    </div>
+                <div class="form-grid" style="margin-bottom:15px;">
+                    <div class="input-group"><label>المحطة</label><select id="f_station" required onchange="fetchDependencies()"></select></div>
+                    <div class="input-group"><label>الشهر</label><input type="month" id="f_month" required onchange="fetchDependencies()"></div>
                 </div>
 
                 <div class="group-box">
-                    <div class="group-title">1. كمية المياه (اختيار الطلمبات)</div>
+                    <div class="group-title">1. تصرف الطلمبات والمياه المرفوعة</div>
                     <div class="form-grid">
-                        <div class="input-group"><label>طلمبة 1</label><select id="p1_select" onchange="updatePumpFlow(1)"></select></div>
-                        <div class="input-group"><label>ساعات تشغيل (1)</label><input type="number" id="h1" step="0.1" value="0" oninput="calc()"></div>
-                        <div class="input-group"><label>تصرف (م3/س)</label><input type="number" id="f1" readonly></div>
+                        <div class="input-group"><label>طلمبة 1</label><select id="p1_sel" onchange="updatePump(1)"></select></div>
+                        <div class="input-group"><label>ساعات (1)</label><input type="number" id="h1" value="0" oninput="calc()"></div>
+                        <div class="input-group"><label>كمية (1)</label><input type="number" id="q1" readonly></div>
                         
-                        <div class="input-group"><label>طلمبة 2</label><select id="p2_select" onchange="updatePumpFlow(2)"></select></div>
-                        <div class="input-group"><label>ساعات تشغيل (2)</label><input type="number" id="h2" step="0.1" value="0" oninput="calc()"></div>
-                        <div class="input-group"><label>تصرف (م3/س)</label><input type="number" id="f2" readonly></div>
+                        <div class="input-group"><label>طلمبة 2</label><select id="p2_sel" onchange="updatePump(2)"></select></div>
+                        <div class="input-group"><label>ساعات (2)</label><input type="number" id="h2" value="0" oninput="calc()"></div>
+                        <div class="input-group"><label>كمية (2)</label><input type="number" id="q2" readonly></div>
                     </div>
+                    <div style="margin-top:8px; text-align:left">إجمالي المرفوع: <span id="total_lifted" class="total-val">0</span> م3</div>
                 </div>
 
                 <div class="group-box">
@@ -103,22 +86,34 @@
                         <div class="input-group"><label>سابق محول 2</label><input type="number" id="e2_p" readonly></div>
                         <div class="input-group"><label>حالي محول 2</label><input type="number" id="e2_c" value="0" oninput="calc()"></div>
                     </div>
+                    <div style="margin-top:8px; text-align:left">إجمالي ك.و: <span id="total_kw" class="total-val">0</span> | قيمة: <span id="cost_elec" class="total-val">0</span> ج.م</div>
                 </div>
 
                 <div class="group-box">
-                    <div class="group-title">3. استهلاك ورصيد السولار</div>
+                    <div class="group-title">3. رصيد واستهلاك السولار</div>
                     <div class="form-grid">
                         <div class="input-group"><label>رصيد سابق</label><input type="number" id="s_p" readonly></div>
                         <div class="input-group"><label>كمية مضافة</label><input type="number" id="s_add" value="0" oninput="calc()"></div>
-                        <div class="input-group"><label>ساعات (على الحمل)</label><input type="number" id="s_h_load" step="0.1" value="0" oninput="calc()"></div>
-                        <div class="input-group"><label>ساعات (بدون حمل)</label><input type="number" id="s_h_no" step="0.1" value="0" oninput="calc()"></div>
-                        <div class="input-group"><label>الرصيد الحالي</label><input type="number" id="res_s_bal" readonly></div>
+                        <div class="input-group"><label>ساعات (حمل)</label><input type="number" id="s_h_load" value="0" oninput="calc()"></div>
+                        <div class="input-group"><label>ساعات (بدون)</label><input type="number" id="s_h_no" value="0" oninput="calc()"></div>
+                        <div class="input-group"><label>المستهلك</label><input type="number" id="s_cons" readonly></div>
+                        <div class="input-group"><label>الرصيد الحالي</label><input type="number" id="s_bal" readonly></div>
                     </div>
                 </div>
 
-                <div style="display: flex; gap: 10px;">
-                    <button type="submit" class="btn btn-add" style="flex: 2; justify-content: center;">حفظ التقرير</button>
-                    <button type="button" class="btn" onclick="closeModal()" style="background:var(--danger); flex: 1; justify-content: center;">إلغاء</button>
+                <div class="group-box">
+                    <div class="group-title">4. عداد مياه الشرب (استهلاك المحطة)</div>
+                    <div class="form-grid">
+                        <div class="input-group"><label>قراءة سابقة</label><input type="number" id="w_p" readonly></div>
+                        <div class="input-group"><label>قراءة حالية</label><input type="number" id="w_c" value="0" oninput="calc()"></div>
+                        <div class="input-group"><label>الاستهلاك (م3)</label><input type="number" id="w_cons" readonly></div>
+                        <div class="input-group"><label>قيمة الفاتورة</label><input type="number" id="w_bill" readonly></div>
+                    </div>
+                </div>
+
+                <div style="display:flex; gap:10px">
+                    <button type="submit" class="btn" style="background:var(--primary); flex:2">حفظ التقرير</button>
+                    <button type="button" class="btn" onclick="closeModal()" style="background:var(--danger); flex:1">إلغاء</button>
                 </div>
             </form>
         </div>
@@ -130,20 +125,17 @@
         const SUPABASE_KEY = 'sb_publishable_n64Hnhuruc3Oeolj-Uwg9g_tu-otJlZ';
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        let STATIONS = [], PUMPS = [], GENS = [], REPORTS = [];
+        let DATA = { stations:[], pumps:[], gens:[] };
 
         async function init() {
             ['cfg_elec','cfg_solar','cfg_water'].forEach(id => document.getElementById(id).value = localStorage.getItem(id) || 0);
-            
             const { data: st } = await _supabase.from('stations').select('*');
             const { data: pm } = await _supabase.from('main_pumps').select('*');
             const { data: gn } = await _supabase.from('generators').select('*');
-            STATIONS = st || []; PUMPS = pm || []; GENS = gn || [];
+            DATA = { stations: st||[], pumps: pm||[], gens: gn||[] };
 
-            const sSelect = document.getElementById('f_station');
-            sSelect.innerHTML = '<option value="">-- اختر المحطة --</option>';
-            STATIONS.forEach(s => sSelect.innerHTML += `<option value="${s.id}">${s.station_name}</option>`);
-            
+            const sel = document.getElementById('f_station');
+            sel.innerHTML = '<option value="">اختر المحطة</option>' + DATA.stations.map(s => `<option value="${s.id}">${s.station_name}</option>`).join('');
             loadTable();
         }
 
@@ -152,126 +144,120 @@
             const month = document.getElementById('f_month').value;
             if(!sid) return;
 
-            const stationPumps = PUMPS.filter(p => String(p.station_id) === String(sid));
-            ['p1_select', 'p2_select'].forEach(id => {
-                const sel = document.getElementById(id);
-                sel.innerHTML = '<option value="0">اختر طلمبة</option>';
-                stationPumps.forEach(p => sel.innerHTML += `<option value="${p.flow_rate}">${p.pump_name}</option>`);
+            // 1. جلب طلمبات المحطة
+            const sPumps = DATA.pumps.filter(p => String(p.station_id) === String(sid));
+            ['p1_sel', 'p2_sel'].forEach(id => {
+                document.getElementById(id).innerHTML = '<option value="0" data-flow="0">اختر طلمبة</option>' + 
+                sPumps.map(p => `<option value="${p.id}" data-flow="${p.flow_rate}">${p.pump_name}</option>`).join('');
             });
 
             if(!month) return;
-            let d = new Date(month + "-01");
-            d.setMonth(d.getMonth() - 1);
-            const prevStr = d.toISOString().split('T')[0];
 
-            const { data } = await _supabase.from('station_costs').select('*')
-                .eq('station_id', sid).eq('accounting_month', prevStr).single();
+            // 2. جلب القراءات السابقة (آخر تقرير تم إدخاله لهذه المحطة)
+            const { data: prev } = await _supabase.from('station_costs')
+                .select('*').eq('station_id', sid).order('accounting_month', {ascending: false}).limit(1);
 
-            document.getElementById('e1_p').value = data?.e1_curr || 0;
-            document.getElementById('e2_p').value = data?.e2_curr || 0;
-            document.getElementById('s_p').value = data?.solar_current_balance || 0;
+            if(prev && prev[0]) {
+                const p = prev[0];
+                document.getElementById('e1_p').value = p.e1_curr || 0;
+                document.getElementById('e2_p').value = p.e2_curr || 0;
+                document.getElementById('s_p').value = p.solar_current_balance || 0;
+                document.getElementById('w_p').value = p.w_curr || 0; // قراءة عداد المياه السابقة من الحالية للتقرير الأخير
+            }
             calc();
         }
 
-        function updatePumpFlow(n) {
-            document.getElementById(`f${n}`).value = document.getElementById(`p${n}_select`).value;
+        function updatePump(n) {
+            const sel = document.getElementById(`p${n}_sel`);
+            const flow = sel.options[sel.selectedIndex].dataset.flow || 0;
+            sel.dataset.selectedFlow = flow;
             calc();
         }
 
         function calc() {
-            const water = (parseFloat(document.getElementById('h1').value)||0)*(parseFloat(document.getElementById('f1').value)||0) +
-                          (parseFloat(document.getElementById('h2').value)||0)*(parseFloat(document.getElementById('f2').value)||0);
-            
-            const kw = Math.max(0, (parseFloat(document.getElementById('e1_c').value)||0)-(parseFloat(document.getElementById('e1_p').value)||0)) +
-                       Math.max(0, (parseFloat(document.getElementById('e2_c').value)||0)-(parseFloat(document.getElementById('e2_p').value)||0));
+            const pE = parseFloat(document.getElementById('cfg_elec').value)||0;
+            const pS = parseFloat(document.getElementById('cfg_solar').value)||0;
+            const pW = parseFloat(document.getElementById('cfg_water').value)||0;
 
-            const gen = GENS.find(g => String(g.station_id) === String(document.getElementById('f_station').value));
-            const consumed = (parseFloat(document.getElementById('s_h_load').value)||0)*(gen?.consumption_rate_load||0) +
-                             (parseFloat(document.getElementById('s_h_no').value)||0)*(gen?.consumption_rate_no_load||0);
-            
-            const balance = (parseFloat(document.getElementById('s_p').value)||0) + (parseFloat(document.getElementById('s_add').value)||0) - consumed;
-            document.getElementById('res_s_bal').value = balance.toFixed(2);
-            
-            const f = document.getElementById('mainForm');
-            f.dataset.consumed = consumed; f.dataset.total_w = water; f.dataset.total_kw = kw;
+            // حساب المياه المرفوعة
+            const q1 = (parseFloat(document.getElementById('h1').value)||0) * (parseFloat(document.getElementById('p1_sel').dataset.selectedFlow)||0);
+            const q2 = (parseFloat(document.getElementById('h2').value)||0) * (parseFloat(document.getElementById('p2_sel').dataset.selectedFlow)||0);
+            document.getElementById('q1').value = q1;
+            document.getElementById('q2').value = q2;
+            const totalW = q1 + q2;
+            document.getElementById('total_lifted').innerText = totalW.toFixed(2);
+
+            // حساب الكهرباء
+            const kw1 = Math.max(0, (parseFloat(document.getElementById('e1_c').value)||0) - (parseFloat(document.getElementById('e1_p').value)||0));
+            const kw2 = Math.max(0, (parseFloat(document.getElementById('e2_c').value)||0) - (parseFloat(document.getElementById('e2_p').value)||0));
+            const totalKW = kw1 + kw2;
+            document.getElementById('total_kw').innerText = totalKW;
+            document.getElementById('cost_elec').innerText = (totalKW * pE).toFixed(2);
+
+            // حساب السولار
+            const gen = DATA.gens.find(g => String(g.station_id) === String(document.getElementById('f_station').value));
+            const sLoad = (parseFloat(document.getElementById('s_h_load').value)||0) * (gen?.consumption_rate_load||0);
+            const sNo = (parseFloat(document.getElementById('s_h_no').value)||0) * (gen?.consumption_rate_no_load||0);
+            const sTotalCons = sLoad + sNo;
+            const sBal = (parseFloat(document.getElementById('s_p').value)||0) + (parseFloat(document.getElementById('s_add').value)||0) - sTotalCons;
+            document.getElementById('s_cons').value = sTotalCons.toFixed(2);
+            document.getElementById('s_bal').value = sBal.toFixed(2);
+
+            // حساب عداد مياه المحطة
+            const wCons = Math.max(0, (parseFloat(document.getElementById('w_c').value)||0) - (parseFloat(document.getElementById('w_p').value)||0));
+            document.getElementById('w_cons').value = wCons;
+            document.getElementById('w_bill').value = (wCons * pW).toFixed(2);
         }
 
         async function loadTable() {
             const { data } = await _supabase.from('station_costs').select('*').order('accounting_month',{ascending:false});
-            REPORTS = data || [];
-            const pE = localStorage.getItem('cfg_elec')||0, pS = localStorage.getItem('cfg_solar')||0;
-            
-            document.getElementById('tableBody').innerHTML = REPORTS.map(r => `
+            const pE = parseFloat(localStorage.getItem('cfg_elec'))||0;
+            const pS = parseFloat(localStorage.getItem('cfg_solar'))||0;
+            const pW = parseFloat(localStorage.getItem('cfg_water'))||0;
+
+            document.getElementById('tableBody').innerHTML = (data||[]).map(r => `
                 <tr>
-                    <td><strong>${r.station_name}</strong></td>
+                    <td>${r.station_name}</td>
                     <td>${r.accounting_month.substring(0,7)}</td>
-                    <td>${r.total_water_produced}</td>
-                    <td>${r.total_kw}</td>
-                    <td>${r.solar_current_balance}</td>
-                    <td style="color:var(--warning); font-weight:bold;">${((r.total_kw*pE)+(r.solar_consumed*pS)).toLocaleString()} ج.م</td>
-                    <td class="no-print">
-                        <div class="actions">
-                            <button class="btn btn-edit" onclick="editReport('${r.id}')"><i class="fas fa-edit"></i></button>
-                            <button class="btn btn-delete" onclick="deleteReport('${r.id}')"><i class="fas fa-trash"></i></button>
-                        </div>
-                    </td>
-                </tr>`).join('');
+                    <td>${r.total_water_produced} م3</td>
+                    <td>${r.total_kw} ك.و</td>
+                    <td>${r.solar_consumed} لتر</td>
+                    <td>${( (parseFloat(r.w_curr||0)-parseFloat(r.w_prev||0)) * pW).toFixed(2)} ج.م</td>
+                    <td class="total-val">${ ((r.total_kw*pE) + (r.solar_consumed*pS) + ((parseFloat(r.w_curr||0)-parseFloat(r.w_prev||0))*pW)).toLocaleString() } ج.م</td>
+                    <td><button onclick="deleteRec('${r.id}')" class="btn" style="background:var(--danger); padding:4px 8px"><i class="fas fa-trash"></i></button></td>
+                </tr>
+            `).join('');
         }
-
-        // دالة الحذف الجديدة
-        async function deleteReport(id) {
-            if(confirm('هل أنت متأكد من حذف هذا التقرير نهائياً؟')) {
-                const { error } = await _supabase.from('station_costs').delete().eq('id', id);
-                if(!error) loadTable(); else alert("خطأ في الحذف");
-            }
-        }
-
-        window.editReport = (id) => {
-            const r = REPORTS.find(x => String(x.id) === String(id));
-            if(!r) return;
-            document.getElementById('editId').value = r.id;
-            document.getElementById('f_station').value = r.station_id;
-            document.getElementById('f_month').value = r.accounting_month.substring(0,7);
-            document.getElementById('e1_c').value = r.e1_curr;
-            document.getElementById('e2_c').value = r.e2_curr;
-            document.getElementById('h1').value = r.h1;
-            document.getElementById('h2').value = r.h2;
-            document.getElementById('s_add').value = r.s_add;
-            document.getElementById('s_h_load').value = r.s_h_load;
-            document.getElementById('s_h_no').value = r.s_h_no;
-            fetchDependencies();
-            openModal();
-        };
 
         document.getElementById('mainForm').onsubmit = async (e) => {
             e.preventDefault();
-            const f = document.getElementById('mainForm');
-            const id = document.getElementById('editId').value;
+            const sid = document.getElementById('f_station').value;
             const payload = {
-                station_id: document.getElementById('f_station').value,
+                station_id: sid,
                 station_name: document.getElementById('f_station').options[document.getElementById('f_station').selectedIndex].text,
                 accounting_month: document.getElementById('f_month').value + "-01",
-                total_water_produced: f.dataset.total_w,
-                total_kw: f.dataset.total_kw,
-                solar_consumed: f.dataset.consumed,
-                solar_current_balance: document.getElementById('res_s_bal').value,
-                e1_curr: document.getElementById('e1_c').value, e2_curr: document.getElementById('e2_c').value,
-                h1: document.getElementById('h1').value, h2: document.getElementById('h2').value,
-                s_add: document.getElementById('s_add').value, s_h_load: document.getElementById('s_h_load').value, s_h_no: document.getElementById('s_h_no').value
+                total_water_produced: document.getElementById('total_lifted').innerText,
+                total_kw: document.getElementById('total_kw').innerText,
+                solar_consumed: document.getElementById('s_cons').value,
+                solar_current_balance: document.getElementById('s_bal').value,
+                e1_curr: document.getElementById('e1_c').value, 
+                e2_curr: document.getElementById('e2_c').value,
+                w_prev: document.getElementById('w_p').value,
+                w_curr: document.getElementById('w_c').value,
+                h1: document.getElementById('h1').value, 
+                h2: document.getElementById('h2').value,
+                s_add: document.getElementById('s_add').value, 
+                s_h_load: document.getElementById('s_h_load').value, 
+                s_h_no: document.getElementById('s_h_no').value
             };
-            
-            const res = id ? await _supabase.from('station_costs').update(payload).eq('id', id) 
-                           : await _supabase.from('station_costs').insert([payload]);
-
-            if(!res.error) { closeModal(); loadTable(); } else alert(res.error.message);
+            const { error } = await _supabase.from('station_costs').insert([payload]);
+            if(!error) { closeModal(); loadTable(); } else alert(error.message);
         };
 
-        function saveCfg() { 
-            ['cfg_elec','cfg_solar','cfg_water'].forEach(id => localStorage.setItem(id, document.getElementById(id).value)); 
-            loadTable();
-        }
-        function openModal() { document.getElementById('entryModal').classList.add('active'); }
-        function closeModal() { document.getElementById('entryModal').classList.remove('active'); document.getElementById('mainForm').reset(); }
+        async function deleteRec(id) { if(confirm('حذف؟')) { await _supabase.from('station_costs').delete().eq('id',id); loadTable(); } }
+        function saveCfg() { ['cfg_elec','cfg_solar','cfg_water'].forEach(id => localStorage.setItem(id, document.getElementById(id).value)); loadTable(); }
+        function openModal() { document.getElementById('entryModal').style.display='flex'; }
+        function closeModal() { document.getElementById('entryModal').style.display='none'; }
         init();
     </script>
 </body>
