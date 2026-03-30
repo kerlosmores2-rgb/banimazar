@@ -19,6 +19,9 @@
             color: #fff;
         }
 
+        /* ============================================
+           Container & Layout
+           ============================================ */
         .container {
             max-width: 1400px;
             margin: 0 auto;
@@ -29,10 +32,11 @@
             display: flex;
             gap: 25px;
             flex-wrap: wrap;
-            transition: all 0.3s ease;
         }
 
-        /* ========== القائمة الجانبية ========== */
+        /* ============================================
+           Sidebar - قائمة جانبية محسنة
+           ============================================ */
         .sidebar {
             width: 280px;
             background: rgba(10, 40, 55, 0.9);
@@ -42,33 +46,9 @@
             height: fit-content;
             border: 1px solid rgba(0, 212, 255, 0.3);
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-            max-height: 90vh;
-            overflow-y: auto;
-            transition: all 0.3s ease;
         }
 
-        /* وضع القائمة الجانبية مخفية */
-        .sidebar.hidden {
-            width: 0;
-            padding: 0;
-            margin: 0;
-            overflow: hidden;
-            opacity: 0;
-            visibility: hidden;
-        }
-
-        .sidebar::-webkit-scrollbar {
-            width: 5px;
-        }
-        .sidebar::-webkit-scrollbar-track {
-            background: rgba(255,255,255,0.1);
-            border-radius: 10px;
-        }
-        .sidebar::-webkit-scrollbar-thumb {
-            background: #00d4ff;
-            border-radius: 10px;
-        }
-
+        /* شعار القائمة */
         .sidebar-logo {
             text-align: center;
             padding: 0 20px 20px 20px;
@@ -95,21 +75,23 @@
             color: rgba(255, 255, 255, 0.6);
         }
 
+        /* عناصر القائمة */
         .sidebar .nav-item {
             display: flex;
             align-items: center;
             gap: 15px;
-            padding: 12px 20px;
+            padding: 14px 25px;
             color: #ddd;
+            text-decoration: none;
             transition: all 0.3s;
             border-right: 3px solid transparent;
             cursor: pointer;
-            font-size: 0.85rem;
+            margin: 5px 0;
         }
 
         .sidebar .nav-item i {
             width: 28px;
-            font-size: 1rem;
+            font-size: 1.2rem;
             text-align: center;
         }
 
@@ -126,9 +108,9 @@
         }
 
         .sidebar .logout-item {
-            margin-top: 20px;
+            margin-top: 30px;
             border-top: 1px solid rgba(255, 255, 255, 0.1);
-            padding-top: 15px;
+            padding-top: 20px;
             color: #ff6b6b;
         }
 
@@ -138,7 +120,9 @@
             border-right-color: #ff6b6b;
         }
 
-        /* ========== محتوى الصفحة ========== */
+        /* ============================================
+           Content Area
+           ============================================ */
         .content {
             flex: 1;
             background: rgba(255, 255, 255, 0.05);
@@ -146,13 +130,6 @@
             border-radius: 25px;
             padding: 25px;
             min-height: 500px;
-            overflow-x: auto;
-            transition: all 0.3s ease;
-        }
-
-        /* عندما تكون القائمة مخفية، المحتوى يأخذ عرض أكبر */
-        .sidebar.hidden + .content {
-            flex: 1;
         }
 
         .header {
@@ -161,13 +138,13 @@
             align-items: center;
             flex-wrap: wrap;
             gap: 15px;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .header h1 {
-            font-size: 1.3rem;
+            font-size: 1.5rem;
             color: #00d4ff;
         }
 
@@ -180,35 +157,125 @@
             border-radius: 50px;
         }
 
-        /* ========== زر إظهار/إخفاء القائمة ========== */
-        .toggle-sidebar-btn {
-            background: rgba(0, 212, 255, 0.2);
-            border: 1px solid #00d4ff;
+        .user-info i {
+            font-size: 1.2rem;
             color: #00d4ff;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s;
-            margin-left: 10px;
-        }
-        
-        .toggle-sidebar-btn:hover {
-            background: #00d4ff;
-            color: #1a1a2e;
-            transform: scale(1.05);
-        }
-        
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 10px;
         }
 
-        /* ========== أزرار وعناصر ========== */
+        /* ============================================
+           بطاقات الإحصائيات
+           ============================================ */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 20px;
+            transition: all 0.3s;
+            cursor: pointer;
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            text-align: center;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            background: rgba(0, 212, 255, 0.15);
+            border-color: #00d4ff;
+        }
+
+        .stat-card .stat-icon {
+            font-size: 2rem;
+            color: #00d4ff;
+            margin-bottom: 12px;
+        }
+
+        .stat-card .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .stat-card .stat-label {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.85rem;
+            margin-top: 5px;
+        }
+
+        /* ============================================
+           بطاقات المحطات
+           ============================================ */
+        .stations-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .station-card {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 18px;
+            padding: 18px;
+            transition: all 0.3s;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+        }
+
+        .station-card:hover {
+            background: rgba(255, 255, 255, 0.12);
+            transform: translateY(-3px);
+        }
+
+        .station-card h4 {
+            color: #00d4ff;
+            margin-bottom: 12px;
+            font-size: 1.1rem;
+        }
+
+        .station-status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            margin-top: 10px;
+        }
+
+        .status-active { background: rgba(40, 167, 69, 0.2); color: #28a745; }
+        .status-maintenance { background: rgba(255, 193, 7, 0.2); color: #ffc107; }
+        .status-inactive { background: rgba(108, 117, 125, 0.2); color: #adb5bd; }
+        .status-emergency { background: rgba(220, 53, 69, 0.2); color: #dc3545; }
+
+        .station-info {
+            margin: 8px 0;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.8rem;
+        }
+
+        .station-info i {
+            width: 22px;
+            color: #00d4ff;
+        }
+
+        /* ============================================
+           عناصر إضافية
+           ============================================ */
+        .section-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 25px 0 15px 0;
+        }
+
+        .section-title h3 {
+            color: #00d4ff;
+            font-size: 1.2rem;
+        }
+
         .btn-outline {
             background: transparent;
             border: 1px solid #00d4ff;
@@ -218,150 +285,57 @@
             cursor: pointer;
             transition: 0.3s;
         }
+
         .btn-outline:hover {
             background: #00d4ff;
             color: #1a1a2e;
         }
 
-        /* ========== iframe ========== */
-        .iframe-container {
-            width: 100%;
-            min-height: 600px;
-            border: none;
-            background: rgba(255,255,255,0.02);
-            border-radius: 15px;
+        .quick-stats {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 25px;
         }
 
-        iframe {
-            width: 100%;
-            height: 600px;
-            border: none;
-            background: transparent;
+        .quick-stat-item {
+            background: rgba(0, 212, 255, 0.1);
             border-radius: 15px;
+            padding: 12px 20px;
+            flex: 1;
+            min-width: 130px;
+            text-align: center;
         }
 
-        /* ========== تنسيقات لوحة التحكم ========== */
         .welcome-section {
-            background: linear-gradient(135deg, rgba(0,212,255,0.12), rgba(0,100,150,0.1));
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.12), rgba(0, 100, 150, 0.1));
             border-radius: 20px;
             padding: 20px;
             margin-bottom: 30px;
             border-right: 4px solid #00d4ff;
         }
+
         .welcome-section h2 {
             color: #00d4ff;
-            font-size: 1.2rem;
-            margin-bottom: 5px;
+            font-size: 1.3rem;
+            margin-bottom: 8px;
         }
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-        .stat-card {
-            background: rgba(255,255,255,0.08);
-            border-radius: 20px;
-            padding: 20px;
-            text-align: center;
-            cursor: pointer;
-            transition: 0.3s;
-            border: 1px solid rgba(0,212,255,0.2);
-        }
-        .stat-card:hover {
-            transform: translateY(-5px);
-            background: rgba(0,212,255,0.15);
-        }
-        .stat-card .stat-icon {
-            font-size: 2rem;
-            color: #00d4ff;
-            margin-bottom: 10px;
-        }
-        .stat-card .stat-value {
-            font-size: 1.5rem;
-            font-weight: bold;
-        }
-        .stat-card .stat-label {
-            color: rgba(255,255,255,0.7);
-            font-size: 0.8rem;
-        }
-        .stations-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
-        }
-        .station-card {
-            background: rgba(255,255,255,0.08);
-            border-radius: 18px;
-            padding: 18px;
-            transition: all 0.3s;
-            border: 1px solid rgba(255,255,255,0.1);
-            cursor: pointer;
-        }
-        .station-card:hover {
-            background: rgba(255,255,255,0.12);
-            transform: translateY(-3px);
-        }
-        .station-card h4 {
-            color: #00d4ff;
-            margin-bottom: 12px;
-        }
-        .station-info {
-            margin: 8px 0;
-            color: rgba(255,255,255,0.7);
-            font-size: 0.8rem;
-        }
-        .station-info i {
-            width: 22px;
-            color: #00d4ff;
-        }
-        .status-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.7rem;
-        }
-        .status-active { background: rgba(40,167,69,0.2); color: #28a745; }
-        .status-maintenance { background: rgba(255,193,7,0.2); color: #ffc107; }
-        .status-inactive { background: rgba(108,117,125,0.2); color: #adb5bd; }
-        .section-title {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin: 25px 0 15px 0;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-        .section-title h3 {
-            color: #00d4ff;
-            font-size: 1.1rem;
-        }
+
         .loading-spinner {
             text-align: center;
-            padding: 60px;
+            padding: 40px;
             color: #00d4ff;
         }
+
         .no-data {
             text-align: center;
-            padding: 60px;
-            color: rgba(255,255,255,0.5);
+            padding: 40px;
+            color: rgba(255, 255, 255, 0.5);
         }
-        .copyright {
-            text-align: center;
-            padding: 20px;
-            margin-top: 40px;
-            border-top: 1px solid rgba(255,255,255,0.1);
-            font-size: 0.75rem;
-            color: rgba(255,255,255,0.6);
-            line-height: 1.8;
-        }
-        .copyright .designer {
-            color: #00d4ff;
-            font-weight: 500;
-        }
-        
-        /* ========== زر القائمة للجوال ========== */
+
+        /* ============================================
+           زر القائمة للجوال
+           ============================================ */
         .menu-toggle {
             display: none;
             position: fixed;
@@ -376,36 +350,31 @@
             font-size: 1.2rem;
             color: #1a1a2e;
             cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         }
 
-        /* ========== رسائل التنبيه ========== */
-        .toast {
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            background: #28a745;
-            color: white;
-            padding: 12px 24px;
-            border-radius: 10px;
-            z-index: 1100;
-            animation: slideIn 0.3s ease;
-        }
-        .toast.error {
-            background: #dc3545;
-        }
-        @keyframes slideIn {
-            from {
-                transform: translateX(-100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
+        /* ============================================
+           حقوق الملكية
+           ============================================ */
+        .copyright {
+            text-align: center;
+            padding: 20px;
+            margin-top: 40px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.6);
+            line-height: 1.8;
         }
 
-        /* ========== استجابة للشاشات الصغيرة ========== */
+        .copyright .designer {
+            color: #00d4ff;
+            font-weight: 500;
+            font-size: 0.85rem;
+        }
+
+        /* ============================================
+           Responsive
+           ============================================ */
         @media (max-width: 768px) {
             .menu-toggle {
                 display: flex;
@@ -413,7 +382,6 @@
                 justify-content: center;
             }
             
-            /* على الجوال، القائمة الجانبية تظهر كـ floating sidebar */
             .sidebar {
                 position: fixed;
                 top: 0;
@@ -422,25 +390,25 @@
                 height: 100vh;
                 z-index: 1000;
                 transition: right 0.3s ease;
+                overflow-y: auto;
                 border-radius: 0;
                 background: rgba(10, 40, 55, 0.95);
             }
+            
             .sidebar.open {
                 right: 0;
             }
-            .sidebar.hidden {
-                right: -300px;
-                width: 280px;
-                opacity: 1;
-                visibility: visible;
-            }
+            
             .content {
-                margin-top: 50px;
                 width: 100%;
+                margin-top: 50px;
             }
-            iframe {
-                height: 500px;
+            
+            .header {
+                flex-direction: column;
+                text-align: center;
             }
+            
             .stats-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
@@ -450,9 +418,9 @@
             .stats-grid {
                 grid-template-columns: 1fr;
             }
-            .header {
-                flex-direction: column;
-                align-items: flex-start;
+            
+            .stations-grid {
+                grid-template-columns: 1fr;
             }
         }
     </style>
@@ -465,7 +433,7 @@
 
 <div class="container">
     <div class="main-layout">
-        <!-- القائمة الجانبية -->
+        <!-- القائمة الجانبية - Sidebar -->
         <div class="sidebar" id="sidebar">
             <div class="sidebar-logo">
                 <i class="fas fa-water"></i>
@@ -505,17 +473,6 @@
                 <i class="fas fa-users"></i>
                 <span>الموظفين</span>
             </div>
-            <div class="nav-item" data-page="meters">
-                <i class="fas fa-chart-simple"></i>
-                <span>العدادات</span>
-            </div>
-          
-                <span>لوحات معامل القدرة</span>
-            </div>
-            <div class="nav-item" data-page="users">
-                <i class="fas fa-user-shield"></i>
-                <span>المستخدمين</span>
-            </div>
             <div class="nav-item logout-item" id="logoutBtn">
                 <i class="fas fa-sign-out-alt"></i>
                 <span>تسجيل الخروج</span>
@@ -525,12 +482,7 @@
         <!-- المحتوى الرئيسي -->
         <div class="content">
             <div class="header">
-                <div class="header-left">
-                    <button class="toggle-sidebar-btn" id="toggleSidebarBtn" title="إظهار/إخفاء القائمة">
-                        <i class="fas fa-bars"></i>
-                    </button>
-                    <h1 id="pageTitle"><i class="fas fa-tachometer-alt"></i> لوحة التحكم</h1>
-                </div>
+                <h1><i class="fas fa-chalkboard-user"></i> لوحة التحكم</h1>
                 <div class="user-info">
                     <i class="fas fa-user-circle"></i>
                     <span id="userName">مرحباً بك</span>
@@ -544,188 +496,90 @@
                 </div>
             </div>
 
+            <!-- حقوق الملكية - التعديل المطلوب -->
             <div class="copyright">
                 <p>تم إعداد وتصميم هذا النظام بمعرفة</p>
                 <p class="designer">فني / كيرلس موريس يعقوب</p>
-                            </div>
+                <p>نائب مدير الفرع: مهندس / منصور رجب عبدالله</p>
+                <p>مدير عام الفرع: مهندسة / زينب أحمد عبدالمنعم</p>
+                <p style="margin-top: 10px;">© 2024 - 2025 شركة مياه الشرب والصرف الصحي - بني مزار</p>
+            </div>
         </div>
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/api.js"></script>
-
 <script>
-    // ============================================
-    // المتغيرات العامة
-    // ============================================
-    let currentPage = 'dashboard';
-    let stationsList = [];
-    let sidebarHidden = false; // حالة القائمة الجانبية (مخفية أم لا)
-
-    // ============================================
-    // دوال مساعدة
-    // ============================================
-    function showToast(message, isError = false) {
-        const toast = document.createElement('div');
-        toast.className = `toast ${isError ? 'error' : ''}`;
-        toast.innerHTML = `<i class="fas ${isError ? 'fa-exclamation-circle' : 'fa-check-circle'}"></i> ${message}`;
-        document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 3000);
+    // التحقق من تسجيل الدخول
+    if (!authToken) {
+        window.location.href = 'index.html';
     }
 
-    async function loadStationsList() {
-        const result = await getStations();
-        if (result.success && result.stations) {
-            stationsList = result.stations;
-        }
-        return stationsList;
+    // عرض اسم المستخدم
+    if (currentUser) {
+        document.getElementById('userName').innerHTML = `مرحباً ${currentUser.full_name || currentUser.username}`;
     }
 
-    // دالة لإظهار/إخفاء القائمة الجانبية
-    function toggleSidebar() {
-        const sidebar = document.getElementById('sidebar');
-        const toggleBtn = document.getElementById('toggleSidebarBtn');
-        const isMobile = window.innerWidth <= 768;
-        
-        if (isMobile) {
-            // على الجوال: نستخدم class "open"
-            sidebar.classList.toggle('open');
-            sidebarHidden = sidebar.classList.contains('open');
-            toggleBtn.innerHTML = sidebarHidden ? '<i class="fas fa-times"></i>' : '<i class="fas fa-bars"></i>';
-        } else {
-            // على الشاشات الكبيرة: نستخدم class "hidden"
-            sidebar.classList.toggle('hidden');
-            sidebarHidden = sidebar.classList.contains('hidden');
-            toggleBtn.innerHTML = sidebarHidden ? '<i class="fas fa-bars"></i>' : '<i class="fas fa-times"></i>';
-            toggleBtn.title = sidebarHidden ? 'إظهار القائمة' : 'إخفاء القائمة';
-        }
-        
-        // حفظ حالة القائمة في localStorage
-        localStorage.setItem('sidebarHidden', sidebarHidden);
-    }
+    const menuToggle = document.getElementById('menuToggle');
+    const sidebar = document.getElementById('sidebar');
+    const navItems = document.querySelectorAll('.nav-item');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const pageContent = document.getElementById('pageContent');
 
-    // استعادة حالة القائمة من localStorage
-    function restoreSidebarState() {
-        const savedState = localStorage.getItem('sidebarHidden');
-        const isMobile = window.innerWidth <= 768;
-        const sidebar = document.getElementById('sidebar');
-        const toggleBtn = document.getElementById('toggleSidebarBtn');
-        
-        if (savedState === 'true') {
-            sidebarHidden = true;
-            if (isMobile) {
+    menuToggle.addEventListener('click', () => {
+        sidebar.classList.toggle('open');
+    });
+
+    navItems.forEach(item => {
+        item.addEventListener('click', () => {
+            if (window.innerWidth <= 768) {
                 sidebar.classList.remove('open');
-                toggleBtn.innerHTML = '<i class="fas fa-bars"></i>';
-            } else {
-                sidebar.classList.add('hidden');
-                toggleBtn.innerHTML = '<i class="fas fa-bars"></i>';
-                toggleBtn.title = 'إظهار القائمة';
             }
-        } else {
-            sidebarHidden = false;
-            if (isMobile) {
-                sidebar.classList.remove('open');
-                toggleBtn.innerHTML = '<i class="fas fa-bars"></i>';
-            } else {
-                sidebar.classList.remove('hidden');
-                toggleBtn.innerHTML = '<i class="fas fa-times"></i>';
-                toggleBtn.title = 'إخفاء القائمة';
-            }
+        });
+    });
+
+    logoutBtn.addEventListener('click', () => {
+        logout();
+    });
+
+    function loadPage(page) {
+        pageContent.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin fa-2x"></i><p>جاري تحميل الصفحة...</p></div>';
+        
+        if (page === 'dashboard') {
+            loadDashboard();
+        } else if (page === 'stations') {
+            loadStationsPage();
+        } else if (page === 'assets') {
+            loadAssetsPage();
+        } else if (page === 'maintenance') {
+            loadMaintenancePage();
+        } else if (page === 'inspection') {
+            loadInspectionPage();
+        } else if (page === 'reports') {
+            loadReportsPage();
+        } else if (page === 'penalty') {
+            loadPenaltyPage();
+        } else if (page === 'employees') {
+            loadEmployeesPage();
         }
     }
-function getIframeHideSidebarCSS() {
-    return `
-        <style>
-            /* إخفاء القائمة الجانبية فقط، وليس الأزرار الداخلية */
-            .sidebar, 
-            .sidebar *,
-            [class*="sidebar"],
-            [id*="sidebar"],
-            .nav-item,
-            .menu-toggle {
-                display: none !important;
+
+    function setActiveNav(page) {
+        navItems.forEach(item => {
+            const itemPage = item.getAttribute('data-page');
+            if (itemPage === page) {
+                item.classList.add('active');
+            } else if (itemPage !== 'logout') {
+                item.classList.remove('active');
             }
-            
-            /* إزالة أي display:none من الأزرار */
-            .btn, 
-            .btn-primary,
-            #addStationBtn {
-                display: inline-flex !important;
-                visibility: visible !important;
-                opacity: 1 !important;
-            }
-            
-            /* إخفاء الهيدر المكرر فقط */
-            .header:not(.page-header) {
-                display: none !important;
-            }
-            
-            /* تنسيق الجسم */
-            body {
-                background: transparent !important;
-                padding: 15px !important;
-                margin: 0 !important;
-            }
-            
-            .container {
-                max-width: 100% !important;
-                padding: 0 !important;
-            }
-            
-            .content {
-                background: transparent !important;
-                padding: 0 !important;
-                margin: 0 !important;
-            }
-            
-            .main-layout {
-                display: block !important;
-            }
-            
-            /* تحسين عرض الجداول */
-            .data-table {
-                width: 100%;
-                border-collapse: collapse;
-            }
-            
-            .data-table th, .data-table td {
-                padding: 10px;
-                text-align: right;
-                border-bottom: 1px solid rgba(255,255,255,0.1);
-            }
-            
-            @media (max-width: 768px) {
-                .data-table {
-                    display: block;
-                    overflow-x: auto;
-                }
-            }
-        </style>
-    `;
-}
-    // ============================================
-    // لوحة التحكم الرئيسية
-    // ============================================
+        });
+    }
+
     async function loadDashboard() {
-        const pageContent = document.getElementById('pageContent');
-        pageContent.innerHTML = `<div class="loading-spinner"><i class="fas fa-spinner fa-spin fa-2x"></i><p>جاري تحميل البيانات...</p></div>`;
-
         try {
-            await loadStationsList();
-            const statsRes = await getStationStats();
-            const stationsRes = await getStations();
-            const employeesRes = await getEmployees();
-            const reportsRes = await getMaintenanceReports();
+            const stats = await getStationStats();
+            const stations = await getStations();
             
-            const stats = statsRes.success ? statsRes.stats : {};
-            const stations = stationsRes.success ? stationsRes.stations : [];
-            const employees = employeesRes.success ? employeesRes.employees : [];
-            const reports = reportsRes.success ? reportsRes.reports : [];
-            
-            const activeStations = stations.filter(s => s.status === 'active').length;
-            const totalCapacity = stations.reduce((sum, s) => sum + (parseFloat(s.capacity) || 0), 0);
-
             let html = `
                 <div class="welcome-section">
                     <h2><i class="fas fa-hand-peace"></i> مرحباً بك في نظام إدارة محطات الصرف الصحي</h2>
@@ -735,243 +589,122 @@ function getIframeHideSidebarCSS() {
                 <div class="stats-grid">
                     <div class="stat-card" onclick="loadPage('stations')">
                         <div class="stat-icon"><i class="fas fa-building"></i></div>
-                        <div class="stat-value">${stats.totalStations || 0}</div>
+                        <div class="stat-value">${stats.stats?.totalStations || 0}</div>
                         <div class="stat-label">إجمالي المحطات</div>
                     </div>
                     <div class="stat-card" onclick="loadPage('stations')">
                         <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
-                        <div class="stat-value">${activeStations}</div>
+                        <div class="stat-value">${stats.stats?.activeStations || 0}</div>
                         <div class="stat-label">محطات نشطة</div>
                     </div>
-                    <div class="stat-card" onclick="loadPage('employees')">
-                        <div class="stat-icon"><i class="fas fa-users"></i></div>
-                        <div class="stat-value">${employees.length}</div>
-                        <div class="stat-label">الموظفين</div>
-                    </div>
-                    <div class="stat-card" onclick="loadPage('maintenance')">
-                        <div class="stat-icon"><i class="fas fa-tools"></i></div>
-                        <div class="stat-value">${reports.length}</div>
-                        <div class="stat-label">بلاغات الصيانة</div>
-                    </div>
                     <div class="stat-card" onclick="loadPage('stations')">
+                        <div class="stat-icon"><i class="fas fa-tools"></i></div>
+                        <div class="stat-value">${stats.stats?.maintenanceStations || 0}</div>
+                        <div class="stat-label">تحت الصيانة</div>
+                    </div>
+                    <div class="stat-card" onclick="loadPage('reports')">
                         <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
-                        <div class="stat-value">${totalCapacity.toLocaleString()}</div>
+                        <div class="stat-value">${(stats.stats?.totalCapacity || 0).toLocaleString()}</div>
                         <div class="stat-label">السعة الكلية (م³/يوم)</div>
                     </div>
                 </div>
             `;
-
-            if (stations.length > 0) {
-                html += `<div class="section-title">
-                            <h3><i class="fas fa-list"></i> أحدث المحطات</h3>
-                            <button class="btn-outline" onclick="loadPage('stations')">عرض الكل</button>
-                        </div>
-                        <div class="stations-grid">`;
+            
+            if (stations.stations && stations.stations.length > 0) {
+                html += `
+                    <div class="section-title">
+                        <h3><i class="fas fa-list"></i> قائمة المحطات</h3>
+                        <button class="btn-outline" onclick="loadPage('stations')"><i class="fas fa-arrow-left"></i> عرض الكل</button>
+                    </div>
+                    <div class="stations-grid">
+                `;
                 
-                stations.slice(0, 4).forEach(station => {
-                    const statusMap = { 'active': 'status-active', 'maintenance': 'status-maintenance', 'inactive': 'status-inactive', 'emergency': 'status-emergency' };
-                    const statusText = { 'active': 'نشطة', 'maintenance': 'صيانة', 'inactive': 'متوقفة', 'emergency': 'طوارئ' };
+                stations.stations.slice(0, 4).forEach(station => {
+                    let statusClass = '';
+                    let statusText = '';
+                    switch(station.status) {
+                        case 'active': statusClass = 'status-active'; statusText = 'نشطة'; break;
+                        case 'maintenance': statusClass = 'status-maintenance'; statusText = 'صيانة'; break;
+                        case 'inactive': statusClass = 'status-inactive'; statusText = 'متوقفة'; break;
+                        case 'emergency': statusClass = 'status-emergency'; statusText = 'طوارئ'; break;
+                        default: statusClass = 'status-active'; statusText = 'نشطة';
+                    }
+                    
                     html += `
                         <div class="station-card" onclick="loadPage('stations')">
                             <h4><i class="fas fa-water"></i> ${station.station_name}</h4>
-                            <div class="station-info"><i class="fas fa-code-branch"></i> ${station.station_code || '---'}</div>
-                            <div class="station-info"><i class="fas fa-tachometer-alt"></i> ${station.capacity || 0} م³/يوم</div>
-                            <span class="status-badge ${statusMap[station.status] || 'status-active'}">${statusText[station.status] || 'نشطة'}</span>
+                            <div class="station-info"><i class="fas fa-code-branch"></i> الكود: ${station.station_code || '---'}</div>
+                            <div class="station-info"><i class="fas fa-map-marker-alt"></i> الموقع: ${station.location || 'غير محدد'}</div>
+                            <div class="station-info"><i class="fas fa-tachometer-alt"></i> السعة: ${station.capacity || 0} م³/يوم</div>
+                            <span class="station-status ${statusClass}">${statusText}</span>
                         </div>
                     `;
                 });
                 html += `</div>`;
             } else {
-                html += `<div class="no-data">لا توجد محطات مسجلة</div>`;
+                html += `<div class="no-data"><i class="fas fa-database"></i> لا توجد محطات مسجلة حتى الآن</div>`;
             }
-
-            pageContent.innerHTML = html;
-            document.getElementById('pageTitle').innerHTML = '<i class="fas fa-tachometer-alt"></i> لوحة التحكم';
-        } catch (error) {
-            console.error('Dashboard Error:', error);
-            pageContent.innerHTML = `<div class="no-data">حدث خطأ أثناء جلب البيانات: ${error.message}</div>`;
-        }
-    }
-
-    // ============================================
-    // تحميل الصفحات الأخرى عبر iframe مع إخفاء القائمة الجانبية
-    // ============================================
-    function loadPage(page) {
-        currentPage = page;
-        
-        const pageTitles = {
-            'dashboard': 'لوحة التحكم',
-            'stations': 'إدارة المحطات',
-            'assets': 'إدارة الأصول',
-            'maintenance': 'بلاغات الصيانة',
-            'inspection': 'تقارير المرور',
-            'reports': 'التقارير التشغيلية',
-            'penalty': 'غرامات معامل القدرة',
-            'employees': 'إدارة الموظفين',
-            'meters': 'العدادات',
-            'monthly-reports': 'التقارير الشهرية',
-            'pf-panels': 'لوحات معامل القدرة',
-            'users': 'إدارة المستخدمين'
-        };
-        
-        const pageIcons = {
-            'dashboard': 'fa-tachometer-alt',
-            'stations': 'fa-building',
-            'assets': 'fa-microchip',
-            'maintenance': 'fa-tools',
-            'inspection': 'fa-clipboard-list',
-            'reports': 'fa-chart-line',
-            'penalty': 'fa-exclamation-triangle',
-            'employees': 'fa-users',
-            'meters': 'fa-chart-simple',
-            'monthly-reports': 'fa-calendar-alt',
-            'pf-panels': 'fa-charging-station',
-            'users': 'fa-user-shield'
-        };
-        
-        const title = pageTitles[page] || page;
-        const icon = pageIcons[page] || 'fa-file';
-        
-        document.getElementById('pageTitle').innerHTML = `<i class="fas ${icon}"></i> ${title}`;
-        
-        const pageContent = document.getElementById('pageContent');
-        
-        if (page === 'dashboard') {
-            loadDashboard();
-        } else {
-            const hideCSS = getIframeHideSidebarCSS();
-            const iframeSrc = `${page}.html`;
             
-            pageContent.innerHTML = `
-                <div class="iframe-container">
-                    <iframe id="pageFrame" src="${iframeSrc}" frameborder="0" style="width:100%; min-height:600px; border:none; border-radius:15px; background:rgba(255,255,255,0.02);"></iframe>
+            html += `
+                <div class="section-title">
+                    <h3><i class="fas fa-chart-simple"></i> إحصائيات سريعة</h3>
+                </div>
+                <div class="quick-stats">
+                    <div class="quick-stat-item">
+                        <i class="fas fa-pump-water"></i>
+                        <div>${stats.stats?.totalPumps || 0}</div>
+                        <small>إجمالي المضخات</small>
+                    </div>
+                    <div class="quick-stat-item">
+                        <i class="fas fa-bolt"></i>
+                        <div>0</div>
+                        <small>استهلاك الكهرباء (kWh)</small>
+                    </div>
+                    <div class="quick-stat-item">
+                        <i class="fas fa-oil-can"></i>
+                        <div>0</div>
+                        <small>استهلاك السولار (لتر)</small>
+                    </div>
                 </div>
             `;
             
-            const iframe = document.getElementById('pageFrame');
-            iframe.onload = function() {
-                try {
-                    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-                    if (iframeDoc) {
-                        const style = iframeDoc.createElement('style');
-                        style.textContent = hideCSS;
-                        iframeDoc.head.appendChild(style);
-                        
-                        const resizeIframe = () => {
-                            const height = iframeDoc.body.scrollHeight;
-                            iframe.style.height = Math.max(height + 50, 500) + 'px';
-                        };
-                        resizeIframe();
-                        setTimeout(resizeIframe, 500);
-                    }
-                } catch(e) {
-                    console.log('Cannot access iframe content', e);
-                }
-            };
+            pageContent.innerHTML = html;
+            
+        } catch (error) {
+            console.error('Error loading dashboard:', error);
+            pageContent.innerHTML = `<div class="no-data"><i class="fas fa-exclamation-circle"></i> حدث خطأ في تحميل البيانات</div>`;
         }
     }
 
-    // ============================================
-    // تسجيل الخروج
-    // ============================================
-    function logout() {
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('currentUser');
-        window.location.href = 'index.html';
-    }
+    function loadStationsPage() { pageContent.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i><p>جاري تحميل صفحة المحطات...</p></div>'; }
+    function loadAssetsPage() { pageContent.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i><p>جاري تحميل صفحة الأصول...</p></div>'; }
+    function loadMaintenancePage() { pageContent.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i><p>جاري تحميل صفحة البلاغات...</p></div>'; }
+    function loadInspectionPage() { pageContent.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i><p>جاري تحميل صفحة تقارير المرور...</p></div>'; }
+    function loadReportsPage() { pageContent.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i><p>جاري تحميل صفحة التقارير...</p></div>'; }
+    function loadPenaltyPage() { pageContent.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i><p>جاري تحميل صفحة الغرامات...</p></div>'; }
+    function loadEmployeesPage() { pageContent.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i><p>جاري تحميل صفحة الموظفين...</p></div>'; }
 
-    // ============================================
-    // معالجة تغيير حجم الشاشة
-    // ============================================
-    function handleResize() {
-        const isMobile = window.innerWidth <= 768;
-        const sidebar = document.getElementById('sidebar');
-        const toggleBtn = document.getElementById('toggleSidebarBtn');
-        
-        if (isMobile) {
-            // على الجوال: نستخدم class "open"
-            sidebar.classList.remove('hidden');
-            if (sidebarHidden) {
-                sidebar.classList.remove('open');
-                toggleBtn.innerHTML = '<i class="fas fa-bars"></i>';
-            } else {
-                sidebar.classList.add('open');
-                toggleBtn.innerHTML = '<i class="fas fa-times"></i>';
-            }
-        } else {
-            // على الشاشات الكبيرة: نستخدم class "hidden"
-            sidebar.classList.remove('open');
-            if (sidebarHidden) {
-                sidebar.classList.add('hidden');
-                toggleBtn.innerHTML = '<i class="fas fa-bars"></i>';
-            } else {
-                sidebar.classList.remove('hidden');
-                toggleBtn.innerHTML = '<i class="fas fa-times"></i>';
-            }
-            toggleBtn.title = sidebarHidden ? 'إظهار القائمة' : 'إخفاء القائمة';
-        }
-    }
+    window.loadPage = loadPage;
+    window.loadStationsPage = loadStationsPage;
+    window.loadAssetsPage = loadAssetsPage;
+    window.loadMaintenancePage = loadMaintenancePage;
+    window.loadInspectionPage = loadInspectionPage;
+    window.loadReportsPage = loadReportsPage;
+    window.loadPenaltyPage = loadPenaltyPage;
+    window.loadEmployeesPage = loadEmployeesPage;
 
-    // ============================================
-    // تهيئة الصفحة
-    // ============================================
-    window.addEventListener('load', async () => {
-        // التحقق من تسجيل الدخول
-        if (typeof checkAuth === 'function' && !checkAuth()) {
-            window.location.href = 'index.html';
-            return;
-        }
-
-        // عرض اسم المستخدم
-        const user = (typeof getCurrentUser === 'function') ? getCurrentUser() : null;
-        if (user && document.getElementById('userName')) {
-            document.getElementById('userName').innerHTML = `مرحباً ${user.full_name || user.username || 'بك'}`;
-        }
-
-        // إعداد القائمة الجانبية
-        const menuToggle = document.getElementById('menuToggle');
-        const sidebar = document.getElementById('sidebar');
-        const logoutBtn = document.getElementById('logoutBtn');
-        const toggleSidebarBtn = document.getElementById('toggleSidebarBtn');
-
-        // زر إظهار/إخفاء القائمة
-        toggleSidebarBtn.addEventListener('click', toggleSidebar);
-        
-        // زر القائمة للجوال
-        menuToggle.addEventListener('click', () => {
-            sidebar.classList.toggle('open');
-        });
-
-        document.querySelectorAll('.nav-item').forEach(item => {
-            const page = item.getAttribute('data-page');
-            if (page && page !== 'logout') {
-                item.addEventListener('click', () => {
-                    if (window.innerWidth <= 768) sidebar.classList.remove('open');
-                    document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
-                    item.classList.add('active');
-                    loadPage(page);
-                });
-            }
-        });
-
-        if (logoutBtn) {
-            logoutBtn.addEventListener('click', () => {
-                logout();
+    navItems.forEach(item => {
+        const page = item.getAttribute('data-page');
+        if (page && page !== 'logout') {
+            item.addEventListener('click', () => {
+                setActiveNav(page);
+                loadPage(page);
             });
         }
-
-        // استعادة حالة القائمة
-        restoreSidebarState();
-        
-        // مراقبة تغيير حجم الشاشة
-        window.addEventListener('resize', handleResize);
-
-        // تشغيل الصفحة الرئيسية
-        await loadStationsList();
-        loadPage('dashboard');
     });
-    
-    window.loadPage = loadPage;
+
+    loadPage('dashboard');
 </script>
+
 </body>
 </html>
