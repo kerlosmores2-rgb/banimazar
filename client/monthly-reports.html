@@ -2,286 +2,190 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>???? ????? ????? ????? ????? - ???????? ???????</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منظومة التكاليف الشهرية - بني مزار</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="css/style.css">
     <style>
-        .report-card {
-            background: rgba(0,212,255,0.1);
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 20px;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-        .report-card:hover {
-            background: rgba(0,212,255,0.2);
-            transform: translateX(-5px);
-        }
-        .report-card h4 {
-            color: #00d4ff;
-            margin-bottom: 10px;
-        }
-        .report-details {
-            display: flex;
-            gap: 20px;
-            flex-wrap: wrap;
-            margin-top: 10px;
-        }
-        .report-detail {
-            background: rgba(255,255,255,0.1);
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-        }
-        .generate-section {
-            background: rgba(0,212,255,0.05);
-            border-radius: 20px;
-            padding: 20px;
-            margin-bottom: 30px;
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap');
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Cairo', sans-serif; background: #0f3b4f; color: #fff; padding: 20px; line-height: 1.6; }
+        .header-section { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px; }
+        .btn { padding: 10px 20px; border-radius: 20px; border: none; cursor: pointer; display: flex; align-items: center; gap: 8px; font-family: 'Cairo'; font-weight: bold; transition: 0.3s; }
+        .btn-add { background: #2ecc71; color: white; }
+        .btn-print { background: #f39c12; color: white; }
+        .card { background: #164a63; border-radius: 15px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; text-align: right; min-width: 800px; }
+        th { background: rgba(0, 212, 255, 0.1); color: #00d4ff; padding: 15px; border-bottom: 2px solid #00d4ff; }
+        td { padding: 12px 15px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
+        .modal.active { display: flex; }
+        .modal-content { background: #164a63; width: 100%; max-width: 800px; border-radius: 20px; padding: 25px; max-height: 90vh; overflow-y: auto; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        label { display: block; margin-bottom: 5px; color: #00d4ff; font-size: 0.9rem; }
+        input, select { width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #1e5f7a; background: #0f3b4f; color: #fff; font-family: 'Cairo'; }
+        input[readonly] { background: #0b2533; color: #2ecc71; border-style: dashed; }
+        .section-tag { background: rgba(241, 196, 15, 0.1); color: #f1c40f; padding: 5px 15px; border-radius: 15px; display: inline-block; margin-bottom: 15px; font-weight: bold; }
+        @media print { .no-print { display: none !important; } body { background: white; color: black; } }
     </style>
 </head>
 <body>
 
-<button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
-
-<div class="container">
-    <div class="main-layout">
-        <div class="sidebar" id="sidebar">
-            <div class="sidebar-logo"><i class="fas fa-water"></i><h3>???? ????? ????? ????? ?????</h3><p>??? ???? - ??????</p></div>
-            <div class="nav-item" data-page="dashboard"><i class="fas fa-tachometer-alt"></i> ????????</div>
-            <div class="nav-item" data-page="stations"><i class="fas fa-building"></i> ???????</div>
-            <div class="nav-item" data-page="assets"><i class="fas fa-microchip"></i> ??????</div>
-            <div class="nav-item" data-page="maintenance"><i class="fas fa-tools"></i> ?????? ???????</div>
-            <div class="nav-item" data-page="inspection"><i class="fas fa-clipboard-list"></i> ?????? ??????</div>
-            <div class="nav-item" data-page="reports"><i class="fas fa-chart-line"></i> ???????? ?????????</div>
-            <div class="nav-item" data-page="penalty"><i class="fas fa-exclamation-triangle"></i> ?????? ????? ??????</div>
-            <div class="nav-item" data-page="employees"><i class="fas fa-users"></i> ????????</div>
-            <div class="nav-item" data-page="users"><i class="fas fa-user-shield"></i> ??????????</div>
-            <div class="nav-item" data-page="meters"><i class="fas fa-chart-simple"></i> ????????</div>
-            <div class="nav-item active" data-page="monthly-reports"><i class="fas fa-calendar-alt"></i> ???????? ???????</div>
-            <div class="nav-item logout-item" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> ????? ??????</div>
-        </div>
-
-        <div class="content">
-            <div class="header">
-                <h1><i class="fas fa-calendar-alt"></i> ???????? ???????</h1>
-                <div class="user-info"><i class="fas fa-user-circle"></i> <span id="userName"></span></div>
-            </div>
-
-            <div style="margin-bottom: 20px;">
-                <select id="stationSelect" class="station-select">
-                    <option value="">???? ?????? ?????</option>
-                </select>
-            </div>
-
-            <div class="generate-section">
-                <h3 style="color:#00d4ff; margin-bottom:15px;"><i class="fas fa-plus-circle"></i> ????? ????? ???? ????</h3>
-                <div class="form-row" style="display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap;">
-                    <div class="form-group">
-                        <label>??? ????????</label>
-                        <input type="month" id="newMonth" class="date-input">
-                    </div>
-                    <button class="btn btn-primary" id="generateBtn"><i class="fas fa-chart-line"></i> ????? ???????</button>
-                </div>
-            </div>
-
-            <div id="reportsList">
-                <div class="loading-spinner"><i class="fas fa-spinner fa-spin fa-2x"></i><p>???? ????? ????????...</p></div>
-            </div>
-
-            <div class="copyright">
-                <p>?? ????? ?????? ??? ?????? ??????</p>
-                <p class="designer">??? / ????? ????? ?????</p>
-                <p>???? ???? ?????: ????? / ????? ??? ???????</p>
-                <p>???? ??? ?????: ?????? / ???? ???? ?????????</p>
-            </div>
+    <div class="header-section no-print">
+        <h2><i class="fas fa-file-invoice-dollar"></i> تقارير التكاليف الشهرية</h2>
+        <div style="display: flex; gap: 10px;">
+            <button class="btn btn-print" onclick="window.print()"><i class="fas fa-print"></i> طباعة</button>
+            <button class="btn btn-add" id="addReportBtn"><i class="fas fa-plus"></i> إضافة تقرير شهر جديد</button>
         </div>
     </div>
-</div>
 
-<!-- Modal ??? ?????? ??????? -->
-<div id="reportModal" class="modal">
-    <div class="modal-content" style="max-width: 900px;">
-        <div class="modal-header">
-            <h3 id="reportModalTitle">?????? ??????? ??????</h3>
-            <span class="modal-close" onclick="closeReportModal()">&times;</span>
-        </div>
-        <div id="reportDetails" style="max-height: 60vh; overflow-y: auto;"></div>
-        <div class="modal-footer">
-            <button class="btn btn-primary" onclick="printReport()"><i class="fas fa-print"></i> ?????</button>
-            <button class="btn" onclick="closeReportModal()">?????</button>
+    <div class="card">
+        <table>
+            <thead>
+                <tr>
+                    <th>المحطة</th>
+                    <th>الشهر</th>
+                    <th>إنتاج المياه (م3)</th>
+                    <th>فاتورة الكهرباء</th>
+                    <th>رصيد السولار</th>
+                </tr>
+            </thead>
+            <tbody id="costsBody"></tbody>
+        </table>
+    </div>
+
+    <div class="modal" id="costModal">
+        <div class="modal-content">
+            <h3 style="margin-bottom: 20px; color: #00d4ff;">نموذج إدخال التكاليف</h3>
+            <form id="costForm">
+                <div class="form-grid">
+                    <div><label>المحطة</label><select id="mStation" required></select></div>
+                    <div><label>الشهر</label><input type="month" id="mMonth" required></div>
+                </div>
+                <div class="section-tag">بيانات المياه</div>
+                <div class="form-grid">
+                    <div><label>ساعات طلمبة 1</label><input type="number" id="h1" class="calc" step="0.1"></div>
+                    <div><label>التصرف</label><input type="number" id="f1" readonly></div>
+                    <div><label>الإجمالي</label><input type="number" id="totalW" readonly></div>
+                </div>
+                <div class="section-tag">بيانات الكهرباء</div>
+                <div class="form-grid">
+                    <div><label>قراءة سابقة</label><input type="number" id="e_prev" readonly></div>
+                    <div><label>قراءة حالية</label><input type="number" id="e_curr" class="calc"></div>
+                    <div><label>الفاتورة</label><input type="number" id="e_bill" value="0"></div>
+                </div>
+                <div class="section-tag">بيانات السولار</div>
+                <div class="form-grid">
+                    <div><label>رصيد سابق</label><input type="number" id="s_prev" readonly></div>
+                    <div><label>كمية مضافة</label><input type="number" id="s_add" class="calc"></div>
+                    <div><label>الرصيد النهائي</label><input type="number" id="s_final" readonly></div>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button type="submit" class="btn btn-add" style="flex: 2; justify-content: center;">حفظ التقرير</button>
+                    <button type="button" class="btn" onclick="closeModal()" style="background:#e74c3c; flex: 1; justify-content: center;">إلغاء</button>
+                </div>
+            </form>
         </div>
     </div>
-</div>
 
-<script src="js/api.js"></script>
-<script>
-    if (!authToken) window.location.href = 'index.html';
-    if (currentUser) document.getElementById('userName').innerText = currentUser.full_name || currentUser.username;
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const SUPABASE_URL = 'https://jvfbkoaeugkeoiccvnkq.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_n64Hnhuruc3Oeolj-Uwg9g_tu-otJlZ';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    const menuToggle = document.getElementById('menuToggle');
-    const sidebar = document.getElementById('sidebar');
-    menuToggle?.addEventListener('click', () => sidebar.classList.toggle('open'));
+        let stations = [], pumps = [];
 
-    document.querySelectorAll('.nav-item').forEach(item => {
-        item.addEventListener('click', () => {
-            const page = item.getAttribute('data-page');
-            if (page && page !== 'logout') window.location.href = `${page}.html`;
-            if (item.id === 'logoutBtn') logout();
-        });
-    });
+        async function init() {
+            try {
+                const { data: st } = await supabaseClient.from('stations').select('*');
+                stations = st || [];
+                const { data: pm } = await supabaseClient.from('main_pumps').select('*');
+                pumps = pm || [];
 
-    let stationsList = [];
-    let currentStationId = null;
-    let reportsData = [];
-    let currentReport = null;
+                const sSelect = document.getElementById('mStation');
+                sSelect.innerHTML = '<option value="">اختر المحطة</option>';
+                stations.forEach(s => sSelect.innerHTML += `<option value="${s.id}">${s.station_name}</option>`);
 
-    async function loadStationsSelect() {
-        try {
-            const result = await getStations();
-            if (result.success) {
-                stationsList = result.stations;
-                const select = document.getElementById('stationSelect');
-                select.innerHTML = '<option value="">???? ?????? ?????</option>';
-                stationsList.forEach(s => {
-                    select.innerHTML += `<option value="${s.id}">${s.station_name} (${s.station_code || s.id})</option>`;
-                });
-            }
-        } catch (error) { console.error(error); }
-    }
-
-    async function loadReports() {
-        if (!currentStationId) {
-            document.getElementById('reportsList').innerHTML = '<div class="no-data"><i class="fas fa-info-circle"></i> ?????? ?????? ???? ?????</div>';
-            return;
-        }
-        document.getElementById('reportsList').innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i><p>???? ???????...</p></div>';
-        try {
-            const result = await getMonthlyReports(currentStationId);
-            if (result.success) {
-                reportsData = result.reports || [];
-                renderReportsList();
-            } else {
-                document.getElementById('reportsList').innerHTML = `<div class="no-data">${result.message}</div>`;
-            }
-        } catch (error) {
-            document.getElementById('reportsList').innerHTML = '<div class="no-data">??? ?? ????? ????????</div>';
-        }
-    }
-
-    function renderReportsList() {
-        const container = document.getElementById('reportsList');
-        if (!reportsData.length) {
-            container.innerHTML = `<div class="no-data"><i class="fas fa-database"></i> ?? ???? ?????? ????? ?????</div>`;
-            return;
-        }
-        let html = '';
-        reportsData.forEach(r => {
-            html += `
-                <div class="report-card" onclick="viewReport(${r.id})">
-                    <h4><i class="fas fa-file-alt"></i> ${r.report_number}</h4>
-                    <div class="report-details">
-                        <span class="report-detail"><i class="fas fa-calendar"></i> ${r.accounting_month}</span>
-                        <span class="report-detail"><i class="fas fa-tint"></i> ?????? ????????: ${(r.water_lifted_m3 || 0).toLocaleString()} ?Ӽ/span>
-                        <span class="report-detail"><i class="fas fa-bolt"></i> ??????: ${(r.transformer_1_cost + r.transformer_2_cost || 0).toLocaleString()} ?.?</span>
-                        <span class="report-detail"><i class="fas fa-oil-can"></i> ?????: ${(r.generator_1_cost + r.generator_2_cost || 0).toLocaleString()} ?.?</span>
-                        <span class="report-detail"><i class="fas fa-tint"></i> ????: ${(r.water_cost || 0).toLocaleString()} ?.?</span>
-                    </div>
-                </div>
-            `;
-        });
-        container.innerHTML = html;
-    }
-
-    window.viewReport = async (id) => {
-        const report = reportsData.find(r => r.id == id);
-        if (report) {
-            currentReport = report;
-            let html = `
-                <div style="background: rgba(0,212,255,0.1); border-radius: 15px; padding: 20px; margin-bottom: 20px;">
-                    <h3 style="color:#00d4ff;">${report.station_name} (${report.station_code})</h3>
-                    <p>???????: ${report.report_number} | ???: ${report.accounting_month}</p>
-                </div>
-                <h4><i class="fas fa-tint"></i> ???? ?????? ????????</h4>
-                <table class="data-table"><tr><th>????? ???????</th><th>???? ??????? (?ӯ????)</th><th>?????? (?ө</th></tr>
-                <tr><td>${report.operating_hours || 0}</td><td>${report.main_pump_flow_rate_m3h || 0}</td><td>${(report.water_lifted_m3 || 0).toLocaleString()}</td></tr></table>
-                
-                <h4 style="margin-top:20px;"><i class="fas fa-bolt"></i> ??????? ????????</h4>
-                <table class="data-table"><tr><th>??????</th><th>??????? ???????</th><th>??????? ???????</th><th>????????? (kWh)</th><th>????????</th><th>??????? (?.?)</th></tr>
-                <tr><td>${report.transformer_1_name || '???? 1'}</td><td>${report.transformer_1_previous_reading || 0}</td><td>${report.transformer_1_current_reading || 0}</td><td>${report.transformer_1_consumption || 0}</td><td>${report.transformer_1_tariff || 0}</td><td>${report.transformer_1_cost || 0}</td></tr>
-                <tr><td>${report.transformer_2_name || '???? 2'}</td><td>${report.transformer_2_previous_reading || 0}</td><td>${report.transformer_2_current_reading || 0}</td><td>${report.transformer_2_consumption || 0}</td><td>${report.transformer_2_tariff || 0}</td><td>${report.transformer_2_cost || 0}</td></tr>
-                <tr style="background:rgba(0,212,255,0.1);"><td colspan="5"><strong>????????</strong></td><td><strong>${(report.transformer_1_cost + report.transformer_2_cost || 0).toLocaleString()}</strong></td></tr></table>
-                
-                <h4 style="margin-top:20px;"><i class="fas fa-oil-can"></i> ??????? ???????</h4>
-                <table class="data-table"><tr><th>??????</th><th>????? ??? ?????</th><th>????? ???? ???</th><th>????????? (???)</th><th>?????? ??????</th><th>??????</th><th>?????? ??????</th><th>???????</th></tr>
-                <tr><td>${report.generator_1_name || '???? 1'}</td><td>${report.generator_1_hours_with_load || 0}</td><td>${report.generator_1_hours_no_load || 0}</td><td>${report.generator_1_total_consumption || 0}</td><td>${report.generator_1_previous_balance || 0}</td><td>${report.generator_1_added_diesel || 0}</td><td>${report.generator_1_current_balance || 0}</td><td>${report.generator_1_cost || 0}</td></tr>
-                <tr><td>${report.generator_2_name || '???? 2'}</td><td>${report.generator_2_hours_with_load || 0}</td><td>${report.generator_2_hours_no_load || 0}</td><td>${report.generator_2_total_consumption || 0}</td><td>${report.generator_2_previous_balance || 0}</td><td>${report.generator_2_added_diesel || 0}</td><td>${report.generator_2_current_balance || 0}</td><td>${report.generator_2_cost || 0}</td></tr>
-                <tr style="background:rgba(0,212,255,0.1);"><td colspan="7"><strong>????????</strong></td><td><strong>${(report.generator_1_cost + report.generator_2_cost || 0).toLocaleString()}</strong></td></tr></table>
-                
-                <h4 style="margin-top:20px;"><i class="fas fa-tint"></i> ??????? ?????? (??????? ??????)</h4>
-                <table class="data-table"><tr><th>??????? ???????</th><th>??????? ???????</th><th>????????? (?ө</th><th>????????</th><th>??????? (?.?)</th></tr>
-                <tr><td>${report.water_previous_reading || 0}</td><td>${report.water_current_reading || 0}</td><td>${report.water_consumption_m3 || 0}</td><td>${report.water_tariff || 0}</td><td>${report.water_cost || 0}</td></tr></table>
-                
-                <div style="background: rgba(0,212,255,0.2); border-radius: 15px; padding: 15px; margin-top: 20px;">
-                    <h4><i class="fas fa-chart-line"></i> ???? ????????</h4>
-                    <div class="summary-card" style="margin-top:10px;">
-                        <div class="summary-item"><div class="summary-value">${(report.transformer_1_cost + report.transformer_2_cost || 0).toLocaleString()}</div><div>?????? (?.?)</div></div>
-                        <div class="summary-item"><div class="summary-value">${(report.generator_1_cost + report.generator_2_cost || 0).toLocaleString()}</div><div>????? (?.?)</div></div>
-                        <div class="summary-item"><div class="summary-value">${(report.water_cost || 0).toLocaleString()}</div><div>???? (?.?)</div></div>
-                        <div class="summary-item"><div class="summary-value" style="color:#ffc107;">${((report.transformer_1_cost + report.transformer_2_cost || 0) + (report.generator_1_cost + report.generator_2_cost || 0) + (report.water_cost || 0)).toLocaleString()}</div><div>???????? (?.?)</div></div>
-                    </div>
-                </div>
-            `;
-            document.getElementById('reportDetails').innerHTML = html;
-            document.getElementById('reportModalTitle').innerText = `????? ??? ${report.accounting_month}`;
-            document.getElementById('reportModal').classList.add('active');
-        }
-    };
-
-    window.printReport = () => {
-        const content = document.getElementById('reportDetails').innerHTML;
-        const win = window.open('', '_blank');
-        win.document.write(`
-            <html dir="rtl"><head><title>????? ????</title>
-            <style>body{font-family:Arial;padding:20px;} table{border-collapse:collapse;width:100%;margin:10px 0;} th,td{border:1px solid #ccc;padding:8px;text-align:right;} .summary-card{display:flex;gap:20px;justify-content:center;margin-top:20px;} .summary-item{text-align:center;padding:10px;background:#f5f5f5;border-radius:10px;}</style></head>
-            <body><h2>????? ????</h2>${content}</body></html>
-        `);
-        win.document.close();
-        win.print();
-    };
-
-    function closeReportModal() { document.getElementById('reportModal').classList.remove('active'); }
-    window.closeReportModal = closeReportModal;
-
-    document.getElementById('stationSelect').addEventListener('change', (e) => {
-        currentStationId = e.target.value;
-        if (currentStationId) loadReports();
-    });
-
-    document.getElementById('generateBtn').addEventListener('click', async () => {
-        const month = document.getElementById('newMonth').value;
-        if (!month) { alert('?????? ?????? ?????'); return; }
-        if (!currentStationId) { alert('?????? ?????? ??????'); return; }
-        try {
-            const result = await generateMonthlyReport({
-                station_id: currentStationId,
-                accounting_month: month + '-01'
-            });
-            if (result.success) {
-                alert('?? ????? ??????? ?????');
                 loadReports();
-            } else {
-                alert(result.message || '??? ???');
-            }
-        } catch (error) {
-            alert('??? ?? ????? ???????');
+                setupEvents();
+            } catch (err) { console.error("Init Error:", err); }
         }
-    });
 
-    loadStationsSelect();
-</script>
+        async function loadReports() {
+            const { data } = await supabaseClient.from('station_costs').select('*').order('accounting_month', { ascending: false });
+            const body = document.getElementById('costsBody');
+            body.innerHTML = data?.map(r => `
+                <tr>
+                    <td>${r.station_name}</td>
+                    <td>${r.accounting_month.substring(0, 7)}</td>
+                    <td style="color:#f1c40f">${r.total_water_produced || 0}</td>
+                    <td style="color:#00d4ff">${r.total_elec_cost || 0}</td>
+                    <td style="color:#e67e22">${r.solar_current_balance || 0}</td>
+                </tr>`).join('') || '';
+        }
+
+        function setupEvents() {
+            document.getElementById('addReportBtn').onclick = () => {
+                document.getElementById('costForm').reset();
+                document.getElementById('costModal').classList.add('active');
+            };
+
+            document.getElementById('mStation').onchange = (e) => {
+                const p = pumps.find(p => String(p.station_id) === String(e.target.value));
+                document.getElementById('f1').value = p ? p.flow_rate : 0;
+                calculate();
+            };
+
+            document.getElementById('mMonth').onchange = fetchPrevious;
+            document.querySelectorAll('.calc').forEach(i => i.oninput = calculate);
+            document.getElementById('costForm').onsubmit = handleSave;
+        }
+
+        async function fetchPrevious() {
+            const sid = document.getElementById('mStation').value;
+            const month = document.getElementById('mMonth').value;
+            if(!sid || !month) return;
+
+            let d = new Date(month + "-01");
+            d.setMonth(d.getMonth() - 1);
+            const prevStr = d.toISOString().split('T')[0];
+
+            const { data } = await supabaseClient.from('station_costs').select('*').eq('station_id', sid).eq('accounting_month', prevStr).single();
+            if(data) {
+                document.getElementById('e_prev').value = data.elec1_curr || 0;
+                document.getElementById('s_prev').value = data.solar_current_balance || 0;
+            } else {
+                // التصحيح هنا: استخدام readOnly بدلاً من readonly
+                document.getElementById('e_prev').readOnly = false;
+                document.getElementById('s_prev').readOnly = false;
+            }
+        }
+
+        function calculate() {
+            const w = (parseFloat(document.getElementById('h1').value) || 0) * (parseFloat(document.getElementById('f1').value) || 0);
+            document.getElementById('totalW').value = w.toFixed(2);
+            const finalSol = (parseFloat(document.getElementById('s_prev').value) || 0) + (parseFloat(document.getElementById('s_add').value) || 0);
+            document.getElementById('s_final').value = finalSol.toFixed(2);
+        }
+
+        async function handleSave(e) {
+            e.preventDefault();
+            const s = document.getElementById('mStation');
+            const payload = {
+                station_id: s.value,
+                station_name: s.options[s.selectedIndex].text,
+                accounting_month: document.getElementById('mMonth').value + "-01",
+                total_water_produced: document.getElementById('totalW').value,
+                total_elec_cost: document.getElementById('e_bill').value,
+                solar_current_balance: document.getElementById('s_final').value,
+                elec1_curr: document.getElementById('e_curr').value // حفظ القراءة الحالية لتكون سابقة الشهر القادم
+            };
+            const { error } = await supabaseClient.from('station_costs').insert([payload]);
+            if(!error) { closeModal(); loadReports(); } else { alert("خطأ: " + error.message); }
+        }
+
+        window.closeModal = () => document.getElementById('costModal').classList.remove('active');
+        init();
+    </script>
 </body>
 </html>
