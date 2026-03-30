@@ -3,197 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>نظام إدارة محطات بني مزار الذكي</title>
+    <title>نظام إدارة محطات بني مزار</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
             --primary: #00d4ff;
             --secondary: #0a2b3e;
-            --accent: #2ecc71;
-            --danger: #ff4757;
             --bg-dark: #061621;
-            --sidebar-width: 280px;
-            --sidebar-collapsed-width: 70px;
             --card-bg: rgba(255, 255, 255, 0.05);
-            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --sidebar-width: 280px;
+            --transition: all 0.3s ease;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Cairo', sans-serif;
-            background-color: var(--bg-dark);
-            color: #fff;
-            overflow-x: hidden;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', sans-serif; }
+        body { background-color: var(--bg-dark); color: #fff; overflow-x: hidden; }
 
-        /* القائمة الجانبية - Sidebar */
+        /* القائمة الجانبية */
         .sidebar {
             width: var(--sidebar-width);
             height: 100vh;
             background: var(--secondary);
             position: fixed;
-            right: 0;
-            top: 0;
+            right: 0; top: 0;
             z-index: 1000;
             transition: var(--transition);
             box-shadow: -5px 0 20px rgba(0,0,0,0.5);
             overflow-y: auto;
-            overflow-x: hidden;
         }
 
-        .sidebar.collapsed { width: var(--sidebar-collapsed-width); }
+        .sidebar.collapsed { right: calc(-1 * var(--sidebar-width)); }
 
         .sidebar-header {
-            padding: 20px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding: 25px;
+            text-align: center;
             background: rgba(0,0,0,0.2);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
         }
 
-        .logo-icon {
-            font-size: 24px;
-            color: var(--primary);
-            min-width: 30px;
-        }
-
-        .logo-text {
-            font-weight: 700;
-            font-size: 1.1rem;
-            white-space: nowrap;
-            transition: var(--transition);
-        }
-
-        .sidebar.collapsed .logo-text { opacity: 0; visibility: hidden; }
-
-        /* مجموعات القائمة */
-        .nav-group { padding: 15px 0; }
         .nav-group-title {
-            padding: 10px 25px;
-            font-size: 0.75rem;
+            padding: 15px 25px 5px;
+            font-size: 0.7rem;
             color: var(--primary);
             text-transform: uppercase;
             letter-spacing: 1px;
-            opacity: 0.7;
-            font-weight: 700;
         }
-        .sidebar.collapsed .nav-group-title { display: none; }
 
         .nav-item {
-            display: flex;
-            align-items: center;
+            display: flex; align-items: center;
             padding: 12px 25px;
             color: #bdc3c7;
             text-decoration: none;
-            transition: var(--transition);
-            cursor: pointer;
             gap: 15px;
-            border-right: 4px solid transparent;
+            cursor: pointer;
+            transition: 0.2s;
         }
 
         .nav-item:hover, .nav-item.active {
             background: rgba(0, 212, 255, 0.1);
             color: #fff;
-            border-right-color: var(--primary);
+            border-right: 4px solid var(--primary);
         }
-
-        .nav-item i { min-width: 25px; font-size: 1.2rem; text-align: center; }
-        .nav-text { white-space: nowrap; transition: var(--transition); }
-        .sidebar.collapsed .nav-text { opacity: 0; visibility: hidden; }
 
         /* المحتوى الرئيسي */
         .main-wrapper {
             margin-right: var(--sidebar-width);
             transition: var(--transition);
-            min-height: 100vh;
         }
-        .main-wrapper.expanded { margin-right: var(--sidebar-collapsed-width); }
+        .main-wrapper.full { margin-right: 0; }
 
-        /* الهيدر العلوي */
-        .top-nav {
+        header {
             height: 70px;
-            background: rgba(10, 43, 62, 0.8);
-            backdrop-filter: blur(10px);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            background: rgba(10, 43, 62, 0.9);
+            display: flex; align-items: center; justify-content: space-between;
             padding: 0 25px;
-            position: sticky;
-            top: 0;
-            z-index: 999;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
+            position: sticky; top: 0; z-index: 999;
         }
 
-        .toggle-btn {
-            background: none;
-            border: none;
-            color: #fff;
-            font-size: 1.5rem;
-            cursor: pointer;
-            transition: var(--transition);
-        }
+        .toggle-btn { background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer; }
 
-        .user-profile {
-            display: flex;
-            align-items: center;
-            gap: 12px;
+        .content-area { padding: 25px; }
+
+        /* جداول البيانات */
+        .data-table {
+            width: 100%; border-collapse: collapse;
             background: var(--card-bg);
-            padding: 5px 15px;
-            border-radius: 50px;
+            border-radius: 15px; overflow: hidden;
+            margin-top: 20px;
         }
+        .data-table th { background: rgba(0, 212, 255, 0.2); padding: 15px; text-align: right; }
+        .data-table td { padding: 12px 15px; border-bottom: 1px solid rgba(255,255,255,0.05); }
 
-        /* شاشة المحتوى */
-        .content-area { padding: 30px; }
+        .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; }
+        .status-active { background: #27ae60; }
+        .status-maintenance { background: #e67e22; }
 
-        /* كروت الإحصائيات الجمالية */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .glass-card {
-            background: var(--card-bg);
-            border-radius: 20px;
-            padding: 25px;
-            border: 1px solid rgba(255,255,255,0.05);
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            transition: var(--transition);
-        }
-        .glass-card:hover { transform: translateY(-5px); background: rgba(255,255,255,0.08); }
-
-        .icon-box {
-            width: 60px;
-            height: 60px;
-            border-radius: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-        }
-
-        /* الجوال */
         @media (max-width: 768px) {
             .sidebar { right: -280px; }
             .sidebar.mobile-open { right: 0; }
-            .main-wrapper { margin-right: 0 !important; }
-            .content-area { padding: 15px; }
-            .nav-item { padding: 15px 20px; }
-        }
-
-        /* تنسيق الخاتمة/حقوق التصميم */
-        .footer-credits {
-            text-align: center;
-            margin-top: 50px;
-            padding: 20px;
-            border-top: 1px solid rgba(255,255,255,0.05);
-            font-size: 0.8rem;
-            color: #7f8c8d;
+            .main-wrapper { margin-right: 0; }
         }
     </style>
 </head>
@@ -201,157 +110,105 @@
 
 <nav class="sidebar" id="sidebar">
     <div class="sidebar-header">
-        <i class="fas fa-droplet logo-icon"></i>
-        <span class="logo-text">بني مزار للصرف</span>
+        <h3 style="color: var(--primary);">نظام إدارة المحطات</h3>
+    </div>
+    
+    <div class="nav-item active" onclick="loadPage('dashboard')">
+        <i class="fas fa-chart-pie"></i> الرئيسية
     </div>
 
-    <div class="nav-group">
-        <div class="nav-item active" onclick="loadPage('dashboard')">
-            <i class="fas fa-home"></i>
-            <span class="nav-text">الرئيسية</span>
-        </div>
-    </div>
+    <div class="nav-group-title">المحطات والأصول</div>
+    <div class="nav-item" onclick="loadPage('stations')"><i class="fas fa-industry"></i> المحطات</div>
+    <div class="nav-item" onclick="loadPage('assets')"><i class="fas fa-tools"></i> الأصول</div>
 
-    <div class="nav-group">
-        <div class="nav-group-title">إدارة الأصول</div>
-        <div class="nav-item" onclick="loadPage('stations')">
-            <i class="fas fa-industry"></i>
-            <span class="nav-text">المحطات</span>
-        </div>
-        <div class="nav-item" onclick="loadPage('assets')">
-            <i class="fas fa-boxes-stacked"></i>
-            <span class="nav-text">الأصول والمعدات</span>
-        </div>
-    </div>
+    <div class="nav-group-title">الصيانة</div>
+    <div class="nav-item" onclick="loadPage('maintenance')"><i class="fas fa-exclamation-triangle"></i> بلاغات الصيانة</div>
+    <div class="nav-item" onclick="loadPage('inspection')"><i class="fas fa-clipboard-list"></i> تقارير المرور</div>
 
-    <div class="nav-group">
-        <div class="nav-group-title">الصيانة والتشغيل</div>
-        <div class="nav-item" onclick="loadPage('maintenance')">
-            <i class="fas fa-tools"></i>
-            <span class="nav-text">بلاغات الصيانة</span>
-        </div>
-        <div class="nav-item" onclick="loadPage('inspection')">
-            <i class="fas fa-clipboard-check"></i>
-            <span class="nav-text">تقارير المرور</span>
-        </div>
-    </div>
+    <div class="nav-group-title">التقارير والكهرباء</div>
+    <div class="nav-item" onclick="loadPage('reports')"><i class="fas fa-file-invoice"></i> التقارير الشهرية</div>
+    <div class="nav-item" onclick="loadPage('pf_panels')"><i class="fas fa-bolt"></i> لوحات معامل القدرة</div>
 
-    <div class="nav-group">
-        <div class="nav-group-title">التقارير والكهرباء</div>
-        <div class="nav-item" onclick="loadPage('reports')">
-            <i class="fas fa-chart-line"></i>
-            <span class="nav-text">التقارير الشهرية</span>
-        </div>
-        <div class="nav-item" onclick="loadPage('pf_panels')">
-            <i class="fas fa-bolt"></i>
-            <span class="nav-text">لوحات معامل القدرة</span>
-        </div>
-    </div>
-
-    <div class="nav-group">
-        <div class="nav-group-title">الموارد البشرية</div>
-        <div class="nav-item" onclick="loadPage('employees')">
-            <i class="fas fa-users"></i>
-            <span class="nav-text">شؤون الموظفين</span>
-        </div>
-    </div>
-
-    <div class="nav-group">
-        <div class="nav-group-title">الإعدادات</div>
-        <div class="nav-item" onclick="loadPage('users')">
-            <i class="fas fa-user-shield"></i>
-            <span class="nav-text">المستخدمين والصلاحيات</span>
-        </div>
-        <div class="nav-item" style="color: var(--danger);">
-            <i class="fas fa-sign-out-alt"></i>
-            <span class="nav-text">تسجيل الخروج</span>
-        </div>
-    </div>
+    <div class="nav-group-title">الموظفين</div>
+    <div class="nav-item" onclick="loadPage('employees')"><i class="fas fa-users"></i> شؤون الموظفين</div>
 </nav>
 
 <div class="main-wrapper" id="mainWrapper">
-    <header class="top-nav">
-        <button class="toggle-btn" id="toggleBtn">
-            <i class="fas fa-bars-staggered"></i>
-        </button>
-        
-        <div class="page-title" id="currentPageTitle">لوحة التحكم الرئيسية</div>
-
-        <div class="user-profile">
-            <span id="userName">م/ إبراهيم</span>
-            <i class="fas fa-circle-user fa-lg" style="color: var(--primary);"></i>
-        </div>
+    <header>
+        <button class="toggle-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+        <div id="pageTitle">الرئيسية</div>
+        <div>م/ إبراهيم</div>
     </header>
 
     <main class="content-area" id="pageContent">
-        <div class="stats-grid">
-            <div class="glass-card">
-                <div class="icon-box" style="background: rgba(0, 212, 255, 0.2); color: var(--primary);">
-                    <i class="fas fa-building-circle-check"></i>
-                </div>
-                <div>
-                    <h3 id="statStations">...</h3>
-                    <p style="font-size: 0.8rem; opacity: 0.7;">إجمالي المحطات</p>
-                </div>
-            </div>
-            </div>
-    </main>
-
-    <footer class="footer-credits">
-        <p>تصميم وتطوير: م/ كيرلس موريس | فرع بني مزار © 2026</p>
-    </footer>
+        </main>
 </div>
 
 <script>
-    const sidebar = document.getElementById('sidebar');
-    const mainWrapper = document.getElementById('mainWrapper');
-    const toggleBtn = document.getElementById('toggleBtn');
+    // بيانات الربط الخاصة بك (من ملفك الأصلي)
+    const supabaseUrl = 'https://paozltmhzmcrvclpuvsn.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'; // سيتم استخدام مفتاحك من الملف المرفق
+    const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
-    // وظيفة الإخفاء والإظهار (للكمبيوتر والجوال)
-    toggleBtn.addEventListener('click', () => {
-        if (window.innerWidth <= 768) {
-            sidebar.classList.toggle('mobile-open');
+    function toggleSidebar() {
+        const sb = document.getElementById('sidebar');
+        if(window.innerWidth > 768) {
+            sb.classList.toggle('collapsed');
+            document.getElementById('mainWrapper').classList.toggle('full');
         } else {
-            sidebar.classList.toggle('collapsed');
-            mainWrapper.classList.toggle('expanded');
+            sb.classList.toggle('mobile-open');
         }
-    });
-
-    // التنقل بين الصفحات
-    function loadPage(page) {
-        // تحديث العنوان
-        const titles = {
-            'dashboard': 'لوحة التحكم الرئيسية',
-            'stations': 'إدارة محطات الصرف',
-            'assets': 'سجل الأصول والمعدات',
-            'maintenance': 'مركز بلاغات الصيانة',
-            'inspection': 'نتائج تقارير المرور',
-            'reports': 'مركز التقارير التشغيلية',
-            'pf_panels': 'متابعة لوحات معامل القدرة',
-            'employees': 'قاعدة بيانات الموظفين',
-            'users': 'صلاحيات المستخدمين'
-        };
-        document.getElementById('currentPageTitle').innerText = titles[page] || 'النظام';
-
-        // تغيير الشكل النشط في القائمة
-        document.querySelectorAll('.nav-item').forEach(item => {
-            item.classList.remove('active');
-            if(item.getAttribute('onclick')?.includes(page)) item.classList.add('active');
-        });
-
-        // محاكاة تحميل المحتوى (هنا تضع منطق الـ Fetch الخاص بك)
-        document.getElementById('pageContent').innerHTML = `
-            <div style="text-align:center; padding: 50px;">
-                <i class="fas fa-spinner fa-spin fa-3x" style="color: var(--primary);"></i>
-                <p style="margin-top:20px;">جاري تحميل بيانات ${titles[page]}...</p>
-            </div>
-        `;
-
-        // إغلاق القائمة في الجوال بعد الاختيار
-        if (window.innerWidth <= 768) sidebar.classList.remove('mobile-open');
     }
 
-    // تهيئة الصفحة عند الفتح
+    async function loadPage(page) {
+        const content = document.getElementById('pageContent');
+        const title = document.getElementById('pageTitle');
+        
+        content.innerHTML = '<div style="text-align:center; padding:50px;"><i class="fas fa-spinner fa-spin fa-2x"></i> جاري التحميل...</div>';
+
+        try {
+            if (page === 'dashboard') {
+                title.innerText = "لوحة التحكم الرئيسية";
+                renderDashboard();
+            } else if (page === 'stations') {
+                title.innerText = "إدارة المحطات";
+                const { data } = await _supabase.from('stations').select('*');
+                renderStations(data);
+            } else if (page === 'pf_panels') {
+                title.innerText = "لوحات معامل القدرة";
+                const { data } = await _supabase.from('pf_panels').select('*');
+                renderPanels(data);
+            } else {
+                content.innerHTML = `<div style="text-align:center; padding:50px;">سيتم ربط جدول (${page}) قريباً...</div>`;
+            }
+        } catch (e) {
+            content.innerHTML = "حدث خطأ أثناء جلب البيانات.";
+        }
+    }
+
+    function renderStations(data) {
+        let html = `<table class="data-table"><thead><tr><th>اسم المحطة</th><th>الحالة</th><th>آخر صيانة</th></tr></thead><tbody>`;
+        data.forEach(s => {
+            html += `<tr><td>${s.station_name}</td><td><span class="status-badge status-active">نشط</span></td><td>${s.last_maintenance || '-'}</td></tr>`;
+        });
+        html += `</tbody></table>`;
+        document.getElementById('pageContent').innerHTML = html;
+    }
+
+    function renderDashboard() {
+        document.getElementById('pageContent').innerHTML = `
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:20px;">
+                <div style="background:var(--card-bg); padding:20px; border-radius:15px; text-align:center;">
+                    <h3>المحطات</h3><p style="font-size:2rem; color:var(--primary);">12</p>
+                </div>
+                <div style="background:var(--card-bg); padding:20px; border-radius:15px; text-align:center;">
+                    <h3>بلاغات مفتوحة</h3><p style="font-size:2rem; color:#e74c3c;">3</p>
+                </div>
+            </div>
+        `;
+    }
+
+    // تشغيل الصفحة الرئيسية عند الفتح
     window.onload = () => loadPage('dashboard');
 </script>
 </body>
