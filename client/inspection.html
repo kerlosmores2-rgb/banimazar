@@ -116,6 +116,51 @@
             loadReports();
         }
 
+
+// --- دالة التعديل (أضف هذا الجزء) ---
+        window.editReport = (id) => {
+            // 1. البحث عن التقرير المطلوب في البيانات المحملة
+            const report = reportsData.find(r => r.id === id);
+            if (!report) return;
+
+            // 2. ملء الحقول الأساسية في النموذج (Form)
+            document.getElementById('editReportId').value = report.id;
+            document.getElementById('visitDate').value = report.visit_date;
+            document.getElementById('visitStation').value = report.station_id;
+            document.getElementById('visitManager').value = report.manager_name;
+            document.getElementById('generalNotes').value = report.notes || '';
+
+            // 3. إعادة بناء جدول الأصول من البيانات المحفوظة (Checklist)
+            let html = `<h4>تعديل قائمة فحص الأصول</h4>
+                        <table class="checklist-table">
+                            <thead><tr><th>الأصل/المعدة</th><th>الحالة</th><th>ملاحظات فنية</th></tr></thead><tbody>`;
+
+            const checklist = report.checklist_data || [];
+            checklist.forEach((item, index) => {
+                const isWorking = item.status === "يعمل" ? "checked" : "";
+                const isBroken = item.status === "لا يعمل" ? "checked" : "";
+                html += `<tr>
+                    <td>${item.asset}</td>
+                    <td>
+                        <div class="status-toggle">
+                            <label><input type="radio" name="st_${index}" value="يعمل" ${isWorking} class="radio-working"> <span>يعمل</span></label>
+                            <label><input type="radio" name="st_${index}" value="لا يعمل" ${isBroken} class="radio-broken"> <span>عطل</span></label>
+                        </div>
+                    </td>
+                    <td><input type="text" class="asset-note" value="${item.note || ''}" placeholder="ملاحظة..." style="margin:0; font-size:12px;"></td>
+                </tr>`;
+            });
+            
+            document.getElementById('assetsChecklistArea').innerHTML = html + '</tbody></table>';
+            
+            // 4. إظهار النافذة (Modal)
+            document.getElementById('reportModal').classList.add('active');
+        };
+
+
+
+
+        
         window.generateChecklist = () => {
             const sid = document.getElementById('visitStation').value;
             const filtered = allAssets.filter(a => String(a.station_id) === String(sid));
