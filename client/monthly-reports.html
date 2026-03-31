@@ -271,6 +271,22 @@
         function openModal() { document.getElementById('entryModal').style.display='flex'; }
         function closeModal() { document.getElementById('entryModal').style.display='none'; }
         init();
+        // دالة حذف التقرير
+async function delRec(id) {
+    if (confirm('هل أنت متأكد من حذف هذا التقرير نهائياً؟')) {
+        const { error } = await _supabase
+            .from('station_costs')
+            .delete()
+            .eq('id', id);
+
+        if (!error) {
+            alert('تم الحذف بنجاح');
+            loadTable(); // إعادة تحميل الجدول لتحديث البيانات
+        } else {
+            alert('خطأ في الحذف: ' + error.message);
+        }
+    }
+}
     </script>
 </body>
 </html>
