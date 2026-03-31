@@ -204,40 +204,32 @@ async function fetchData() {
             document.getElementById('p1_sel').innerHTML = pumpOptions;
             document.getElementById('p2_sel').innerHTML = pumpOptions;
 
-            // --- 2. جلب بيانات المولد (استعادة معدل الوقود من الكود الأول) ---
-            const gen = DB.gens.find(g => String(g.station_id) === String(sid));
-            if (gen) {
-                // جلب القيم الحقيقية المسجلة في المصفوفة DB.gens
-                document.getElementById('g_rate_load').value = gen.consumption_rate_load || "";
-                document.getElementById('g_rate_no').value = gen.consumption_rate_no_load || "";
-            } else {
-                // تصفير الخانات في حال عدم وجود مولد لهذه المحطة
-                document.getElementById('g_rate_load').value = "";
-                document.getElementById('g_rate_no').value = "";
-            }
 
-            // إذا لم يتم اختيار الشهر، نتوقف هنا بعد تحديث الطلمبات والمولد
-            if(!month) return;
 
-            // --- 3. جلب القراءات السابقة من Supabase (استمرارية البيانات) ---
-            const { data: last, error } = await _supabase.from('station_costs')
-                .select('*')
-                .eq('station_id', sid)
-                .order('accounting_month', {ascending: false})
-                .limit(1);
+/**
+ * دالة جلب معدلات استهلاك الوقود (السولار) بناءً على المسميات الصحيحة
+ * @param {string|number} sid - معرف المحطة (station_id)
+ */
+function fetchFuelRates(sid) {
+    // 1. البحث عن المولد في مصفوفة المولدات DB.gens
+    const gen = DB.gens.find(g => String(g.station_id) === String(sid));
 
-            if(last && last[0]) {
-                const L = last[0];
-                document.getElementById('e1_p').value = L.e1_curr || 0;
-                document.getElementById('e2_p').value = L.e2_curr || 0;
-                document.getElementById('s_prev_bal').value = L.solar_current_balance || 0;
-                document.getElementById('w_prev').value = L.w_curr || 0;
-            } else {
-                // تصفير القراءات السابقة للمحطات الجديدة تماماً
-                ['e1_p', 'e2_p', 's_prev_bal', 'w_prev'].forEach(id => document.getElementById(id).value = 0);
-            }
-            
-            // --- 4. تحديث الحسابات النهائية فوراً ---
+    // 2. الوصول لخانتي الإدخال في الصفحة (تأكد من الـ IDs في الـ HTML)
+    const loadInput = document.getElementById('g_rate_load');
+    const noLoadInput = document.getElementById('g_rate_no');
+
+    if (gen) {
+        // 3. استخدام المسميات الصحيحة التي حددتها حضرتك
+        loadInput.value = gen.fuel_rate_withload || 0;
+        noLoadInput.value = gen.fuel_rate_no_load || 0;
+        console.log("تم جلب معدل الوقود بنجاح: " + gen.fuel_rate_withload);
+    } else {
+        // تصفير الخانات إذا لم يوجد مولد مسجل للمحطة
+        loadInput.value = "";
+        noLoadInput.value = "";
+        console.warn("تنبيه: لا يوجد بيانات مولد لهذه المحطة.");
+    }
+}
             calc(); 
         }
 
