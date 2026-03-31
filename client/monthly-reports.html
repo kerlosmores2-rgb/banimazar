@@ -217,8 +217,8 @@
             document.getElementById('res_total_e_cost').innerText = ((d1+d2)*pE).toLocaleString();
 
             // 3. سولار
-            const sL = (parseFloat(document.getElementById('s_h_load').value)||0) * (parseFloat(document.getElementById('g_rate_load').value)||0);
-            const sN = (parseFloat(document.getElementById('s_h_no').value)||0) * (parseFloat(document.getElementById('g_rate_no').value)||0);
+            const sL = (parseFloat(document.getElementById('s_h_load').value)||0) * (parseFloat(document.getElementById('fuel_rate_with_load').value)||0);
+            const sN = (parseFloat(document.getElementById('s_h_no').value)||0) * (parseFloat(document.getElementById('fuel_rate_no_load').value)||0);
             document.getElementById('s_q_load').value = sL.toFixed(2);
             document.getElementById('s_q_no').value = sN.toFixed(2);
             const totS = sL + sN;
