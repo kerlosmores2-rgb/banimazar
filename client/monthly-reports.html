@@ -77,14 +77,14 @@
                 <div class="group-box">
                     <div class="group-title"><i class="fas fa-water"></i> أولاً: كمية المياه المرفوعة (طلمبات الرفع)</div>
                     <div class="form-row">
-                        <div class="input-group"><label>ساعات تشغيل (1)</label><input type="number" id="h1" step="0.1" placeholder="أدخل الساعات" oninput="calc()"></div>
+                        <div class="input-group"><label>ساعات تشغيل (1)</label><input type="number" id="h1" step="0.1" placeholder=" " oninput="calc()"></div>
                         <div class="input-group"><label>اختيار طلمبة (1)</label><select id="p1_sel" onchange="calc()"></select></div>
                         <div class="input-group"><label>تصرف الطلمبة (م3/س)</label><input type="number" id="p1_flow" readonly></div>
                         <div class="input-group"><label>المرفوع (م3)</label><input type="number" id="q1" readonly></div>
                     </div>
                     <div class="divider"></div>
                     <div class="form-row">
-                        <div class="input-group"><label>ساعات تشغيل (2)</label><input type="number" id="h2" step="0.1" placeholder="أدخل الساعات" oninput="calc()"></div>
+                        <div class="input-group"><label>ساعات تشغيل (2)</label><input type="number" id="h2" step="0.1" placeholder=" " oninput="calc()"></div>
                         <div class="input-group"><label>اختيار طلمبة (2)</label><select id="p2_sel" onchange="calc()"></select></div>
                         <div class="input-group"><label>تصرف الطلمبة (م3/س)</label><input type="number" id="p2_flow" readonly></div>
                         <div class="input-group"><label>المرفوع (م3)</label><input type="number" id="q2" readonly></div>
@@ -99,14 +99,14 @@
                     <div class="group-title"><i class="fas fa-bolt"></i> ثانياً: استهلاك محولات الكهرباء</div>
                     <div class="form-row">
                         <div class="input-group"><label>سابق محول 1</label><input type="number" id="e1_p" readonly></div>
-                        <div class="input-group"><label>حالي محول 1</label><input type="number" id="e1_c" placeholder="أدخل القراءة" oninput="calc()"></div>
+                        <div class="input-group"><label>حالي محول 1</label><input type="number" id="e1_c" placeholder=" " oninput="calc()"></div>
                         <div class="input-group"><label>استهلاك (1)</label><input type="number" id="e1_diff" readonly></div>
                         <div class="input-group"><label>فاتورة (1) ج.م</label><input type="number" id="e1_cost" readonly></div>
                     </div>
                     <div class="divider"></div>
                     <div class="form-row">
                         <div class="input-group"><label>سابق محول 2</label><input type="number" id="e2_p" readonly></div>
-                        <div class="input-group"><label>حالي محول 2</label><input type="number" id="e2_c" placeholder="أدخل القراءة" oninput="calc()"></div>
+                        <div class="input-group"><label>حالي محول 2</label><input type="number" id="e2_c" placeholder=" " oninput="calc()"></div>
                         <div class="input-group"><label>استهلاك (2)</label><input type="number" id="e2_diff" readonly></div>
                         <div class="input-group"><label>فاتورة (2) ج.م</label><input type="number" id="e2_cost" readonly></div>
                     </div>
@@ -120,19 +120,19 @@
                     <div class="group-title"><i class="fas fa-gas-pump"></i> ثالثاً: استهلاك وقود المولد (السولار)</div>
                     <div class="form-row">
                         <div class="input-group"><label>معدل (ع الحمل)</label><input type="number" id="g_rate_load" readonly></div>
-                        <div class="input-group"><label>ساعات (ع الحمل)</label><input type="number" id="s_h_load" step="0.1" placeholder="ساعات" oninput="calc()"></div>
+                        <div class="input-group"><label>ساعات (ع الحمل)</label><input type="number" id="s_h_load" step="0.1" placeholder=" " oninput="calc()"></div>
                         <div class="input-group"><label>مستهلك (حمل)</label><input type="number" id="s_cons_load" readonly></div>
                     </div>
                     <div class="divider"></div>
                     <div class="form-row">
                         <div class="input-group"><label>معدل (بـدون)</label><input type="number" id="g_rate_no" readonly></div>
-                        <div class="input-group"><label>ساعات (بدون)</label><input type="number" id="s_h_no" step="0.1" placeholder="ساعات" oninput="calc()"></div>
+                        <div class="input-group"><label>ساعات (بدون)</label><input type="number" id="s_h_no" step="0.1" placeholder=" " oninput="calc()"></div>
                         <div class="input-group"><label>مستهلك (بدون)</label><input type="number" id="s_cons_no" readonly></div>
                     </div>
                     <div class="divider"></div>
                     <div class="form-row">
                         <div class="input-group"><label>رصيد سابق</label><input type="number" id="s_prev_bal" readonly></div>
-                        <div class="input-group"><label>سولار مضاف (+)</label><input type="number" id="s_added" placeholder="كمية مضافة" oninput="calc()"></div>
+                        <div class="input-group"><label>سولار مضاف (+)</label><input type="number" id="s_added" placeholder=" " oninput="calc()"></div>
                         <div class="input-group"><label>إجمالي المستهلك (-)</label><input type="number" id="s_total_cons" readonly></div>
                         <div class="input-group"><label>الرصيد الحالي (=)</label><input type="number" id="s_curr_bal" readonly style="color:var(--success)"></div>
                     </div>
@@ -142,7 +142,7 @@
                     <div class="group-title"><i class="fas fa-tint"></i> رابعاً: استهلاك عداد مياه (المحطة)</div>
                     <div class="form-row">
                         <div class="input-group"><label>قراءة سابقة</label><input type="number" id="w_prev" readonly></div>
-                        <div class="input-group"><label>قراءة حالية</label><input type="number" id="w_curr" placeholder="أدخل القراءة" oninput="calc()"></div>
+                        <div class="input-group"><label>قراءة حالية</label><input type="number" id="w_curr" placeholder=" " oninput="calc()"></div>
                         <div class="input-group"><label>كمية مستهلكة</label><input type="number" id="w_diff" readonly></div>
                         <div class="input-group"><label>قيمة الفاتورة</label><input type="number" id="w_cost" readonly></div>
                     </div>
@@ -183,22 +183,29 @@
             const month = document.getElementById('f_month').value;
             if(!sid) return;
 
-            // 1. تصفية وجلب طلمبات المحطة المختارة
+            // 1. فلترة الطلمبات حسب المحطة المختار (تحويل لنص للمقارنة)
             const sPumps = DB.pumps.filter(p => String(p.station_id) === String(sid));
-            const pumpOptions = '<option value="" data-flow="0">اختر طلمبة</option>' + 
-                                sPumps.map(p => `<option value="${p.id}" data-flow="${p.flow_rate}">${p.pump_name}</option>`).join('');
+            let pumpOptions = '<option value="" data-flow="0">-- اختر الطلمبة --</option>';
+            
+            if(sPumps.length > 0) {
+                pumpOptions += sPumps.map(p => 
+                    `<option value="${p.id}" data-flow="${p.flow_rate || 0}">${p.pump_name || 'طلمبة بدون اسم'}</option>`
+                ).join('');
+            } else {
+                pumpOptions = '<option value="">لا توجد طلمبات مسجلة</option>';
+            }
             
             document.getElementById('p1_sel').innerHTML = pumpOptions;
             document.getElementById('p2_sel').innerHTML = pumpOptions;
 
-            // 2. جلب بيانات المولد للمحطة المختارة
+            // 2. جلب بيانات المولد
             const gen = DB.gens.find(g => String(g.station_id) === String(sid));
             document.getElementById('g_rate_load').value = gen?.consumption_rate_load || "";
             document.getElementById('g_rate_no').value = gen?.consumption_rate_no_load || "";
 
             if(!month) return;
 
-            // 3. جلب القراءات السابقة من آخر سجل محفوظ في Supabase
+            // 3. القراءات السابقة
             const { data: last } = await _supabase.from('station_costs')
                 .select('*').eq('station_id', sid).order('accounting_month', {ascending: false}).limit(1);
 
@@ -219,29 +226,25 @@
             const pSolar = parseFloat(document.getElementById('cfg_solar').value)||0;
             const pWater = parseFloat(document.getElementById('cfg_water_price').value)||0;
 
-            // حساب المياه المرفوعة
+            // المياه المرفوعة
             const h1 = parseFloat(document.getElementById('h1').value) || 0;
-            const h2 = parseFloat(document.getElementById('h2').value) || 0;
-            
             const sel1 = document.getElementById('p1_sel');
             const flow1 = parseFloat(sel1.options[sel1.selectedIndex]?.dataset.flow) || 0;
             document.getElementById('p1_flow').value = flow1 || "";
+            const q1 = h1 * flow1;
+            document.getElementById('q1').value = q1 ? q1.toFixed(1) : "";
             
+            const h2 = parseFloat(document.getElementById('h2').value) || 0;
             const sel2 = document.getElementById('p2_sel');
             const flow2 = parseFloat(sel2.options[sel2.selectedIndex]?.dataset.flow) || 0;
             document.getElementById('p2_flow').value = flow2 || "";
-            
-            const q1 = h1 * flow1;
             const q2 = h2 * flow2;
-            document.getElementById('q1').value = q1 ? q1.toFixed(1) : "";
             document.getElementById('q2').value = q2 ? q2.toFixed(1) : "";
             
-            const totalHours = h1 + h2;
-            const totalWater = q1 + q2;
-            document.getElementById('res_total_hours').innerText = totalHours.toFixed(1);
-            document.getElementById('res_total_water').innerText = totalWater.toFixed(1);
+            document.getElementById('res_total_hours').innerText = (h1 + h2).toFixed(1);
+            document.getElementById('res_total_water').innerText = (q1 + q2).toFixed(1);
 
-            // حساب الكهرباء
+            // الكهرباء
             const e1_c = parseFloat(document.getElementById('e1_c').value);
             const e1_p = parseFloat(document.getElementById('e1_p').value) || 0;
             const d1 = !isNaN(e1_c) ? Math.max(0, e1_c - e1_p) : 0;
@@ -260,12 +263,11 @@
             document.getElementById('res_total_kw').innerText = totalKW;
             document.getElementById('res_total_elec_cost').innerText = totalElecCost.toLocaleString();
 
-            // حساب السولار
+            // السولار
             const rL = parseFloat(document.getElementById('g_rate_load').value)||0;
             const rN = parseFloat(document.getElementById('g_rate_no').value)||0;
             const sHL = parseFloat(document.getElementById('s_h_load').value)||0;
             const sHN = parseFloat(document.getElementById('s_h_no').value)||0;
-            
             const cL = rL * sHL;
             const cN = rN * sHN;
             const tCons = cL + cN;
@@ -277,7 +279,7 @@
             document.getElementById('s_total_cons').value = tCons ? tCons.toFixed(1) : "";
             document.getElementById('s_curr_bal').value = (pBal + add - tCons).toFixed(1);
 
-            // حساب عداد المياه
+            // عداد مياه المحطة
             const wC = parseFloat(document.getElementById('w_curr').value);
             const wP = parseFloat(document.getElementById('w_prev').value)||0;
             const wD = !isNaN(wC) ? Math.max(0, wC - wP) : 0;
@@ -312,15 +314,16 @@
                 total_hours: document.getElementById('res_total_hours').innerText,
                 total_kw: document.getElementById('res_total_kw').innerText,
                 total_elec_bill: document.getElementById('res_total_elec_cost').innerText.replace(/,/g, ''),
-                solar_consumed: document.getElementById('s_total_cons').value,
-                solar_current_balance: document.getElementById('s_curr_bal').value,
+                solar_consumed: document.getElementById('s_total_cons').value || 0,
+                solar_current_balance: document.getElementById('s_curr_bal').value || 0,
                 e1_curr: document.getElementById('e1_c').value || 0,
                 e2_curr: document.getElementById('e2_c').value || 0,
                 w_curr: document.getElementById('w_curr').value || 0,
                 h1: document.getElementById('h1').value || 0,
                 h2: document.getElementById('h2').value || 0,
                 s_h_load: document.getElementById('s_h_load').value || 0,
-                s_h_no: document.getElementById('s_h_no').value || 0
+                s_h_no: document.getElementById('s_h_no').value || 0,
+                s_added: document.getElementById('s_added').value || 0
             };
             
             const { error } = await _supabase.from('station_costs').insert([payload]);
@@ -329,7 +332,7 @@
                 loadTable(); 
                 alert("تم حفظ التقرير بنجاح");
             } else {
-                alert("خطأ: " + error.message);
+                alert("خطأ في الحفظ: تأكد من إضافة الأعمدة في Supabase SQL\n" + error.message);
             }
         };
 
@@ -339,11 +342,14 @@
             localStorage.setItem('cfg_water_price', document.getElementById('cfg_water_price').value);
             loadTable();
         }
+
         function openModal() { 
             document.getElementById('mainForm').reset();
+            // تصفير شاشات الإجماليات
             ['res_total_hours','res_total_water','res_total_kw','res_total_elec_cost'].forEach(id=>document.getElementById(id).innerText="0");
             document.getElementById('entryModal').style.display='flex'; 
         }
+
         function closeModal() { document.getElementById('entryModal').style.display='none'; }
         async function delRec(id) { if(confirm('هل أنت متأكد من الحذف؟')) { await _supabase.from('station_costs').delete().eq('id', id); loadTable(); } }
         
