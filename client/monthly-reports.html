@@ -3,52 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام تكاليف محطات بني مزار - الإصدار الكامل</title>
+    <title>نظام تكاليف محطات بني مزار - النسخة النهائية المنسقة</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
         :root { --primary: #00d4ff; --secondary: #164a63; --bg: #0b2533; --success: #2ecc71; --warning: #f1c40f; --danger: #e74c3c; --text: #e0f2f1; }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', sans-serif; }
-        body { background: var(--bg); color: var(--text); padding: 20px; }
+        body { background: var(--bg); color: var(--text); padding: 20px; line-height: 1.6; }
         
         .pricing-bar { background: rgba(0,212,255,0.05); padding: 15px; border-radius: 12px; margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 20px; border: 1px solid var(--primary); align-items: center; justify-content: center; }
-        .pricing-bar input { width: 100px; background: #071a24; color: var(--success); border: 1px solid var(--primary); text-align: center; border-radius: 5px; padding: 5px; }
+        .pricing-bar input { width: 100px; background: #071a24; color: var(--success); border: 1px solid var(--primary); text-align: center; border-radius: 5px; padding: 5px; font-weight: bold; }
 
         .card { background: var(--secondary); border-radius: 15px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; min-width: 1200px; }
-        th { padding: 12px; border-bottom: 2px solid var(--primary); color: var(--primary); background: rgba(0,0,0,0.2); }
-        td { padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); text-align: center; }
+        table { width: 100%; border-collapse: collapse; text-align: right; min-width: 1200px; }
+        th { padding: 12px; border-bottom: 2px solid var(--primary); color: var(--primary); font-size: 0.85rem; background: rgba(0,0,0,0.2); }
+        td { padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 0.85rem; }
 
         .modal { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.9); display:none; align-items:center; justify-content:center; z-index:1000; padding: 10px; }
         .modal-content { background: var(--secondary); width:100%; max-width:1200px; padding:25px; border-radius:20px; max-height:95vh; overflow-y:auto; border: 2px solid var(--primary); }
         
         .section-box { background: rgba(0,0,0,0.2); border: 1px solid rgba(0,212,255,0.2); padding: 20px; border-radius: 15px; margin-bottom: 20px; }
-        .section-title { color: var(--warning); font-weight: bold; margin-bottom: 15px; border-right: 5px solid var(--warning); padding-right: 15px; }
+        .section-title { color: var(--warning); font-weight: bold; margin-bottom: 15px; border-right: 5px solid var(--warning); padding-right: 15px; font-size: 1.1rem; }
         
-        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 15px; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px; }
         .input-group { display: flex; flex-direction: column; gap: 5px; }
-        label { font-size: 0.85rem; color: #b0bec5; }
-        input, select { padding: 10px; border-radius: 8px; border: 1px solid #263238; background: #0b2533; color: #fff; }
+        label { font-size: 0.85rem; color: #b0bec5; font-weight: 600; }
+        input, select { padding: 10px; border-radius: 8px; border: 1px solid #263238; background: #0b2533; color: #fff; font-size: 0.95rem; }
         input[readonly] { background: rgba(0,0,0,0.3); color: var(--success); font-weight: bold; border-style: dashed; }
         
         .row-line { border-bottom: 1px solid rgba(0,212,255,0.1); margin-bottom: 15px; padding-bottom: 15px; }
-        .btn { padding: 12px 20px; border-radius: 10px; border: none; cursor: pointer; font-weight: bold; transition: 0.3s; display: inline-flex; align-items: center; gap: 8px; }
+        .result-tag { font-size: 0.9rem; color: var(--primary); font-weight: bold; background: rgba(0,212,255,0.1); padding: 8px; border-radius: 5px; text-align: center; display: block; margin-top: 5px; }
+        .btn { padding: 12px 25px; border-radius: 10px; border: none; cursor: pointer; font-weight: bold; transition: 0.3s; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-save { background: var(--primary); color: #000; width: 100%; font-size: 1.2rem; justify-content: center; }
     </style>
 </head>
 <body>
 
     <div class="pricing-bar">
-        <div><label>كهرباء:</label> <input type="number" id="cfg_elec" step="0.01" onchange="saveCfg()"></div>
-        <div><label>سولار:</label> <input type="number" id="cfg_solar" step="0.01" onchange="saveCfg()"></div>
-        <div><label>مياه:</label> <input type="number" id="cfg_water" step="0.01" onchange="saveCfg()"></div>
-        <button class="btn" style="background:var(--success); color:white" onclick="prepareAdd()"><i class="fas fa-plus"></i> إضافة تقرير شهري</button>
+        <div><label>كهرباء (ك.و):</label> <input type="number" id="cfg_elec" step="0.01" onchange="saveCfg()"></div>
+        <div><label>لتر سولار:</label> <input type="number" id="cfg_solar" step="0.01" onchange="saveCfg()"></div>
+        <div><label>م3 مياه شرب:</label> <input type="number" id="cfg_water" step="0.01" onchange="saveCfg()"></div>
+        <button class="btn" style="background:var(--success); color:white" onclick="openModal()"><i class="fas fa-plus"></i> إضافة تقرير</button>
     </div>
 
     <div class="card">
         <table>
             <thead>
                 <tr>
-                    <th>المحطة</th><th>الشهر</th><th>مياه مرفوعة</th><th>إجمالي ك.و</th><th>فاتورة كهرباء</th><th>سولار</th><th>إجمالي التكلفة</th><th>إجراءات</th>
+                    <th>المحطة</th><th>الشهر</th><th>مياه مرفوعة</th><th>إجمالي ك.و</th><th>فاتورة كهرباء</th><th>سولار مستهلك</th><th>الإجمالي</th><th>إجراءات</th>
                 </tr>
             </thead>
             <tbody id="tableBody"></tbody>
@@ -57,9 +59,8 @@
 
     <div class="modal" id="entryModal">
         <div class="modal-content">
-            <h2 id="modalTitle" style="color:var(--primary); text-align:center; margin-bottom:25px;">بيان التشغيل والتكاليف التفصيلي</h2>
+            <h2 style="color:var(--primary); text-align:center; margin-bottom:25px;">بيان التشغيل والتكاليف التفصيلي</h2>
             <form id="mainForm">
-                <input type="hidden" id="edit_id">
                 
                 <div class="form-grid">
                     <div class="input-group"><label>المحطة</label><select id="f_station" required onchange="fetchData()"></select></div>
@@ -70,66 +71,75 @@
                     <div class="section-title">أولاً: مياه الصرف المرفوعة</div>
                     <div class="form-grid row-line">
                         <div class="input-group"><label>طلمبة رقم 1</label><select id="p1_sel" onchange="upPump(1)"></select></div>
-                        <div class="input-group"><label>ساعات (1)</label><input type="number" id="h1" value="0" step="0.1" oninput="calc()"></div>
+                        <div class="input-group"><label>ساعات التشغيل (1)</label><input type="number" id="h1" value="0" step="0.1" oninput="calc()"></div>
                         <div class="input-group"><label>كمية م3 (1)</label><input type="number" id="q1" readonly></div>
                     </div>
                     <div class="form-grid row-line">
                         <div class="input-group"><label>طلمبة رقم 2</label><select id="p2_sel" onchange="upPump(2)"></select></div>
-                        <div class="input-group"><label>ساعات (2)</label><input type="number" id="h2" value="0" step="0.1" oninput="calc()"></div>
+                        <div class="input-group"><label>ساعات التشغيل (2)</label><input type="number" id="h2" value="0" step="0.1" oninput="calc()"></div>
                         <div class="input-group"><label>كمية م3 (2)</label><input type="number" id="q2" readonly></div>
                     </div>
-                    <div style="text-align:center; color:var(--primary); font-weight:bold;">إجمالي المياه المرفوعة: <span id="res_total_q">0</span> م3</div>
+                    <div class="form-grid">
+                        <div class="result-tag">إجمالي ساعات تشغيل الطلمبات: <span id="res_total_h">0</span> ساعة</div>
+                        <div class="result-tag">إجمالي المياه المرفوعة: <span id="res_total_q">0</span> م3</div>
+                    </div>
                 </div>
 
                 <div class="section-box">
-                    <div class="section-title">ثانياً: استهلاك الكهرباء</div>
+                    <div class="section-title">ثانياً: استهلاك الكهرباء (المحولات)</div>
                     <div class="form-grid row-line">
                         <div class="input-group"><label>سابق محول 1</label><input type="number" id="e1_p" readonly></div>
                         <div class="input-group"><label>حالي محول 1</label><input type="number" id="e1_c" value="0" oninput="calc()"></div>
                         <div class="input-group"><label>استهلاك ك.و (1)</label><input type="number" id="e1_diff" readonly></div>
+                        <div class="input-group"><label>فاتورة م1 (ج.م)</label><input type="number" id="e1_cost" readonly></div>
                     </div>
                     <div class="form-grid row-line">
                         <div class="input-group"><label>سابق محول 2</label><input type="number" id="e2_p" readonly></div>
                         <div class="input-group"><label>حالي محول 2</label><input type="number" id="e2_c" value="0" oninput="calc()"></div>
                         <div class="input-group"><label>استهلاك ك.و (2)</label><input type="number" id="e2_diff" readonly></div>
+                        <div class="input-group"><label>فاتورة م2 (ج.م)</label><input type="number" id="e2_cost" readonly></div>
+                    </div>
+                    <div class="form-grid">
+                        <div class="result-tag">إجمالي الاستهلاك: <span id="res_total_kw">0</span> ك.و</div>
+                        <div class="result-tag">إجمالي فاتورة الكهرباء: <span id="res_total_e_cost">0</span> ج.م</div>
                     </div>
                 </div>
 
                 <div class="section-box">
                     <div class="section-title">ثالثاً: وقود المولد (السولار)</div>
                     <div class="form-grid row-line">
-                        <div class="input-group"><label>معدل الحمل</label><input type="number" id="g_rate_load" readonly></div>
-                        <div class="input-group"><label>ساعات حمل</label><input type="number" id="s_h_load" value="0" step="0.1" oninput="calc()"></div>
-                        <div class="input-group"><label>مستهلك حمل (لتر)</label><input type="number" id="s_q_load" readonly></div>
+                        <div class="input-group"><label>معدل الحمل (تلقائي)</label><input type="number" id="g_rate_load" readonly></div>
+                        <div class="input-group"><label>ساعات التشغيل ع الحمل</label><input type="number" id="s_h_load" value="0" step="0.1" oninput="calc()"></div>
+                        <div class="input-group"><label>كمية مستهلكة بحمل</label><input type="number" id="s_q_load" readonly></div>
                     </div>
                     <div class="form-grid row-line">
-                        <div class="input-group"><label>معدل بدون حمل</label><input type="number" id="g_rate_no" readonly></div>
-                        <div class="input-group"><label>ساعات بدون</label><input type="number" id="s_h_no" value="0" step="0.1" oninput="calc()"></div>
-                        <div class="input-group"><label>مستهلك بدون (لتر)</label><input type="number" id="s_q_no" readonly></div>
+                        <div class="input-group"><label>معدل بدون حمل (تلقائي)</label><input type="number" id="g_rate_no" readonly></div>
+                        <div class="input-group"><label>ساعات تشغيل بدون حمل</label><input type="number" id="s_h_no" value="0" step="0.1" oninput="calc()"></div>
+                        <div class="input-group"><label>كمية مستهلكة بدون حمل</label><input type="number" id="s_q_no" readonly></div>
                     </div>
                     <div class="form-grid">
-                        <div class="input-group"><label>المضاف (+)</label><input type="number" id="s_added" value="0" oninput="calc()"></div>
-                        <div class="input-group"><label>رصيد سابق</label><input type="number" id="s_prev_bal" readonly></div>
-                        <div class="input-group"><label>إجمالي مستهلك</label><input type="number" id="s_cons" readonly></div>
-                        <div class="input-group"><label>رصيد حالي</label><input type="number" id="s_curr_bal" readonly style="color:var(--warning)"></div>
+                        <div class="input-group"><label>كمية السولار المضافة (+)</label><input type="number" id="s_added" value="0" oninput="calc()"></div>
+                        <div class="input-group"><label>الرصيد السابق</label><input type="number" id="s_prev_bal" readonly></div>
+                        <div class="input-group"><label>إجمالي المستهلك (حمل وبدون)</label><input type="number" id="s_cons" readonly></div>
+                        <div class="input-group"><label>الرصيد الحالي المتبقي</label><input type="number" id="s_curr_bal" readonly style="color:var(--warning)"></div>
                     </div>
                 </div>
 
                 <div class="section-box">
-                    <div class="section-title">رابعاً: مياه الشرب</div>
+                    <div class="section-title">رابعاً: مياه الشرب والنظافة</div>
                     <div class="form-grid">
                         <div class="input-group"><label>سابق العداد</label><input type="number" id="w_prev" readonly></div>
                         <div class="input-group"><label>حالي العداد</label><input type="number" id="w_curr" value="0" oninput="calc()"></div>
                         <div class="input-group"><label>الاستهلاك م3</label><input type="number" id="w_diff" readonly></div>
+                        <div class="input-group"><label>التكلفة ج.م</label><input type="number" id="w_cost" readonly></div>
                     </div>
                 </div>
 
-                <div style="background:var(--primary); color:#000; padding:15px; border-radius:10px; text-align:center; font-weight:bold; font-size:1.2rem; margin-bottom:15px;">
-                    الإجمالي العام: <span id="grand_total">0</span> ج.م
+                <div style="background:var(--primary); color:#000; padding:15px; border-radius:10px; text-align:center; font-weight:bold; font-size:1.3rem; margin-bottom:15px;">
+                    الإجمالي العام للمصاريف: <span id="grand_total">0</span> ج.م
                 </div>
 
-                <button type="submit" class="btn" style="background:var(--primary); color:#000; width:100%; justify-content:center">حفظ وإرسال التقرير</button>
-                <button type="button" class="btn" style="background:#444; color:#fff; width:100%; margin-top:10px; justify-content:center" onclick="closeModal()">إغلاق</button>
+                <button type="submit" class="btn btn-save">حفظ التقرير النهائي</button>
             </form>
         </div>
     </div>
@@ -140,11 +150,6 @@
         const SUPABASE_KEY = 'sb_publishable_n64Hnhuruc3Oeolj-Uwg9g_tu-otJlZ';
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         let DB = { stations:[], pumps:[], gens:[] };
-
-        const num = (id) => {
-            const val = document.getElementById(id)?.value;
-            return val === "" || isNaN(val) ? 0 : parseFloat(val);
-        };
 
         async function init() {
             ['cfg_elec', 'cfg_solar', 'cfg_water'].forEach(id => document.getElementById(id).value = localStorage.getItem(id) || 0);
@@ -160,18 +165,15 @@
             const sid = document.getElementById('f_station').value;
             const month = document.getElementById('f_month').value;
             if(!sid) return;
-
             const sPumps = DB.pumps.filter(p => String(p.station_id) === String(sid));
             ['p1_sel', 'p2_sel'].forEach(id => {
-                document.getElementById(id).innerHTML = '<option value="0" data-flow="0">-- اختر --</option>' + sPumps.map(p => `<option value="${p.id}" data-flow="${p.flow_rate_m3h || 0}">${p.pump_number || 'طلمبة'}</option>`).join('');
+                document.getElementById(id).innerHTML = '<option value="0" data-flow="0">-- اختر --</option>' + sPumps.map(p => `<option value="${p.id}" data-flow="${p.flow_rate_m3h || 0}">${p.pump_number || 'بدون رقم'}</option>`).join('');
             });
-
-            // جلب معدل السولار بالاسم الجديد fuel_with_load
             const gen = DB.gens.find(g => String(g.station_id) === String(sid));
-            document.getElementById('g_rate_load').value = gen?.fuel_with_load || 0;
-            document.getElementById('g_rate_no').value = gen?.fuel_no_load || 0;
+            document.getElementById('g_rate_load').value = gen?.fuel_rate_withload || 0;
+            document.getElementById('g_rate_no').value = gen?.fuel_rate_no_load || 0;
 
-            if(month && !document.getElementById('edit_id').value) {
+            if(month) {
                 const { data: last } = await _supabase.from('station_costs').select('*').eq('station_id', sid).order('accounting_month', {ascending: false}).limit(1);
                 if(last && last[0]) {
                     document.getElementById('e1_p').value = last[0].e1_curr || 0;
@@ -183,118 +185,89 @@
             calc();
         }
 
+        function upPump(n) {
+            const sel = document.getElementById(`p${n}_sel`);
+            sel.dataset.flow = sel.options[sel.selectedIndex].dataset.flow || 0;
+            calc();
+        }
+
         function calc() {
-            const pE = num('cfg_elec'), pS = num('cfg_solar'), pW = num('cfg_water');
-            
-            // حساب المياه
-            const q1 = num('h1') * (parseFloat(document.getElementById('p1_sel').options[document.getElementById('p1_sel').selectedIndex]?.dataset.flow)||0);
-            const q2 = num('h2') * (parseFloat(document.getElementById('p2_sel').options[document.getElementById('p2_sel').selectedIndex]?.dataset.flow)||0);
+            const pE = parseFloat(document.getElementById('cfg_elec').value) || 0;
+            const pS = parseFloat(document.getElementById('cfg_solar').value) || 0;
+            const pW = parseFloat(document.getElementById('cfg_water').value) || 0;
+
+            // 1. مياه
+            const h1 = parseFloat(document.getElementById('h1').value)||0;
+            const h2 = parseFloat(document.getElementById('h2').value)||0;
+            const q1 = h1 * (parseFloat(document.getElementById('p1_sel').dataset.flow)||0);
+            const q2 = h2 * (parseFloat(document.getElementById('p2_sel').dataset.flow)||0);
             document.getElementById('q1').value = q1.toFixed(2);
             document.getElementById('q2').value = q2.toFixed(2);
+            document.getElementById('res_total_h').innerText = (h1 + h2).toFixed(1);
             document.getElementById('res_total_q').innerText = (q1 + q2).toFixed(2);
 
-            // حساب الكهرباء
-            const d1 = Math.max(0, num('e1_c') - num('e1_p')), d2 = Math.max(0, num('e2_c') - num('e2_p'));
+            // 2. كهرباء
+            const d1 = Math.max(0, (parseFloat(document.getElementById('e1_c').value)||0) - (parseFloat(document.getElementById('e1_p').value)||0));
+            const d2 = Math.max(0, (parseFloat(document.getElementById('e2_c').value)||0) - (parseFloat(document.getElementById('e2_p').value)||0));
             document.getElementById('e1_diff').value = d1;
             document.getElementById('e2_diff').value = d2;
+            document.getElementById('e1_cost').value = (d1 * pE).toFixed(2);
+            document.getElementById('e2_cost').value = (d2 * pE).toFixed(2);
+            document.getElementById('res_total_kw').innerText = d1 + d2;
+            document.getElementById('res_total_e_cost').innerText = ((d1+d2)*pE).toLocaleString();
 
-            // حساب السولار
-            const sL = num('s_h_load') * num('g_rate_load');
-            const sN = num('s_h_no') * num('g_rate_no');
+            // 3. سولار
+            const sL = (parseFloat(document.getElementById('s_h_load').value)||0) * (parseFloat(document.getElementById('g_rate_load').value)||0);
+            const sN = (parseFloat(document.getElementById('s_h_no').value)||0) * (parseFloat(document.getElementById('g_rate_no').value)||0);
             document.getElementById('s_q_load').value = sL.toFixed(2);
             document.getElementById('s_q_no').value = sN.toFixed(2);
             const totS = sL + sN;
             document.getElementById('s_cons').value = totS.toFixed(2);
-            document.getElementById('s_curr_bal').value = (num('s_prev_bal') + num('s_added') - totS).toFixed(2);
+            const sAdd = parseFloat(document.getElementById('s_added').value)||0;
+            const sPrev = parseFloat(document.getElementById('s_prev_bal').value)||0;
+            document.getElementById('s_curr_bal').value = (sPrev + sAdd - totS).toFixed(2);
 
-            // مياه شرب
-            const wD = Math.max(0, num('w_curr') - num('w_prev'));
+            // 4. مياه شرب
+            const wD = Math.max(0, (parseFloat(document.getElementById('w_curr').value)||0) - (parseFloat(document.getElementById('w_prev').value)||0));
             document.getElementById('w_diff').value = wD.toFixed(2);
+            document.getElementById('w_cost').value = (wD * pW).toFixed(2);
 
-            const totalCost = ((d1+d2)*pE) + (totS*pS) + (wD*pW);
-            document.getElementById('grand_total').innerText = totalCost.toLocaleString();
-            return { totQ: (q1+q2), totKW: (d1+d2), totS: totS };
+            document.getElementById('grand_total').innerText = ((d1+d2)*pE + totS*pS + wD*pW).toLocaleString();
         }
 
         document.getElementById('mainForm').onsubmit = async (e) => {
             e.preventDefault();
-            const results = calc();
-            const editId = document.getElementById('edit_id').value;
-            const sid = document.getElementById('f_station').value;
-            const month = document.getElementById('f_month').value + "-01";
-
-            if(!editId) {
-                const { data: exist } = await _supabase.from('station_costs').select('id').eq('station_id', sid).eq('accounting_month', month);
-                if(exist && exist.length > 0) return alert('التقرير موجود بالفعل لهذا الشهر!');
-            }
-
             const payload = {
-                station_id: sid,
+                station_id: document.getElementById('f_station').value,
                 station_name: document.getElementById('f_station').options[document.getElementById('f_station').selectedIndex].text,
-                accounting_month: month,
-                total_water_produced: results.totQ,
-                total_kw: results.totKW,
-                solar_consumed: results.totS,
-                e1_curr: num('e1_c'), e2_curr: num('e2_c'),
-                w_curr: num('w_curr'), w_prev: num('w_prev'),
-                solar_current_balance: num('s_curr_bal'),
-                h1: num('h1'), h2: num('h2'),
-                s_h_load: num('s_h_load'), s_h_no: num('s_h_no'),
-                solar_added: num('s_added')
+                accounting_month: document.getElementById('f_month').value + "-01",
+                total_water_produced: document.getElementById('res_total_q').innerText,
+                total_kw: document.getElementById('res_total_kw').innerText,
+                solar_consumed: document.getElementById('s_cons').value,
+                e1_curr: document.getElementById('e1_c').value,
+                e2_curr: document.getElementById('e2_c').value,
+                w_curr: document.getElementById('w_curr').value,
+                w_prev: document.getElementById('w_prev').value,
+                solar_current_balance: document.getElementById('s_curr_bal').value,
+                h1: document.getElementById('h1').value, h2: document.getElementById('h2').value,
+                s_h_load: document.getElementById('s_h_load').value, s_h_no: document.getElementById('s_h_no').value,
+                solar_added: document.getElementById('s_added').value
             };
-
-            const { error } = editId ? await _supabase.from('station_costs').update(payload).eq('id', editId) : await _supabase.from('station_costs').insert([payload]);
-            if(!error) { alert('تم الحفظ'); closeModal(); loadTable(); } else alert(error.message);
+            const { error } = await _supabase.from('station_costs').insert([payload]);
+            if(!error) { closeModal(); loadTable(); } else alert(error.message);
         };
 
         async function loadTable() {
             const { data } = await _supabase.from('station_costs').select('*').order('accounting_month',{ascending:false});
-            const pE = num('cfg_elec'), pS = num('cfg_solar');
-            document.getElementById('tableBody').innerHTML = (data||[]).map(r => `
-                <tr>
-                    <td>${r.station_name}</td>
-                    <td>${r.accounting_month.substring(0,7)}</td>
-                    <td>${r.total_water_produced}</td>
-                    <td>${r.total_kw}</td>
-                    <td>${(r.total_kw*pE).toLocaleString()}</td>
-                    <td>${r.solar_consumed}</td>
-                    <td style="font-weight:bold; color:var(--primary)">${((r.total_kw*pE)+(r.solar_consumed*pS)).toLocaleString()}</td>
-                    <td>
-                        <button onclick="editRec('${r.id}')" class="btn" style="background:var(--warning); padding:5px 10px;"><i class="fas fa-edit"></i></button>
-                        <button onclick="delRec('${r.id}')" class="btn" style="background:var(--danger); color:white; padding:5px 10px;"><i class="fas fa-trash"></i></button>
-                    </td>
-                </tr>
-            `).join('');
+            const pE = parseFloat(localStorage.getItem('cfg_elec'))||0;
+            const pS = parseFloat(localStorage.getItem('cfg_solar'))||0;
+            document.getElementById('tableBody').innerHTML = (data||[]).map(r => `<tr><td>${r.station_name}</td><td>${r.accounting_month.substring(0,7)}</td><td>${r.total_water_produced}</td><td>${r.total_kw}</td><td>${(r.total_kw*pE).toLocaleString()}</td><td>${r.solar_consumed}</td><td>${((r.total_kw*pE)+(r.solar_consumed*pS)).toLocaleString()}</td><td><button onclick="delRec('${r.id}')" style="background:var(--danger); color:white; border:none; padding:5px; border-radius:5px;"><i class="fas fa-trash"></i></button></td></tr>`).join('');
         }
 
-        async function editRec(id) {
-            const { data } = await _supabase.from('station_costs').select('*').eq('id', id).single();
-            if(data) {
-                document.getElementById('edit_id').value = data.id;
-                document.getElementById('modalTitle').innerText = "تعديل التقرير";
-                document.getElementById('f_station').value = data.station_id;
-                document.getElementById('f_month').value = data.accounting_month.substring(0,7);
-                await fetchData();
-                document.getElementById('e1_c').value = data.e1_curr;
-                document.getElementById('e2_c').value = data.e2_curr;
-                document.getElementById('h1').value = data.h1;
-                document.getElementById('h2').value = data.h2;
-                document.getElementById('s_h_load').value = data.s_h_load;
-                document.getElementById('s_h_no').value = data.s_h_no;
-                document.getElementById('s_added').value = data.solar_added;
-                document.getElementById('w_curr').value = data.w_curr;
-                openModal();
-                calc();
-            }
+        function saveCfg() {
+            ['cfg_elec', 'cfg_solar', 'cfg_water'].forEach(id => localStorage.setItem(id, document.getElementById(id).value));
+            loadTable();
         }
-
-        async function delRec(id) {
-            if(confirm('حذف نهائي؟')) { await _supabase.from('station_costs').delete().eq('id', id); loadTable(); }
-        }
-
-        function upPump(n) { calc(); }
-        function saveCfg() { ['cfg_elec', 'cfg_solar', 'cfg_water'].forEach(id => localStorage.setItem(id, document.getElementById(id).value)); loadTable(); }
-        function prepareAdd() { document.getElementById('mainForm').reset(); document.getElementById('edit_id').value=""; document.getElementById('modalTitle').innerText="إضافة تقرير جديد"; openModal(); }
         function openModal() { document.getElementById('entryModal').style.display='flex'; }
         function closeModal() { document.getElementById('entryModal').style.display='none'; }
         init();
