@@ -178,21 +178,27 @@
             loadTable();
         }
 
-        async function fetchData() {
+
+
+async function fetchData() {
             const sid = document.getElementById('f_station').value;
             const month = document.getElementById('f_month').value;
             if(!sid) return;
 
-            // 1. فلترة الطلمبات حسب المحطة المختار (تحويل لنص للمقارنة)
+            // 1. تصفية الطلمبات بناءً على المحطة المختارة (باستخدام المسميات الصحيحة)
             const sPumps = DB.pumps.filter(p => String(p.station_id) === String(sid));
+            
             let pumpOptions = '<option value="" data-flow="0">-- اختر الطلمبة --</option>';
             
             if(sPumps.length > 0) {
-                pumpOptions += sPumps.map(p => 
-                    `<option value="${p.id}" data-flow="${p.flow_rate || 0}">${p.pump_name || 'طلمبة بدون اسم'}</option>`
-                ).join('');
+                pumpOptions += sPumps.map(p => {
+                    // استخدام pump_number للاسم و flow_rate_m3h للتصرف
+                    const pName = p.pump_number || 'طلمبة بدون رقم';
+                    const pFlow = p.flow_rate_m3h || 0;
+                    return `<option value="${p.id}" data-flow="${pFlow}">${pName}</option>`;
+                }).join('');
             } else {
-                pumpOptions = '<option value="">لا توجد طلمبات مسجلة</option>';
+                pumpOptions = '<option value="">لا توجد طلمبات مسجلة لهذه المحطة</option>';
             }
             
             document.getElementById('p1_sel').innerHTML = pumpOptions;
@@ -205,9 +211,12 @@
 
             if(!month) return;
 
-            // 3. القراءات السابقة
+            // 3. جلب القراءات السابقة
             const { data: last } = await _supabase.from('station_costs')
-                .select('*').eq('station_id', sid).order('accounting_month', {ascending: false}).limit(1);
+                .select('*')
+                .eq('station_id', sid)
+                .order('accounting_month', {ascending: false})
+                .limit(1);
 
             if(last && last[0]) {
                 const L = last[0];
@@ -216,11 +225,15 @@
                 document.getElementById('s_prev_bal').value = L.solar_current_balance || 0;
                 document.getElementById('w_prev').value = L.w_curr || 0;
             } else {
+                // تصفير القيم في حالة عدم وجود سجلات سابقة للمحطة
                 ['e1_p', 'e2_p', 's_prev_bal', 'w_prev'].forEach(id => document.getElementById(id).value = 0);
             }
+            
+            // استدعاء دالة الحسابات لتحديث النتائج فوراً
             calc();
         }
 
+        
         function calc() {
             const pElec = parseFloat(document.getElementById('cfg_elec').value)||0;
             const pSolar = parseFloat(document.getElementById('cfg_solar').value)||0;
