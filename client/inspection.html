@@ -16,22 +16,18 @@
         .btn-success { background: #28a745; color: #fff; }
         .btn-danger { background: #dc3545; color: #fff; }
 
-        /* شريط البحث */
         .search-area { margin-bottom: 20px; display: flex; gap: 10px; }
         .search-area input { flex: 1; padding: 10px; border-radius: 10px; border: none; background: #164a63; color: white; }
 
-        /* نموذج التفتيش */
         .inspection-card { background: #164a63; padding: 20px; border-radius: 15px; margin-bottom: 20px; border: 1px solid #00d4ff; }
         .checklist-table { width: 100%; border-collapse: collapse; margin-top: 15px; background: #1e2a3a; border-radius: 10px; overflow: hidden; }
         .checklist-table th, .checklist-table td { padding: 12px; border: 1px solid #ffffff11; text-align: center; }
         
-        /* الراديو بوتون (يعمل/لا يعمل) */
         .status-toggle { display: flex; gap: 10px; justify-content: center; }
         .status-toggle label { cursor: pointer; padding: 4px 10px; border-radius: 5px; font-size: 12px; }
         .radio-working:checked + span { background: #28a745; color: white; padding: 2px 8px; border-radius: 5px; }
         .radio-broken:checked + span { background: #dc3545; color: white; padding: 2px 8px; border-radius: 5px; }
 
-        /* جدول التقارير السابقة */
         .reports-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
         .report-item { background: #164a63; padding: 15px; border-radius: 10px; position: relative; border-right: 5px solid #00d4ff; }
         
@@ -53,8 +49,7 @@
         <input type="text" id="searchInput" placeholder="بحث باسم المحطة أو المدير..." onkeyup="filterReports()">
     </div>
 
-    <div id="reportsList" class="reports-grid">
-        </div>
+    <div id="reportsList" class="reports-grid"></div>
 
     <div id="reportModal" class="modal">
         <div class="modal-content">
@@ -97,16 +92,14 @@
         const SUPABASE_KEY = 'sb_publishable_n64Hnhuruc3Oeolj-Uwg9g_tu-otJlZ';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        let allAssets = [], allManagers = [], reportsData = [];
+        let allAssets = [], reportsData = [];
 
         async function init() {
-            // جلب المحطات
             const { data: stations } = await supabaseClient.from('stations').select('*');
             const sSelect = document.getElementById('visitStation');
             sSelect.innerHTML = '<option value="">اختر المحطة</option>';
             stations?.forEach(s => sSelect.innerHTML += `<option value="${s.id}">${s.station_name}</option>`);
 
-            // جلب الأصول (من الـ 7 جداول)
             const tables = ['transformers', 'generators', 'electrical_panels', 'main_pumps', 'sub_pumps', 'other_assets', 'buildings'];
             const res = await Promise.all(tables.map(t => supabaseClient.from(t).select('*')));
             allAssets = [];
@@ -115,7 +108,6 @@
                 allAssets.push({ name, station_id: item.station_id });
             }));
 
-            // جلب المديرين (من جدول الموظفين)
             const { data: emps } = await supabaseClient.from('employees').select('employee_name');
             const mSelect = document.getElementById('visitManager');
             mSelect.innerHTML = '<option value="">اختر المدير</option>';
@@ -124,7 +116,6 @@
             loadReports();
         }
 
-        // توليد قائمة الأصول فور اختيار المحطة
         window.generateChecklist = () => {
             const sid = document.getElementById('visitStation').value;
             const filtered = allAssets.filter(a => String(a.station_id) === String(sid));
@@ -174,13 +165,46 @@
             document.getElementById('reportsList').innerHTML = html || '<p style="text-align:center;">لا توجد تقارير مسجلة</p>';
         }
 
-        // حفظ التقرير
+        // --- دالة التعديل الجديدة ---
+        window.editReport = (id) => {
+            const report = reportsData.find(r => r.id === id);
+            if (!report) return;
+
+            document.getElementById('editReportId').value = report.id;
+            document.getElementById('visitDate').value = report.visit_date;
+            document.getElementById('visitStation').value = report.station_id;
+            document.getElementById('visitManager').value = report.manager_name;
+            document.getElementById('generalNotes').value = report.notes || '';
+
+            // إعادة بناء جدول الأصول من البيانات المحفوظة
+            let html = `<h4>تعديل قائمة فحص الأصول</h4>
+                        <table class="checklist-table">
+                            <thead><tr><th>الأصل/المعدة</th><th>الحالة</th><th>ملاحظات فنية</th></tr></thead><tbody>`;
+
+            const checklist = report.checklist_data || [];
+            checklist.forEach((item, index) => {
+                const isWorking = item.status === "يعمل" ? "checked" : "";
+                const isBroken = item.status === "لا يعمل" ? "checked" : "";
+                html += `<tr>
+                    <td>${item.asset}</td>
+                    <td>
+                        <div class="status-toggle">
+                            <label><input type="radio" name="st_${index}" value="يعمل" ${isWorking} class="radio-working"> <span>يعمل</span></label>
+                            <label><input type="radio" name="st_${index}" value="لا يعمل" ${isBroken} class="radio-broken"> <span>عطل</span></label>
+                        </div>
+                    </td>
+                    <td><input type="text" class="asset-note" value="${item.note || ''}" placeholder="ملاحظة..." style="margin:0; font-size:12px;"></td>
+                </tr>`;
+            });
+            document.getElementById('assetsChecklistArea').innerHTML = html + '</tbody></table>';
+            document.getElementById('reportModal').classList.add('active');
+        };
+
         document.getElementById('inspectionForm').onsubmit = async (e) => {
             e.preventDefault();
             const sid = document.getElementById('visitStation').value;
             const sName = document.getElementById('visitStation').options[document.getElementById('visitStation').selectedIndex].text;
             
-            // جمع بيانات الأصول من الجدول
             const checklist = [];
             const rows = document.querySelectorAll('.checklist-table tbody tr');
             rows.forEach((row, i) => {
@@ -197,7 +221,7 @@
                 station_name: sName,
                 manager_name: document.getElementById('visitManager').value,
                 notes: document.getElementById('generalNotes').value,
-                checklist_data: checklist // سيتم حفظها كـ JSON
+                checklist_data: checklist
             };
 
             const reportId = document.getElementById('editReportId').value;
@@ -212,7 +236,7 @@
                 closeModal();
                 loadReports();
             } else {
-                alert("خطأ: تأكد من إنشاء جدول inspection_reports في سوبابيز");
+                alert("خطأ في الحفظ");
             }
         };
 
@@ -226,7 +250,7 @@
         window.closeModal = () => document.getElementById('reportModal').classList.remove('active');
 
         window.deleteReport = async (id) => {
-            if(confirm("هل أنت متأكد من حذف هذا التقرير؟")) {
+            if(confirm("هل أنت متأكد؟")) {
                 await supabaseClient.from('inspection_reports').delete().eq('id', id);
                 loadReports();
             }
