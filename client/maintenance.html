@@ -26,7 +26,7 @@
         .stat-card span { display: block; font-size: 1.8rem; font-weight: bold; color: #00d4ff; }
 
         .table-container { background: #164a63; border-radius: 15px; overflow-x: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
-        .data-table { width: 100%; border-collapse: collapse; min-width: 1000px; }
+        .data-table { width: 100%; border-collapse: collapse; min-width: 1100px; }
         .data-table th { background: rgba(0, 212, 255, 0.1); color: #00d4ff; padding: 15px; text-align: center; font-size: 0.9rem; }
         .data-table td { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); text-align: center; vertical-align: middle; }
         
@@ -40,7 +40,7 @@
         .modal-content { background: #1e2a3a; padding: 25px; border-radius: 20px; width: 100%; max-width: 550px; border: 1px solid #00d4ff; max-height: 90vh; overflow-y: auto; }
         
         label { color: #00d4ff; font-size: 0.85rem; margin-bottom: 5px; display: block; font-weight: bold; }
-        input, select, textarea { width: 100%; padding: 10px; margin-bottom: 15px; border-radius: 8px; border: 1px solid #333; background: #2c3e50; color: white; font-family: 'Cairo'; }
+        input, select, textarea { width: 100%; padding: 10px; margin-bottom: 15px; border-radius: 8px; border: 1px solid #333; background: #2c3e50; color: white; font-family: 'Cairo'; resize: vertical; }
     </style>
 </head>
 <body>
@@ -49,7 +49,7 @@
         <h2><i class="fas fa-tools"></i> نظام بلاغات الصيانة المطور</h2>
         <div class="search-box">
             <i class="fas fa-search"></i>
-            <input type="text" id="searchInput" placeholder="ابحث بالمحطة، المعدة، الموظف، أو قطعة الغيار..." onkeyup="filterTickets()">
+            <input type="text" id="searchInput" placeholder="ابحث بالمحطة، المعدة، أو إجراءات الإصلاح..." onkeyup="filterTickets()">
         </div>
         <button class="btn btn-primary" id="addTicketBtn"><i class="fas fa-plus"></i> تسجيل بلاغ جديد</button>
     </div>
@@ -114,8 +114,11 @@
                 <option value="تم الإصلاح">✅ تم الإصلاح (إغلاق البلاغ)</option>
             </select>
 
+            <label>إجراءات الإصلاح المتخذة:</label>
+            <textarea id="repairActions" rows="3" placeholder="ماذا تم فعله لإصلاح العطل؟"></textarea>
+
             <label>قطع الغيار المستخدمة (إن وجدت):</label>
-            <textarea id="spareParts" rows="3" placeholder="مثال: بلي 6308، ريلاي، زيت..."></textarea>
+            <textarea id="spareParts" rows="2" placeholder="مثال: بلي، مفتاح، كابل..."></textarea>
 
             <div style="text-align: left; margin-top: 10px;">
                 <button type="button" class="btn btn-danger" onclick="closeStatusModal()">إلغاء</button>
@@ -163,11 +166,9 @@
         window.updateRelatedData = () => {
             const sid = document.getElementById('ticketStation').value;
             const sName = stationsMap[sid];
-
             const aSel = document.getElementById('ticketAsset');
             aSel.innerHTML = '<option value="">-- اختر المعدة --</option>';
             allAssets.filter(a => String(a.station_id) === String(sid)).forEach(a => aSel.innerHTML += `<option value="${a.name}">${a.name}</option>`);
-
             const eSel = document.getElementById('ticketEmployee');
             eSel.innerHTML = '<option value="">-- اختر الموظف --</option>';
             allEmployees.filter(e => String(e.station_id) === String(sid) || e.station === sName).forEach(e => eSel.innerHTML += `<option value="${e.employee_name}">${e.employee_name}</option>`);
@@ -189,7 +190,8 @@
                         <th>المعدة</th>
                         <th>النوع</th>
                         <th>الموظف</th>
-                        <th>الوصف</th>
+                        <th>وصف العطل</th>
+                        <th>الإجراءات</th>
                         <th>قطع الغيار</th>
                         <th>الحالة</th>
                         <th>إجراء</th>
@@ -207,11 +209,13 @@
                     <td>${t.asset_name}</td>
                     <td>${typeIcon} ${t.fault_type || 'غير محدد'}</td>
                     <td>${t.employee_name}</td>
-                    <td title="${t.fault_description}">${t.fault_description ? t.fault_description.substring(0,15) + '...' : '---'}</td>
+                    <td title="${t.fault_description}">${t.fault_description ? t.fault_description.substring(0,10) + '...' : '---'}</td>
+                    <td style="color:#00d4ff; font-size:12px;">${t.repair_actions || '---'}</td>
                     <td style="color:#2ecc71; font-size:12px;">${t.spare_parts || '---'}</td>
                     <td><span class="badge ${statusClass}">${t.status}</span></td>
                     <td>
-                        <button class="btn btn-warning" style="padding:4px 10px; font-size:11px;" onclick="openStatusModal(${t.id}, '${t.status}', '${t.spare_parts || ''}')">
+                        <button class="btn btn-warning" style="padding:4px 10px; font-size:11px;" 
+                            onclick="openStatusModal(${t.id}, '${t.status}', '${t.spare_parts || ''}', '${t.repair_actions || ''}')">
                             <i class="fas fa-edit"></i> تحديث
                         </button>
                     </td>
@@ -229,16 +233,17 @@
             const filtered = ticketsData.filter(t => 
                 (t.station_name?.toLowerCase().includes(val)) || 
                 (t.asset_name?.toLowerCase().includes(val)) || 
-                (t.spare_parts?.toLowerCase().includes(val)) ||
+                (t.repair_actions?.toLowerCase().includes(val)) ||
                 (t.employee_name?.toLowerCase().includes(val))
             );
             renderTable(filtered);
         };
 
-        window.openStatusModal = (id, currentStatus, spare) => {
+        window.openStatusModal = (id, currentStatus, spare, actions) => {
             document.getElementById('editTicketId').value = id;
             document.getElementById('newStatus').value = currentStatus;
             document.getElementById('spareParts').value = (spare === 'null' || spare === 'undefined') ? '' : spare;
+            document.getElementById('repairActions').value = (actions === 'null' || actions === 'undefined') ? '' : actions;
             document.getElementById('statusModal').classList.add('active');
         };
 
@@ -248,10 +253,15 @@
             const id = document.getElementById('editTicketId').value;
             const status = document.getElementById('newStatus').value;
             const spare = document.getElementById('spareParts').value;
+            const actions = document.getElementById('repairActions').value;
 
             const { error } = await supabaseClient
                 .from('maintenance_tickets')
-                .update({ status: status, spare_parts: spare })
+                .update({ 
+                    status: status, 
+                    spare_parts: spare, 
+                    repair_actions: actions 
+                })
                 .eq('id', id);
 
             if (!error) {
