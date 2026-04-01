@@ -50,14 +50,14 @@
     </div>
 
     <div class="card">
-        <table>
+         <table>
             <thead>
-                <tr>
+                 <tr>
                     <th>المحطة</th><th>الشهر</th><th>مياه مرفوعة</th><th>إجمالي ك.و</th><th>فاتورة كهرباء</th><th>سولار مستهلك</th><th>الإجمالي</th><th>إجراءات</th>
-                </tr>
+                 </tr>
             </thead>
             <tbody id="tableBody"></tbody>
-        </table>
+         </table>
     </div>
 
     <div class="modal" id="entryModal">
@@ -154,7 +154,6 @@
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         let DB = { stations:[], pumps:[], gens:[] };
 
-        // دالة مساعدة لتحويل القيمة إلى رقم أو null
         function toNumberOrNull(value) {
             if (value === undefined || value === null || value === '') return null;
             const num = parseFloat(value);
@@ -214,7 +213,6 @@
             const pS = parseFloat(document.getElementById('cfg_solar').value) || 0;
             const pW = parseFloat(document.getElementById('cfg_water').value) || 0;
 
-            // 1. مياه
             const h1 = parseFloat(document.getElementById('h1').value)||0;
             const h2 = parseFloat(document.getElementById('h2').value)||0;
             const flow1 = parseFloat(document.getElementById('p1_sel').dataset.flow) || 0;
@@ -226,7 +224,6 @@
             document.getElementById('res_total_h').innerText = (h1 + h2).toFixed(1);
             document.getElementById('res_total_q').innerText = (q1 + q2).toFixed(2);
 
-            // 2. كهرباء
             const e1_p = parseFloat(document.getElementById('e1_p').value)||0;
             const e1_c = parseFloat(document.getElementById('e1_c').value)||0;
             const e2_p = parseFloat(document.getElementById('e2_p').value)||0;
@@ -240,7 +237,6 @@
             document.getElementById('res_total_kw').innerText = d1 + d2;
             document.getElementById('res_total_e_cost').innerText = ((d1+d2)*pE).toLocaleString();
 
-            // 3. سولار
             const rateLoad = parseFloat(document.getElementById('g_rate_load').value) || 0;
             const rateNo = parseFloat(document.getElementById('g_rate_no').value) || 0;
             const s_h_load = parseFloat(document.getElementById('s_h_load').value)||0;
@@ -256,92 +252,55 @@
             const sPrev = parseFloat(document.getElementById('s_prev_bal').value)||0;
             document.getElementById('s_curr_bal').value = (sPrev + sAdd - totS).toFixed(2);
 
-            // 4. مياه شرب
             const wPrev = parseFloat(document.getElementById('w_prev').value)||0;
             const wCurr = parseFloat(document.getElementById('w_curr').value)||0;
             const wD = Math.max(0, wCurr - wPrev);
             document.getElementById('w_diff').value = wD.toFixed(2);
             document.getElementById('w_cost').value = (wD * pW).toFixed(2);
 
-            // الإجمالي
             const total = ((d1+d2)*pE) + (totS*pS) + (wD*pW);
             document.getElementById('grand_total').innerText = total.toLocaleString();
         }
 
-        // دالة التعديل
-       async function editRec(id) {
-    console.log('جاري تحميل التقرير رقم:', id);
-    
-    // جلب بيانات التقرير
-    const { data: report, error } = await _supabase.from('station_costs').select('*').eq('id', id).single();
-    if (error || !report) {
-        console.error('خطأ في جلب التقرير:', error);
-        alert('لم يتم العثور على التقرير');
-        return;
-    }
-    
-    console.log('البيانات المستلمة:', report);
-    
-    // تعيين المحطة والشهر أولاً
-    document.getElementById('f_station').value = report.station_id;
-    document.getElementById('f_month').value = report.accounting_month.substring(0, 7);
-    
-    // انتظار تحميل بيانات المحطة (طلمبات ومولدات)
-    await fetchData();
-    
-    // بعد تحميل البيانات، نعبي القيم
-    document.getElementById('h1').value = report.h1 ?? 0;
-    document.getElementById('h2').value = report.h2 ?? 0;
-    document.getElementById('e1_c').value = report.e1_curr ?? 0;
-    document.getElementById('e2_c').value = report.e2_curr ?? 0;
-    document.getElementById('w_curr').value = report.w_curr ?? 0;
-    document.getElementById('s_added').value = report.solar_added ?? 0;
-    document.getElementById('s_h_load').value = report.s_h_load ?? 0;
-    document.getElementById('s_h_no').value = report.s_h_no ?? 0;
-    
-    // اختيار الطلمبات المناسبة
-    if (report.pump1_id) {
-        const p1Sel = document.getElementById('p1_sel');
-        for(let i = 0; i < p1Sel.options.length; i++) {
-            if(p1Sel.options[i].value == report.pump1_id) {
-                p1Sel.selectedIndex = i;
-                upPump(1);
-                break;
+        // دالة التعديل المعدلة لتظهر البيانات في المودال بشكل صحيح
+        window.editRec = async function(id) {
+            console.log('جاري تحميل التقرير رقم:', id);
+            
+            const { data: report, error } = await _supabase.from('station_costs').select('*').eq('id', id).single();
+            if (error || !report) {
+                console.error('خطأ في جلب التقرير:', error);
+                alert('لم يتم العثور على التقرير');
+                return;
             }
-        }
-    }
-    if (report.pump2_id) {
-        const p2Sel = document.getElementById('p2_sel');
-        for(let i = 0; i < p2Sel.options.length; i++) {
-            if(p2Sel.options[i].value == report.pump2_id) {
-                p2Sel.selectedIndex = i;
-                upPump(2);
-                break;
-            }
-        }
-    }
-    
-    // حفظ ID التقرير للتحديث
-    document.getElementById('mainForm').dataset.editId = id;
-    
-    // إعادة الحساب
-    calc();
-    
-    // فتح المودال
-    openModal();
-}
+            
+            console.log('البيانات المستلمة:', report);
+            
+            document.getElementById('f_station').value = report.station_id;
+            document.getElementById('f_month').value = report.accounting_month.substring(0, 7);
+            
+            await fetchData();
+            
+            document.getElementById('h1').value = report.h1 ?? 0;
+            document.getElementById('h2').value = report.h2 ?? 0;
+            document.getElementById('e1_c').value = report.e1_curr ?? 0;
+            document.getElementById('e2_c').value = report.e2_curr ?? 0;
+            document.getElementById('w_curr').value = report.w_curr ?? 0;
+            document.getElementById('s_added').value = report.solar_added ?? 0;
+            document.getElementById('s_h_load').value = report.s_h_load ?? 0;
+            document.getElementById('s_h_no').value = report.s_h_no ?? 0;
+            
+            document.getElementById('mainForm').dataset.editId = id;
+            
+            calc();
+            openModal();
+        };
 
-
-
-
-        
-        // دالة الحذف
-        async function delRec(id) {
+        window.delRec = async function(id) {
             if (!confirm('هل أنت متأكد من حذف هذا التقرير؟')) return;
             const { error } = await _supabase.from('station_costs').delete().eq('id', id);
             if (error) alert(error.message);
             else loadTable();
-        }
+        };
 
         document.getElementById('mainForm').onsubmit = async (e) => {
             e.preventDefault();
@@ -396,8 +355,8 @@
                     <td>${r.solar_consumed}</td>
                     <td>${((r.total_kw*pE)+(r.solar_consumed*pS)).toLocaleString()}</td>
                     <td class="action-buttons">
-                        <button class="btn-edit" onclick="editRec('${r.id}')"><i class="fas fa-edit"></i> تعديل</button>
-                        <button class="btn-delete" onclick="delRec('${r.id}')"><i class="fas fa-trash"></i> حذف</button>
+                        <button class="btn-edit" onclick="window.editRec('${r.id}')"><i class="fas fa-edit"></i> تعديل</button>
+                        <button class="btn-delete" onclick="window.delRec('${r.id}')"><i class="fas fa-trash"></i> حذف</button>
                     </td>
                 </tr>
             `).join('');
