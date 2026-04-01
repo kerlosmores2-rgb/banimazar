@@ -62,7 +62,7 @@
 
     <div class="modal" id="entryModal">
         <div class="modal-content">
-            <h2 style="color:var(--primary); text-align:center; margin-bottom:25px;">بيان التشغيل والتكاليف التفصيلي</h2>
+            <h2 id="modalHeaderTitle" style="color:var(--primary); text-align:center; margin-bottom:25px;">بيان التشغيل والتكاليف التفصيلي</h2>
             <form id="mainForm">
                 
                 <div class="form-grid">
@@ -143,6 +143,7 @@
                 </div>
 
                 <button type="submit" class="btn btn-save">حفظ التقرير النهائي</button>
+                <button type="button" class="btn" style="background:#444; color:#fff; width:100%; margin-top:10px; justify-content:center" onclick="closeModal()">إلغاء</button>
             </form>
         </div>
     </div>
@@ -173,29 +174,28 @@
         async function fetchData() {
             const sid = document.getElementById('f_station').value;
             const month = document.getElementById('f_month').value;
+            const editId = document.getElementById('mainForm').dataset.editId;
             if(!sid) return;
+
             const sPumps = DB.pumps.filter(p => String(p.station_id) === String(sid));
             ['p1_sel', 'p2_sel'].forEach(id => {
                 const select = document.getElementById(id);
                 select.innerHTML = '<option value="0" data-flow="0">-- اختر --</option>' + sPumps.map(p => `<option value="${p.id}" data-flow="${p.flow_rate_m3h || 0}">${p.pump_number || 'بدون رقم'}</option>`).join('');
                 select.dataset.flow = 0;
             });
+            
             const gen = DB.gens.find(g => String(g.station_id) === String(sid));
+            // تأكدت من استخدام fuel_rate_with_load بناءً على كودك
             document.getElementById('g_rate_load').value = gen?.fuel_rate_with_load || 0;
             document.getElementById('g_rate_no').value = gen?.fuel_rate_no_load || 0;
 
-            if(month) {
+            if(month && !editId) {
                 const { data: last } = await _supabase.from('station_costs').select('*').eq('station_id', sid).order('accounting_month', {ascending: false}).limit(1);
                 if(last && last[0]) {
                     document.getElementById('e1_p').value = last[0].e1_curr || 0;
                     document.getElementById('e2_p').value = last[0].e2_curr || 0;
                     document.getElementById('w_prev').value = last[0].w_curr || 0;
                     document.getElementById('s_prev_bal').value = last[0].solar_current_balance || 0;
-                } else {
-                    document.getElementById('e1_p').value = 0;
-                    document.getElementById('e2_p').value = 0;
-                    document.getElementById('w_prev').value = 0;
-                    document.getElementById('s_prev_bal').value = 0;
                 }
             }
             calc();
@@ -262,37 +262,35 @@
             document.getElementById('grand_total').innerText = total.toLocaleString();
         }
 
-        // دالة التعديل المعدلة لتظهر البيانات في المودال بشكل صحيح
         window.editRec = async function(id) {
-            console.log('جاري تحميل التقرير رقم:', id);
-            
             const { data: report, error } = await _supabase.from('station_costs').select('*').eq('id', id).single();
-            if (error || !report) {
-                console.error('خطأ في جلب التقرير:', error);
-                alert('لم يتم العثور على التقرير');
-                return;
-            }
+            if (error || !report) return alert('لم يتم العثور على التقرير');
             
-            console.log('البيانات المستلمة:', report);
+            document.getElementById('mainForm').dataset.editId = id;
+            document.getElementById('modalHeaderTitle').innerText = "تعديل تقرير: " + report.station_name;
             
             document.getElementById('f_station').value = report.station_id;
             document.getElementById('f_month').value = report.accounting_month.substring(0, 7);
             
+            // قمنا بتحميل البيانات الأساسية للمحطة أولاً
             await fetchData();
             
+            // الآن نملأ القيم المخزنة في التقرير
             document.getElementById('h1').value = report.h1 ?? 0;
             document.getElementById('h2').value = report.h2 ?? 0;
             document.getElementById('e1_c').value = report.e1_curr ?? 0;
+            document.getElementById('e1_p').value = report.e1_prev ?? report.e1_curr - (report.total_kw/2); // fallback لو مفيش سابق
             document.getElementById('e2_c').value = report.e2_curr ?? 0;
+            document.getElementById('e2_p').value = report.e2_prev ?? 0;
             document.getElementById('w_curr').value = report.w_curr ?? 0;
+            document.getElementById('w_prev').value = report.w_prev ?? 0;
             document.getElementById('s_added').value = report.solar_added ?? 0;
+            document.getElementById('s_prev_bal').value = report.solar_prev_balance ?? 0;
             document.getElementById('s_h_load').value = report.s_h_load ?? 0;
             document.getElementById('s_h_no').value = report.s_h_no ?? 0;
             
-            document.getElementById('mainForm').dataset.editId = id;
-            
             calc();
-            openModal();
+            document.getElementById('entryModal').style.display='flex';
         };
 
         window.delRec = async function(id) {
@@ -305,14 +303,25 @@
         document.getElementById('mainForm').onsubmit = async (e) => {
             e.preventDefault();
             const editId = document.getElementById('mainForm').dataset.editId;
+            const sid = document.getElementById('f_station').value;
+            const month = document.getElementById('f_month').value + "-01";
+
+            // فحص منع التكرار في حالة الإضافة فقط
+            if (!editId) {
+                const { data: exist } = await _supabase.from('station_costs').select('id').eq('station_id', sid).eq('accounting_month', month);
+                if (exist && exist.length > 0) {
+                    alert('خطأ: يوجد تقرير مسجل بالفعل لهذه المحطة في هذا الشهر.');
+                    return;
+                }
+            }
             
             const payload = {
-                station_id: document.getElementById('f_station').value,
+                station_id: sid,
                 station_name: document.getElementById('f_station').options[document.getElementById('f_station').selectedIndex]?.text || '',
-                accounting_month: document.getElementById('f_month').value + "-01",
-                total_water_produced: document.getElementById('res_total_q').innerText,
-                total_kw: document.getElementById('res_total_kw').innerText,
-                solar_consumed: document.getElementById('s_cons').value,
+                accounting_month: month,
+                total_water_produced: parseFloat(document.getElementById('res_total_q').innerText),
+                total_kw: parseFloat(document.getElementById('res_total_kw').innerText),
+                solar_consumed: parseFloat(document.getElementById('s_cons').value),
                 e1_curr: toNumberOrNull(document.getElementById('e1_c').value),
                 e2_curr: toNumberOrNull(document.getElementById('e2_c').value),
                 w_curr: toNumberOrNull(document.getElementById('w_curr').value),
@@ -328,7 +337,6 @@
             let result;
             if (editId) {
                 result = await _supabase.from('station_costs').update(payload).eq('id', editId);
-                delete document.getElementById('mainForm').dataset.editId;
             } else {
                 result = await _supabase.from('station_costs').insert([payload]);
             }
@@ -337,7 +345,7 @@
                 closeModal(); 
                 loadTable(); 
             } else { 
-                alert('خطأ: ' + result.error.message);
+                alert('خطأ في قاعدة البيانات: ' + result.error.message);
             }
         };
 
@@ -353,7 +361,7 @@
                     <td>${r.total_kw}</td>
                     <td>${(r.total_kw*pE).toLocaleString()}</td>
                     <td>${r.solar_consumed}</td>
-                    <td>${((r.total_kw*pE)+(r.solar_consumed*pS)).toLocaleString()}</td>
+                    <td style="font-weight:bold; color:var(--primary)">${((r.total_kw*pE)+(r.solar_consumed*pS)).toLocaleString()}</td>
                     <td class="action-buttons">
                         <button class="btn-edit" onclick="window.editRec('${r.id}')"><i class="fas fa-edit"></i> تعديل</button>
                         <button class="btn-delete" onclick="window.delRec('${r.id}')"><i class="fas fa-trash"></i> حذف</button>
@@ -368,10 +376,7 @@
         }
         function openModal() { 
             document.getElementById('mainForm').reset();
-            document.getElementById('s_prev_bal').value = 0;
-            document.getElementById('w_prev').value = 0;
-            document.getElementById('e1_p').value = 0;
-            document.getElementById('e2_p').value = 0;
+            document.getElementById('modalHeaderTitle').innerText = "بيان التشغيل والتكاليف التفصيلي";
             delete document.getElementById('mainForm').dataset.editId;
             document.getElementById('entryModal').style.display='flex'; 
         }
