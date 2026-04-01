@@ -365,10 +365,6 @@
                     <td class="action-buttons">
                         <button class="btn-edit" onclick="window.editRec('${r.id}')"><i class="fas fa-edit"></i> تعديل</button>
                         <button class="btn-delete" onclick="window.delRec('${r.id}')"><i class="fas fa-trash"></i> حذف</button>
-                        // ضيف السطر ده جوه حلقة التكرار (الـ Loop) اللي بتبني الجدول
-<button onclick="printReport('${item.id}')" style="background:#3498db; color:white; border:none; padding:5px 10px; cursor:pointer; border-radius:4px;">
-    <i class="fas fa-print"></i> طباعة التقرير
-</button>
                     </td>
                 </tr>
             `).join('');
@@ -386,84 +382,6 @@
         }
         function closeModal() { document.getElementById('entryModal').style.display='none'; }
         init();
-        // دالة الطباعة الرسمية - توضع في نهاية السكريبت
-async function printReport(reportId) {
-    // 1. جلب بيانات التقرير المالي
-    const { data: report, error: err1 } = await _supabase.from('station_costs').select('*').eq('id', reportId).single();
-    if (err1) return alert('خطأ في جلب بيانات التقرير');
-
-    // 2. جلب بيانات المحطة الأساسية (المصب، الطاقة، النطاق)
-    const { data: station, error: err2 } = await _supabase.from('stations').select('*').eq('id', report.station_id).single();
-    if (err2) return alert('خطأ في جلب بيانات المحطة');
-
-    // أسعار الطاقة من الإعدادات
-    const pE = parseFloat(localStorage.getItem('cfg_elec')) || 0;
-    const pW = parseFloat(localStorage.getItem('cfg_water')) || 0;
-
-    const printWindow = window.open('', '_blank');
-    printWindow.document.write(`
-        <html>
-        <head>
-            <title>تقرير ${station.station_name}</title>
-            <style>
-                @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap');
-                body { direction: rtl; font-family: 'Cairo', sans-serif; padding: 1cm; }
-                .header { display: flex; justify-content: space-between; margin-bottom: 20px; }
-                .header-right { font-weight: bold; line-height: 1.5; font-size: 13px; }
-                .title-box { text-align: center; border: 2px solid #000; padding: 10px; margin: 10px 0; }
-                table { width: 100%; border-collapse: collapse; }
-                th, td { border: 1px solid #000; padding: 8px; text-align: right; font-size: 14px; }
-                .label { background: #eee; font-weight: bold; width: 20%; }
-                .footer { margin-top: 50px; display: flex; justify-content: space-around; font-weight: bold; }
-            </style>
-        </head>
-        <body>
-            <div class="header">
-                <div class="header-right">
-                    شركة مياه الشرب والصرف الصحي بالمنيا<br>
-                    إحدى الشركات التابعة للشركة القابضة<br>
-                    فرع بني مزار
-                </div>
-                <div style="font-weight:bold; font-size: 20px;">شعار الشركة</div>
-            </div>
-            <div class="title-box">
-                <h3>نموذج بيان بكمية المياه وتكلفة مباشرة لمياه الصرف المرفوعة</h3>
-                <p>محطة: ${station.station_name} | شهر: ${report.accounting_month}</p>
-            </div>
-            <table>
-                <tr>
-                    <td class="label">نوع المحطة</td><td>${station.station_type || 'رئيسية'}</td>
-                    <td class="label">الطاقة التصميمية</td><td>${station.design_capacity || '---'} م3/يوم</td>
-                </tr>
-                <tr>
-                    <td class="label">عدد الطلمبات</td><td>${station.pumps_count || '---'}</td>
-                    <td class="label">ساعات التشغيل</td><td>${(report.h1 + report.h2).toFixed(1)} ساعة</td>
-                </tr>
-                <tr>
-                    <td class="label">المياه المرفوعة</td><td>${report.total_water_produced} م3</td>
-                    <td class="label">الكهرباء المستهلكة</td><td>${report.total_kw} ك.و</td>
-                </tr>
-                <tr>
-                    <td class="label">فاتورة الكهرباء</td><td>${(report.total_kw * pE).toFixed(2)} ج.م</td>
-                    <td class="label">اسم المصب</td><td>${station.discharge_point || '---'}</td>
-                </tr>
-                <tr>
-                    <td class="label">نطاق الخدمة</td><td>${station.service_area || '---'}</td>
-                    <td class="label">أجهزة القياس</td><td>${station.flow_meter_type || '---'}</td>
-                </tr>
-            </table>
-            <div class="footer">
-                <p>مدير المحطة: .................</p>
-                <p>مدير المحطات : .................</p>
-                <p>نائب مدير الفرع لشؤن الصرف الصحي : .................</p>
-                <p>مدير عام الفرع  : .................</p>
-            </div>
-            <script>window.onload = function() { window.print(); window.close(); }<\/script>
-        </body>
-        </html>
-    `);
-    printWindow.document.close();
-}
     </script>
 </body>
 </html>
