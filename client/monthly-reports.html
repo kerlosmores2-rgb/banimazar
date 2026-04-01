@@ -154,6 +154,13 @@
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         let DB = { stations:[], pumps:[], gens:[] };
 
+        // دالة مساعدة لتحويل القيمة إلى رقم أو null
+        function toNumberOrNull(value) {
+            if (value === undefined || value === null || value === '') return null;
+            const num = parseFloat(value);
+            return isNaN(num) ? null : num;
+        }
+
         async function init() {
             ['cfg_elec', 'cfg_solar', 'cfg_water'].forEach(id => document.getElementById(id).value = localStorage.getItem(id) || 0);
             const { data: st } = await _supabase.from('stations').select('*');
@@ -185,6 +192,11 @@
                     document.getElementById('e2_p').value = last[0].e2_curr || 0;
                     document.getElementById('w_prev').value = last[0].w_curr || 0;
                     document.getElementById('s_prev_bal').value = last[0].solar_current_balance || 0;
+                } else {
+                    document.getElementById('e1_p').value = 0;
+                    document.getElementById('e2_p').value = 0;
+                    document.getElementById('w_prev').value = 0;
+                    document.getElementById('s_prev_bal').value = 0;
                 }
             }
             calc();
@@ -258,27 +270,23 @@
 
         // دالة التعديل
         async function editRec(id) {
-            const { data: report } = await _supabase.from('station_costs').select('*').eq('id', id).single();
-            if (!report) return alert('لم يتم العثور على التقرير');
+            const { data: report, error } = await _supabase.from('station_costs').select('*').eq('id', id).single();
+            if (error || !report) return alert('لم يتم العثور على التقرير');
             
-            // فتح المودال وتعبئة البيانات
             document.getElementById('f_station').value = report.station_id;
             document.getElementById('f_month').value = report.accounting_month.substring(0,7);
             await fetchData();
             
-            // تعبئة القيم
-            document.getElementById('h1').value = report.h1 || 0;
-            document.getElementById('h2').value = report.h2 || 0;
-            document.getElementById('e1_c').value = report.e1_curr || 0;
-            document.getElementById('e2_c').value = report.e2_curr || 0;
-            document.getElementById('w_curr').value = report.w_curr || 0;
-            document.getElementById('s_added').value = report.solar_added || 0;
-            document.getElementById('s_h_load').value = report.s_h_load || 0;
-            document.getElementById('s_h_no').value = report.s_h_no || 0;
+            document.getElementById('h1').value = toNumberOrNull(report.h1) ?? 0;
+            document.getElementById('h2').value = toNumberOrNull(report.h2) ?? 0;
+            document.getElementById('e1_c').value = toNumberOrNull(report.e1_curr) ?? 0;
+            document.getElementById('e2_c').value = toNumberOrNull(report.e2_curr) ?? 0;
+            document.getElementById('w_curr').value = toNumberOrNull(report.w_curr) ?? 0;
+            document.getElementById('s_added').value = toNumberOrNull(report.solar_added) ?? 0;
+            document.getElementById('s_h_load').value = toNumberOrNull(report.s_h_load) ?? 0;
+            document.getElementById('s_h_no').value = toNumberOrNull(report.s_h_no) ?? 0;
             
-            // تخزين ID التقرير للتحديث
             document.getElementById('mainForm').dataset.editId = id;
-            
             calc();
             openModal();
         }
@@ -294,23 +302,26 @@
         document.getElementById('mainForm').onsubmit = async (e) => {
             e.preventDefault();
             const editId = document.getElementById('mainForm').dataset.editId;
+            
             const payload = {
                 station_id: document.getElementById('f_station').value,
-                station_name: document.getElementById('f_station').options[document.getElementById('f_station').selectedIndex].text,
+                station_name: document.getElementById('f_station').options[document.getElementById('f_station').selectedIndex]?.text || '',
                 accounting_month: document.getElementById('f_month').value + "-01",
                 total_water_produced: document.getElementById('res_total_q').innerText,
                 total_kw: document.getElementById('res_total_kw').innerText,
                 solar_consumed: document.getElementById('s_cons').value,
-                e1_curr: document.getElementById('e1_c').value,
-                e2_curr: document.getElementById('e2_c').value,
-                w_curr: document.getElementById('w_curr').value,
-                w_prev: document.getElementById('w_prev').value,
-                solar_current_balance: document.getElementById('s_curr_bal').value,
-                h1: document.getElementById('h1').value, h2: document.getElementById('h2').value,
-                s_h_load: document.getElementById('s_h_load').value, s_h_no: document.getElementById('s_h_no').value,
-                solar_added: document.getElementById('s_added').value
+                e1_curr: toNumberOrNull(document.getElementById('e1_c').value),
+                e2_curr: toNumberOrNull(document.getElementById('e2_c').value),
+                w_curr: toNumberOrNull(document.getElementById('w_curr').value),
+                w_prev: toNumberOrNull(document.getElementById('w_prev').value),
+                solar_current_balance: toNumberOrNull(document.getElementById('s_curr_bal').value),
+                h1: toNumberOrNull(document.getElementById('h1').value),
+                h2: toNumberOrNull(document.getElementById('h2').value),
+                s_h_load: toNumberOrNull(document.getElementById('s_h_load').value),
+                s_h_no: toNumberOrNull(document.getElementById('s_h_no').value),
+                solar_added: toNumberOrNull(document.getElementById('s_added').value)
             };
-            
+
             let result;
             if (editId) {
                 result = await _supabase.from('station_costs').update(payload).eq('id', editId);
@@ -319,8 +330,12 @@
                 result = await _supabase.from('station_costs').insert([payload]);
             }
             
-            if(!result.error) { closeModal(); loadTable(); } 
-            else alert(result.error.message);
+            if(!result.error) { 
+                closeModal(); 
+                loadTable(); 
+            } else { 
+                alert('خطأ: ' + result.error.message);
+            }
         };
 
         async function loadTable() {
@@ -350,6 +365,10 @@
         }
         function openModal() { 
             document.getElementById('mainForm').reset();
+            document.getElementById('s_prev_bal').value = 0;
+            document.getElementById('w_prev').value = 0;
+            document.getElementById('e1_p').value = 0;
+            document.getElementById('e2_p').value = 0;
             delete document.getElementById('mainForm').dataset.editId;
             document.getElementById('entryModal').style.display='flex'; 
         }
