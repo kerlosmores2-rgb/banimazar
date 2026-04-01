@@ -269,28 +269,72 @@
         }
 
         // دالة التعديل
-        async function editRec(id) {
-            const { data: report, error } = await _supabase.from('station_costs').select('*').eq('id', id).single();
-            if (error || !report) return alert('لم يتم العثور على التقرير');
-            
-            document.getElementById('f_station').value = report.station_id;
-            document.getElementById('f_month').value = report.accounting_month.substring(0,7);
-            await fetchData();
-            
-            document.getElementById('h1').value = toNumberOrNull(report.h1) ?? 0;
-            document.getElementById('h2').value = toNumberOrNull(report.h2) ?? 0;
-            document.getElementById('e1_c').value = toNumberOrNull(report.e1_curr) ?? 0;
-            document.getElementById('e2_c').value = toNumberOrNull(report.e2_curr) ?? 0;
-            document.getElementById('w_curr').value = toNumberOrNull(report.w_curr) ?? 0;
-            document.getElementById('s_added').value = toNumberOrNull(report.solar_added) ?? 0;
-            document.getElementById('s_h_load').value = toNumberOrNull(report.s_h_load) ?? 0;
-            document.getElementById('s_h_no').value = toNumberOrNull(report.s_h_no) ?? 0;
-            
-            document.getElementById('mainForm').dataset.editId = id;
-            calc();
-            openModal();
+       async function editRec(id) {
+    console.log('جاري تحميل التقرير رقم:', id);
+    
+    // جلب بيانات التقرير
+    const { data: report, error } = await _supabase.from('station_costs').select('*').eq('id', id).single();
+    if (error || !report) {
+        console.error('خطأ في جلب التقرير:', error);
+        alert('لم يتم العثور على التقرير');
+        return;
+    }
+    
+    console.log('البيانات المستلمة:', report);
+    
+    // تعيين المحطة والشهر أولاً
+    document.getElementById('f_station').value = report.station_id;
+    document.getElementById('f_month').value = report.accounting_month.substring(0, 7);
+    
+    // انتظار تحميل بيانات المحطة (طلمبات ومولدات)
+    await fetchData();
+    
+    // بعد تحميل البيانات، نعبي القيم
+    document.getElementById('h1').value = report.h1 ?? 0;
+    document.getElementById('h2').value = report.h2 ?? 0;
+    document.getElementById('e1_c').value = report.e1_curr ?? 0;
+    document.getElementById('e2_c').value = report.e2_curr ?? 0;
+    document.getElementById('w_curr').value = report.w_curr ?? 0;
+    document.getElementById('s_added').value = report.solar_added ?? 0;
+    document.getElementById('s_h_load').value = report.s_h_load ?? 0;
+    document.getElementById('s_h_no').value = report.s_h_no ?? 0;
+    
+    // اختيار الطلمبات المناسبة
+    if (report.pump1_id) {
+        const p1Sel = document.getElementById('p1_sel');
+        for(let i = 0; i < p1Sel.options.length; i++) {
+            if(p1Sel.options[i].value == report.pump1_id) {
+                p1Sel.selectedIndex = i;
+                upPump(1);
+                break;
+            }
         }
+    }
+    if (report.pump2_id) {
+        const p2Sel = document.getElementById('p2_sel');
+        for(let i = 0; i < p2Sel.options.length; i++) {
+            if(p2Sel.options[i].value == report.pump2_id) {
+                p2Sel.selectedIndex = i;
+                upPump(2);
+                break;
+            }
+        }
+    }
+    
+    // حفظ ID التقرير للتحديث
+    document.getElementById('mainForm').dataset.editId = id;
+    
+    // إعادة الحساب
+    calc();
+    
+    // فتح المودال
+    openModal();
+}
 
+
+
+
+        
         // دالة الحذف
         async function delRec(id) {
             if (!confirm('هل أنت متأكد من حذف هذا التقرير؟')) return;
