@@ -170,7 +170,7 @@
                 document.getElementById(id).innerHTML = '<option value="0" data-flow="0">-- اختر --</option>' + sPumps.map(p => `<option value="${p.id}" data-flow="${p.flow_rate_m3h || 0}">${p.pump_number || 'بدون رقم'}</option>`).join('');
             });
             const gen = DB.gens.find(g => String(g.station_id) === String(sid));
-            document.getElementById('g_rate_load').value = gen?.fuel_rate_withload || 0;
+            document.getElementById('g_rate_load').value = gen?.fuel_rate_with_load || 0;
             document.getElementById('g_rate_no').value = gen?.fuel_rate_no_load || 0;
 
             if(month) {
