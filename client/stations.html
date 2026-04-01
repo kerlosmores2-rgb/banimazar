@@ -119,7 +119,7 @@
             background: #1e2a3a;
             border-radius: 20px;
             width: 90%;
-            max-width: 700px;
+            max-width: 600px;
             max-height: 85vh;
             overflow-y: auto;
             padding: 25px;
@@ -164,11 +164,6 @@
             margin-top: 5px;
             color: #aaa;
             font-size: 0.7rem;
-        }
-        .form-row {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 15px;
         }
         .form-actions {
             display: flex;
@@ -229,7 +224,6 @@
     </div>
 </div>
 
-<!-- المودال (النافذة المنبثقة) -->
 <div id="stationModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
@@ -239,19 +233,16 @@
         <form id="stationForm">
             <input type="hidden" id="stationId">
             
-            <!-- 1. اسم المحطة -->
             <div class="form-group">
                 <label>اسم المحطة <span style="color:#dc3545;">*</span></label>
                 <input type="text" id="stationName" required placeholder="مثال: محطة بني مزار المركزية">
             </div>
             
-            <!-- 2. كود المحطة -->
             <div class="form-group">
                 <label>كود المحطة</label>
                 <input type="text" id="stationCode" placeholder="مثال: ST-001">
             </div>
             
-            <!-- 3. نوع المحطة (قائمة منسدلة) -->
             <div class="form-group">
                 <label>نوع المحطة</label>
                 <select id="stationType">
@@ -259,79 +250,55 @@
                     <option value="رئيسية">🏢 رئيسية</option>
                     <option value="فرعية">🏘️ فرعية</option>
                 </select>
-                <small>اختر نوع المحطة: معالجة / رئيسية / فرعية</small>
             </div>
             
-            <!-- 4. المصب (قائمة منسدلة من المحطات المسجلة) -->
             <div class="form-group">
                 <label>المصب</label>
                 <select id="downstreamStationId">
                     <option value="">-- اختر محطة المصب --</option>
                 </select>
-                <small>اختر المحطة التي تذهب إليها المياه بعد المعالجة</small>
             </div>
             
-            <!-- 5. موقع المحطة -->
             <div class="form-group">
                 <label>موقع المحطة</label>
                 <input type="text" id="stationLocation" placeholder="مثال: بني مزار بجوار مسجد الرحمة">
             </div>
             
-            <!-- 6. منطقة الخدمة -->
             <div class="form-group">
                 <label>منطقة الخدمة</label>
                 <input type="text" id="serviceArea" placeholder="مثال: شرق المحطة ومنطقة الرحمة">
             </div>
             
-            <!-- 7. الطاقة التصميمية -->
             <div class="form-group">
                 <label>الطاقة التصميمية (م³/ساعة)</label>
                 <input type="number" id="stationCapacity" step="0.01" placeholder="مثال: 500">
             </div>
-            
-            <!-- 8. خط الطرد القطر (مم) -->
-            <div class="form-group">
-                <label>خط الطرد القطر (مم)</label>
-                <input type="number" id="dischargePipeDiameter" step="1" placeholder="مثال: 200">
+
+            <div style="background: rgba(0,212,255,0.05); padding: 15px; border-radius: 10px; margin-bottom: 18px; border: 1px dashed rgba(0,212,255,0.3);">
+                <div class="form-group">
+                    <label>خط الطرد: القطر (مم) | الطول (م) | نوع الخط</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="number" id="pipeDiameter" placeholder="القطر مم">
+                        <input type="number" id="pipeLength" placeholder="الطول م">
+                        <input type="text" id="pipeType" placeholder="نوع الخط">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>البيارة: قطر البيارة (م) | عمق البيارة (م) | قطر الدخول (مم)</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="number" id="wellDiameter" step="0.1" placeholder="قطر م">
+                        <input type="number" id="wellDepth" step="0.1" placeholder="عمق م">
+                        <input type="number" id="inletDiameter" placeholder="دخول مم">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>شبكة الانحدار (كم)</label>
+                    <input type="number" id="sewageNetwork" step="0.01" placeholder="كم">
+                </div>
             </div>
-            
-            <!-- 9. خط الطرد الطول (م) -->
-            <div class="form-group">
-                <label>خط الطرد الطول (م)</label>
-                <input type="number" id="dischargePipeLength" step="0.01" placeholder="مثال: 1500">
-            </div>
-            
-            <!-- 10. نوع الخط -->
-            <div class="form-group">
-                <label>نوع الخط</label>
-                <input type="text" id="pipeType" placeholder="مثال: GRP / HDPE / فولاذ">
-            </div>
-            
-            <!-- 11. قطر البيارة (م) -->
-            <div class="form-group">
-                <label>قطر البيارة (م)</label>
-                <input type="number" id="manholeDiameter" step="0.01" placeholder="مثال: 3.5">
-            </div>
-            
-            <!-- 12. عمق البيارة (م) -->
-            <div class="form-group">
-                <label>عمق البيارة (م)</label>
-                <input type="number" id="manholeDepth" step="0.01" placeholder="مثال: 6">
-            </div>
-            
-            <!-- 13. قطر الدخول (مم) -->
-            <div class="form-group">
-                <label>قطر الدخول (مم)</label>
-                <input type="number" id="inletPipeDiameter" step="1" placeholder="مثال: 300">
-            </div>
-            
-            <!-- 14. خط شبكة الانحدار (كم) -->
-            <div class="form-group">
-                <label>خط شبكة الانحدار (كم)</label>
-                <input type="number" id="gravityNetworkLength" step="0.01" placeholder="مثال: 2.5">
-            </div>
-            
-            <!-- 15. الحالة -->
+
             <div class="form-group">
                 <label>الحالة</label>
                 <select id="stationStatus">
@@ -342,7 +309,6 @@
                 </select>
             </div>
             
-            <!-- 16. ملاحظات -->
             <div class="form-group">
                 <label>ملاحظات</label>
                 <textarea id="stationNotes" rows="3" placeholder="أي ملاحظات إضافية عن المحطة..."></textarea>
@@ -358,267 +324,104 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-    // ========== إعدادات Supabase ==========
     const SUPABASE_URL = 'https://jvfbkoaeugkeoiccvnkq.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_n64Hnhuruc3Oeolj-Uwg9g_tu-otJlZ';
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     let stationsData = [];
-
-    // ========== صلاحيات المستخدم ==========
     const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
     const addBtn = document.getElementById('addStationBtn');
-    
-    if (user.role === 'viewer') {
-        if (addBtn) addBtn.style.display = 'none';
-    }
+    if (user.role === 'viewer') if (addBtn) addBtn.style.display = 'none';
 
-    // ========== دوال API ==========
     async function getStationsDirect() {
         try {
-            const { data, error } = await supabaseClient
-                .from('stations')
-                .select('*')
-                .order('station_name');
+            const { data, error } = await supabaseClient.from('stations').select('*').order('station_name');
             if (error) throw error;
             return { success: true, stations: data || [] };
-        } catch (error) {
-            return { success: false, message: error.message, stations: [] };
-        }
+        } catch (error) { return { success: false, message: error.message, stations: [] }; }
     }
 
     async function createStationDirect(data) {
         try {
-            const newStation = {
-                station_name: data.station_name,
-                station_code: data.station_code || null,
-                station_type: data.station_type || null,
-                downstream_station_id: data.downstream_station_id || null,
-                location: data.location || null,
-                service_area: data.service_area || null,
-                capacity: parseFloat(data.capacity) || null,
-                discharge_pipe_diameter_mm: parseFloat(data.discharge_pipe_diameter) || null,
-                discharge_pipe_length_m: parseFloat(data.discharge_pipe_length) || null,
-                pipe_type: data.pipe_type || null,
-                manhole_diameter_m: parseFloat(data.manhole_diameter) || null,
-                manhole_depth_m: parseFloat(data.manhole_depth) || null,
-                inlet_pipe_diameter_mm: parseFloat(data.inlet_pipe_diameter) || null,
-                gravity_network_length_km: parseFloat(data.gravity_network_length) || null,
-                status: data.status || 'active',
-                notes: data.notes || null,
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString()
-            };
-            const { data: result, error } = await supabaseClient
-                .from('stations')
-                .insert([newStation])
-                .select();
+            const { data: result, error } = await supabaseClient.from('stations').insert([data]).select();
             if (error) throw error;
             return { success: true, data: result[0], message: '✅ تم إضافة المحطة بنجاح' };
-        } catch (error) {
-            return { success: false, message: error.message };
-        }
+        } catch (error) { return { success: false, message: error.message }; }
     }
 
     async function updateStationDirect(id, data) {
         try {
-            const updateData = {
-                station_name: data.station_name,
-                station_code: data.station_code || null,
-                station_type: data.station_type || null,
-                downstream_station_id: data.downstream_station_id || null,
-                location: data.location || null,
-                service_area: data.service_area || null,
-                capacity: parseFloat(data.capacity) || null,
-                discharge_pipe_diameter_mm: parseFloat(data.discharge_pipe_diameter) || null,
-                discharge_pipe_length_m: parseFloat(data.discharge_pipe_length) || null,
-                pipe_type: data.pipe_type || null,
-                manhole_diameter_m: parseFloat(data.manhole_diameter) || null,
-                manhole_depth_m: parseFloat(data.manhole_depth) || null,
-                inlet_pipe_diameter_mm: parseFloat(data.inlet_pipe_diameter) || null,
-                gravity_network_length_km: parseFloat(data.gravity_network_length) || null,
-                status: data.status || 'active',
-                notes: data.notes || null,
-                updated_at: new Date().toISOString()
-            };
-            const { data: result, error } = await supabaseClient
-                .from('stations')
-                .update(updateData)
-                .eq('id', id)
-                .select();
+            const { data: result, error } = await supabaseClient.from('stations').update(data).eq('id', id).select();
             if (error) throw error;
             return { success: true, data: result[0], message: '✅ تم تحديث المحطة بنجاح' };
-        } catch (error) {
-            return { success: false, message: error.message };
-        }
+        } catch (error) { return { success: false, message: error.message }; }
     }
 
     async function deleteStationDirect(id) {
         try {
-            const { error } = await supabaseClient
-                .from('stations')
-                .delete()
-                .eq('id', id);
+            const { error } = await supabaseClient.from('stations').delete().eq('id', id);
             if (error) throw error;
             return { success: true, message: '✅ تم حذف المحطة بنجاح' };
-        } catch (error) {
-            return { success: false, message: error.message };
-        }
+        } catch (error) { return { success: false, message: error.message }; }
     }
 
-    // ========== ملء قائمة محطات المصب ==========
     function loadDownstreamStations() {
         const select = document.getElementById('downstreamStationId');
         if (!select) return;
-        
         const currentId = document.getElementById('stationId').value;
-        
         select.innerHTML = '<option value="">-- اختر محطة المصب --</option>';
-        
         stationsData.forEach(station => {
             if (currentId && station.id == currentId) return;
             select.innerHTML += `<option value="${station.id}">${station.station_name} (${station.station_code || ''})</option>`;
         });
     }
 
-    // ========== عرض البيانات في الجدول ==========
     async function loadStations() {
         const container = document.getElementById('stationsList');
         container.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin fa-2x"></i><p>جاري تحميل البيانات...</p></div>';
-        
         const result = await getStationsDirect();
         if (result.success) {
             stationsData = result.stations;
             loadDownstreamStations();
-            
             if (stationsData.length === 0) {
                 let html = '<div class="no-data"><i class="fas fa-database"></i><p>لا توجد محطات مسجلة</p>';
-                if (user.role !== 'viewer') {
-                    html += '<button class="btn btn-primary" onclick="document.getElementById(\'addStationBtn\').click()" style="margin-top:15px;"><i class="fas fa-plus"></i> إضافة أول محطة</button>';
-                }
-                html += '</div>';
-                container.innerHTML = html;
-            } else {
-                renderTable();
-            }
-        } else {
-            container.innerHTML = '<div class="no-data">خطأ: ' + result.message + '</div>';
-        }
+                if (user.role !== 'viewer') html += '<button class="btn btn-primary" onclick="document.getElementById(\'addStationBtn\').click()" style="margin-top:15px;"><i class="fas fa-plus"></i> إضافة أول محطة</button>';
+                container.innerHTML = html + '</div>';
+            } else { renderTable(); }
+        } else { container.innerHTML = '<div class="no-data">خطأ: ' + result.message + '</div>'; }
     }
 
-function renderTable() {
-    let html = '<div class="table-responsive"><table class="data-table"><thead>发展' +
-        '<th>#</th>' +
-        '<th>اسم المحطة</th>' +
-        '<th>الكود</th>' +
-        '<th>النوع</th>' +
-        '<th>المصب</th>' +
-        '<th>الموقع</th>' +
-        '<th>منطقة الخدمة</th>' +
-        '<th>الطاقة (م³/س)</th>' +
-        '<th>خط الطرد (مم)</th>' +
-        '<th>طول الطرد (م)</th>' +
-        '<th>نوع الخط</th>' +
-        '<th>قطر البيارة (م)</th>' +
-        '<th>عمق البيارة (م)</th>' +
-        '<th>قطر الدخول (مم)</th>' +
-        '<th>شبكة الانحدار (كم)</th>' +
-        '<th>الحالة</th>' +
-        '<th>الإجراءات</th>' +
-        ' </thead><tbody>';
-    
-    for (let i = 0; i < stationsData.length; i++) {
-        const s = stationsData[i];
-        
-        // تحديد حالة المحطة
-        let statusClass = 'status-active';
-        let statusText = 'نشطة';
-        if (s.status === 'maintenance') { statusClass = 'status-maintenance'; statusText = 'صيانة'; }
-        else if (s.status === 'inactive') { statusClass = 'status-inactive'; statusText = 'متوقفة'; }
-        else if (s.status === 'emergency') { statusClass = 'status-emergency'; statusText = 'طوارئ'; }
-        
-        // نوع المحطة مع أيقونة
-        let typeIcon = '';
-        let typeText = s.station_type || '---';
-        if (typeText === 'معالجة') typeIcon = '🏭 ';
-        else if (typeText === 'رئيسية') typeIcon = '🏢 ';
-        else if (typeText === 'فرعية') typeIcon = '🏘️ ';
-        
-        // اسم محطة المصب
-        let downstreamName = '---';
-        if (s.downstream_station_id) {
-            const downstream = stationsData.find(st => st.id == s.downstream_station_id);
-            downstreamName = downstream ? downstream.station_name : 'غير معروف';
-        }
-        
-        // الموقع ومنطقة الخدمة
-        let locationText = s.location && s.location.trim() !== '' ? s.location : '---';
-        let serviceAreaText = s.service_area && s.service_area.trim() !== '' ? s.service_area : '---';
-        let capacityText = s.capacity ? s.capacity + ' م³/س' : '---';
-        let dischargeDiameterText = s.discharge_pipe_diameter_mm ? s.discharge_pipe_diameter_mm + ' مم' : '---';
-        let dischargeLengthText = s.discharge_pipe_length_m ? s.discharge_pipe_length_m + ' م' : '---';
-        let pipeTypeText = s.pipe_type || '---';
-        let manholeDiameterText = s.manhole_diameter_m ? s.manhole_diameter_m + ' م' : '---';
-        let manholeDepthText = s.manhole_depth_m ? s.manhole_depth_m + ' م' : '---';
-        let inletDiameterText = s.inlet_pipe_diameter_mm ? s.inlet_pipe_diameter_mm + ' مم' : '---';
-        let gravityLengthText = s.gravity_network_length_km ? s.gravity_network_length_km + ' كم' : '---';
-        
-        html += '发展' +
-            '发展' + (i+1) + '发展' +
-            '发展<i class="fas fa-water"></i> ' + (s.station_name || '---') + '发展' +
-            '发展' + (s.station_code || '---') + '发展' +
-            '发展' + typeIcon + typeText + '发展' +
-            '发展' + downstreamName + '发展' +
-            '发展' + locationText + '发展' +
-            '发展' + serviceAreaText + '发展' +
-            '发展' + capacityText + '发展' +
-            '发展' + dischargeDiameterText + '发展' +
-            '发展' + dischargeLengthText + '发展' +
-            '发展' + pipeTypeText + '发展' +
-            '发展' + manholeDiameterText + '发展' +
-            '发展' + manholeDepthText + '发展' +
-            '发展' + inletDiameterText + '发展' +
-            '发展' + gravityLengthText + '发展' +
-            '发展<span class="status-badge ' + statusClass + '">' + statusText + '</span>发展' +
-            '<td class="action-buttons">';
-        
-        if (user.role !== 'viewer') {
-            html += '<button class="btn btn-sm btn-primary" onclick="editStation(' + s.id + ')"><i class="fas fa-edit"></i> تعديل</button>';
-            html += '<button class="btn btn-sm btn-danger" onclick="deleteStation(' + s.id + ')"><i class="fas fa-trash"></i> حذف</button>';
-        } else {
-            html += '<span class="status-badge" style="background:rgba(0,212,255,0.1);">عرض فقط</span>';
-        }
-        
-        html += '发展发展';
+    function renderTable() {
+        let html = '<div class="table-responsive"><table class="data-table"><thead><tr>' +
+            '<th>#</th><th>اسم المحطة</th><th>الكود</th><th>النوع</th><th>المصب</th><th>الموقع</th><th>منطقة الخدمة</th><th>الطاقة (م³/س)</th><th>الحالة</th><th>الإجراءات</th>' +
+            '</tr></thead><tbody>';
+        stationsData.forEach((s, i) => {
+            let statusClass = s.status === 'maintenance' ? 'status-maintenance' : s.status === 'inactive' ? 'status-inactive' : s.status === 'emergency' ? 'status-emergency' : 'status-active';
+            let typeIcon = s.station_type === 'معالجة' ? '🏭 ' : s.station_type === 'رئيسية' ? '🏢 ' : '🏘️ ';
+            const ds = stationsData.find(st => st.id == s.downstream_station_id);
+            html += `<tr><td>${i+1}</td><td><i class="fas fa-water"></i> ${s.station_name || '---'}</td><td>${s.station_code || '---'}</td><td>${typeIcon}${s.station_type || '---'}</td><td>${ds ? ds.station_name : '---'}</td><td>${s.location || '---'}</td><td>${s.service_area || '---'}</td><td>${s.capacity ? s.capacity + ' م³/س' : '---'}</td><td><span class="status-badge ${statusClass}">${s.status}</span></td><td class="action-buttons">`;
+            if (user.role !== 'viewer') {
+                html += `<button class="btn btn-sm btn-primary" onclick="editStation(${s.id})"><i class="fas fa-edit"></i> عرض</button><button class="btn btn-sm btn-danger" onclick="deleteStation(${s.id})"><i class="fas fa-trash"></i> حذف</button>`;
+            } else { html += '<span class="status-badge" style="background:rgba(0,212,255,0.1);">عرض فقط</span>'; }
+            html += '</td></tr>';
+        });
+        document.getElementById('stationsList').innerHTML = html + '</tbody></table></div>';
     }
-    html += '</tbody> </div>';
-    document.getElementById('stationsList').innerHTML = html;
-}
-    // ========== دوال المودال ==========
-    function closeModal() {
-        document.getElementById('stationModal').classList.remove('active');
-    }
+
+    function closeModal() { document.getElementById('stationModal').classList.remove('active'); }
     window.closeModal = closeModal;
 
-    // ========== فتح المودال لإضافة جديدة ==========
-    document.getElementById('addStationBtn').addEventListener('click', function() {
-        if (user.role === 'viewer') {
-            alert('⚠️ ليس لديك صلاحية للإضافة');
-            return;
-        }
+    document.getElementById('addStationBtn').addEventListener('click', () => {
+        if (user.role === 'viewer') return alert('⚠️ ليس لديك صلاحية');
         document.getElementById('stationForm').reset();
         document.getElementById('stationId').value = '';
-        document.getElementById('stationStatus').value = 'active';
-        document.getElementById('stationType').value = 'معالجة';
         document.getElementById('modalTitle').innerHTML = '<i class="fas fa-plus-circle"></i> إضافة محطة جديدة';
         loadDownstreamStations();
         document.getElementById('stationModal').classList.add('active');
     });
 
-    // ========== حفظ البيانات ==========
     document.getElementById('stationForm').addEventListener('submit', async function(e) {
         e.preventDefault();
-        
         const id = document.getElementById('stationId').value;
         const data = {
             station_name: document.getElementById('stationName').value,
@@ -628,96 +431,57 @@ function renderTable() {
             location: document.getElementById('stationLocation').value,
             service_area: document.getElementById('serviceArea').value,
             capacity: parseFloat(document.getElementById('stationCapacity').value) || 0,
-            discharge_pipe_diameter: parseFloat(document.getElementById('dischargePipeDiameter').value) || null,
-            discharge_pipe_length: parseFloat(document.getElementById('dischargePipeLength').value) || null,
-            pipe_type: document.getElementById('pipeType').value || null,
-            manhole_diameter: parseFloat(document.getElementById('manholeDiameter').value) || null,
-            manhole_depth: parseFloat(document.getElementById('manholeDepth').value) || null,
-            inlet_pipe_diameter: parseFloat(document.getElementById('inletPipeDiameter').value) || null,
-            gravity_network_length: parseFloat(document.getElementById('gravityNetworkLength').value) || null,
             status: document.getElementById('stationStatus').value,
-            notes: document.getElementById('stationNotes').value
+            notes: document.getElementById('stationNotes').value,
+            // الحقول الإضافية
+            pipe_diameter: document.getElementById('pipeDiameter').value,
+            pipe_length: document.getElementById('pipeLength').value,
+            pipe_type: document.getElementById('pipeType').value,
+            well_diameter: document.getElementById('wellDiameter').value,
+            well_depth: document.getElementById('wellDepth').value,
+            inlet_diameter: document.getElementById('inletDiameter').value,
+            sewage_network: document.getElementById('sewageNetwork').value,
+            updated_at: new Date().toISOString()
         };
-        
-        if (!data.station_name) {
-            alert('⚠️ الرجاء إدخال اسم المحطة');
-            return;
-        }
-        
-        let result;
-        if (id) {
-            result = await updateStationDirect(id, data);
-        } else {
-            result = await createStationDirect(data);
-        }
-        
-        if (result.success) {
-            closeModal();
-            loadStations();
-            if (window.parent && window.parent.showToast) {
-                window.parent.showToast(result.message);
-            }
-        } else {
-            alert('❌ ' + result.message);
-        }
+        if (!id) data.created_at = new Date().toISOString();
+
+        let result = id ? await updateStationDirect(id, data) : await createStationDirect(data);
+        if (result.success) { closeModal(); loadStations(); if (window.parent?.showToast) window.parent.showToast(result.message); }
+        else alert('❌ ' + result.message);
     });
 
-    // ========== تعديل محطة ==========
     window.editStation = function(id) {
-        if (user.role === 'viewer') {
-            alert('⚠️ ليس لديك صلاحية للتعديل');
-            return;
-        }
-        const station = stationsData.find(s => s.id == id);
-        if (station) {
-            document.getElementById('stationId').value = station.id;
-            document.getElementById('stationName').value = station.station_name || '';
-            document.getElementById('stationCode').value = station.station_code || '';
-            document.getElementById('stationType').value = station.station_type || 'معالجة';
-            document.getElementById('stationLocation').value = station.location || '';
-            document.getElementById('serviceArea').value = station.service_area || '';
-            document.getElementById('stationCapacity').value = station.capacity || '';
-            document.getElementById('dischargePipeDiameter').value = station.discharge_pipe_diameter_mm || '';
-            document.getElementById('dischargePipeLength').value = station.discharge_pipe_length_m || '';
-            document.getElementById('pipeType').value = station.pipe_type || '';
-            document.getElementById('manholeDiameter').value = station.manhole_diameter_m || '';
-            document.getElementById('manholeDepth').value = station.manhole_depth_m || '';
-            document.getElementById('inletPipeDiameter').value = station.inlet_pipe_diameter_mm || '';
-            document.getElementById('gravityNetworkLength').value = station.gravity_network_length_km || '';
-            document.getElementById('stationStatus').value = station.status || 'active';
-            document.getElementById('stationNotes').value = station.notes || '';
+        const s = stationsData.find(st => st.id == id);
+        if (s) {
+            document.getElementById('stationId').value = s.id;
+            document.getElementById('stationName').value = s.station_name || '';
+            document.getElementById('stationCode').value = s.station_code || '';
+            document.getElementById('stationType').value = s.station_type || 'معالجة';
+            document.getElementById('stationLocation').value = s.location || '';
+            document.getElementById('serviceArea').value = s.service_area || '';
+            document.getElementById('stationCapacity').value = s.capacity || '';
+            document.getElementById('stationStatus').value = s.status || 'active';
+            document.getElementById('stationNotes').value = s.notes || '';
+            // ملء الحقول الإضافية عند التعديل
+            document.getElementById('pipeDiameter').value = s.pipe_diameter || '';
+            document.getElementById('pipeLength').value = s.pipe_length || '';
+            document.getElementById('pipeType').value = s.pipe_type || '';
+            document.getElementById('wellDiameter').value = s.well_diameter || '';
+            document.getElementById('wellDepth').value = s.well_depth || '';
+            document.getElementById('inletDiameter').value = s.inlet_diameter || '';
+            document.getElementById('sewageNetwork').value = s.sewage_network || '';
             
             loadDownstreamStations();
-            if (station.downstream_station_id) {
-                setTimeout(() => {
-                    document.getElementById('downstreamStationId').value = station.downstream_station_id;
-                }, 100);
-            }
-            
+            setTimeout(() => { document.getElementById('downstreamStationId').value = s.downstream_station_id || ''; }, 100);
             document.getElementById('modalTitle').innerHTML = '<i class="fas fa-edit"></i> تعديل محطة';
             document.getElementById('stationModal').classList.add('active');
         }
     };
 
-    // ========== حذف محطة ==========
     window.deleteStation = function(id) {
-        if (user.role === 'viewer') {
-            alert('⚠️ ليس لديك صلاحية للحذف');
-            return;
-        }
-        if (confirm('⚠️ هل أنت متأكد من حذف هذه المحطة؟')) {
-            deleteStationDirect(id).then(result => {
-                if (result.success) {
-                    loadStations();
-                    if (window.parent && window.parent.showToast) window.parent.showToast(result.message);
-                } else {
-                    alert(result.message);
-                }
-            });
-        }
+        if (confirm('⚠️ هل أنت متأكد؟')) deleteStationDirect(id).then(r => { if (r.success) loadStations(); });
     };
 
-    // بدء التحميل
     loadStations();
 </script>
 </body>
