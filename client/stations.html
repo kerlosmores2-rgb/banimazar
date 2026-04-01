@@ -119,7 +119,7 @@
             background: #1e2a3a;
             border-radius: 20px;
             width: 90%;
-            max-width: 600px;
+            max-width: 700px;
             max-height: 85vh;
             overflow-y: auto;
             padding: 25px;
@@ -164,6 +164,11 @@
             margin-top: 5px;
             color: #aaa;
             font-size: 0.7rem;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
         }
         .form-actions {
             display: flex;
@@ -284,7 +289,49 @@
                 <input type="number" id="stationCapacity" step="0.01" placeholder="مثال: 500">
             </div>
             
-            <!-- 8. الحالة -->
+            <!-- 8. خط الطرد القطر (مم) -->
+            <div class="form-group">
+                <label>خط الطرد القطر (مم)</label>
+                <input type="number" id="dischargePipeDiameter" step="1" placeholder="مثال: 200">
+            </div>
+            
+            <!-- 9. خط الطرد الطول (م) -->
+            <div class="form-group">
+                <label>خط الطرد الطول (م)</label>
+                <input type="number" id="dischargePipeLength" step="0.01" placeholder="مثال: 1500">
+            </div>
+            
+            <!-- 10. نوع الخط -->
+            <div class="form-group">
+                <label>نوع الخط</label>
+                <input type="text" id="pipeType" placeholder="مثال: GRP / HDPE / فولاذ">
+            </div>
+            
+            <!-- 11. قطر البيارة (م) -->
+            <div class="form-group">
+                <label>قطر البيارة (م)</label>
+                <input type="number" id="manholeDiameter" step="0.01" placeholder="مثال: 3.5">
+            </div>
+            
+            <!-- 12. عمق البيارة (م) -->
+            <div class="form-group">
+                <label>عمق البيارة (م)</label>
+                <input type="number" id="manholeDepth" step="0.01" placeholder="مثال: 6">
+            </div>
+            
+            <!-- 13. قطر الدخول (مم) -->
+            <div class="form-group">
+                <label>قطر الدخول (مم)</label>
+                <input type="number" id="inletPipeDiameter" step="1" placeholder="مثال: 300">
+            </div>
+            
+            <!-- 14. خط شبكة الانحدار (كم) -->
+            <div class="form-group">
+                <label>خط شبكة الانحدار (كم)</label>
+                <input type="number" id="gravityNetworkLength" step="0.01" placeholder="مثال: 2.5">
+            </div>
+            
+            <!-- 15. الحالة -->
             <div class="form-group">
                 <label>الحالة</label>
                 <select id="stationStatus">
@@ -295,7 +342,7 @@
                 </select>
             </div>
             
-            <!-- 9. ملاحظات -->
+            <!-- 16. ملاحظات -->
             <div class="form-group">
                 <label>ملاحظات</label>
                 <textarea id="stationNotes" rows="3" placeholder="أي ملاحظات إضافية عن المحطة..."></textarea>
@@ -350,6 +397,13 @@
                 location: data.location || null,
                 service_area: data.service_area || null,
                 capacity: parseFloat(data.capacity) || null,
+                discharge_pipe_diameter_mm: parseFloat(data.discharge_pipe_diameter) || null,
+                discharge_pipe_length_m: parseFloat(data.discharge_pipe_length) || null,
+                pipe_type: data.pipe_type || null,
+                manhole_diameter_m: parseFloat(data.manhole_diameter) || null,
+                manhole_depth_m: parseFloat(data.manhole_depth) || null,
+                inlet_pipe_diameter_mm: parseFloat(data.inlet_pipe_diameter) || null,
+                gravity_network_length_km: parseFloat(data.gravity_network_length) || null,
                 status: data.status || 'active',
                 notes: data.notes || null,
                 created_at: new Date().toISOString(),
@@ -376,6 +430,13 @@
                 location: data.location || null,
                 service_area: data.service_area || null,
                 capacity: parseFloat(data.capacity) || null,
+                discharge_pipe_diameter_mm: parseFloat(data.discharge_pipe_diameter) || null,
+                discharge_pipe_length_m: parseFloat(data.discharge_pipe_length) || null,
+                pipe_type: data.pipe_type || null,
+                manhole_diameter_m: parseFloat(data.manhole_diameter) || null,
+                manhole_depth_m: parseFloat(data.manhole_depth) || null,
+                inlet_pipe_diameter_mm: parseFloat(data.inlet_pipe_diameter) || null,
+                gravity_network_length_km: parseFloat(data.gravity_network_length) || null,
                 status: data.status || 'active',
                 notes: data.notes || null,
                 updated_at: new Date().toISOString()
@@ -446,7 +507,7 @@
     }
 
 function renderTable() {
-    let html = '<div class="table-responsive"><table class="data-table"><thead><tr>' +
+    let html = '<div class="table-responsive"><table class="data-table"><thead>发展' +
         '<th>#</th>' +
         '<th>اسم المحطة</th>' +
         '<th>الكود</th>' +
@@ -455,9 +516,16 @@ function renderTable() {
         '<th>الموقع</th>' +
         '<th>منطقة الخدمة</th>' +
         '<th>الطاقة (م³/س)</th>' +
+        '<th>خط الطرد (مم)</th>' +
+        '<th>طول الطرد (م)</th>' +
+        '<th>نوع الخط</th>' +
+        '<th>قطر البيارة (م)</th>' +
+        '<th>عمق البيارة (م)</th>' +
+        '<th>قطر الدخول (مم)</th>' +
+        '<th>شبكة الانحدار (كم)</th>' +
         '<th>الحالة</th>' +
         '<th>الإجراءات</th>' +
-        '</tr></thead><tbody>';
+        ' </thead><tbody>';
     
     for (let i = 0; i < stationsData.length; i++) {
         const s = stationsData[i];
@@ -487,29 +555,43 @@ function renderTable() {
         let locationText = s.location && s.location.trim() !== '' ? s.location : '---';
         let serviceAreaText = s.service_area && s.service_area.trim() !== '' ? s.service_area : '---';
         let capacityText = s.capacity ? s.capacity + ' م³/س' : '---';
+        let dischargeDiameterText = s.discharge_pipe_diameter_mm ? s.discharge_pipe_diameter_mm + ' مم' : '---';
+        let dischargeLengthText = s.discharge_pipe_length_m ? s.discharge_pipe_length_m + ' م' : '---';
+        let pipeTypeText = s.pipe_type || '---';
+        let manholeDiameterText = s.manhole_diameter_m ? s.manhole_diameter_m + ' م' : '---';
+        let manholeDepthText = s.manhole_depth_m ? s.manhole_depth_m + ' م' : '---';
+        let inletDiameterText = s.inlet_pipe_diameter_mm ? s.inlet_pipe_diameter_mm + ' مم' : '---';
+        let gravityLengthText = s.gravity_network_length_km ? s.gravity_network_length_km + ' كم' : '---';
         
-        html += '<tr>' +
-            '<td>' + (i+1) + '</td>' +
-            '<td><i class="fas fa-water"></i> ' + (s.station_name || '---') + '</td>' +
-            '<td>' + (s.station_code || '---') + '</td>' +
-            '<td>' + typeIcon + typeText + '</td>' +
-            '<td>' + downstreamName + '</td>' +
-            '<td>' + locationText + '</td>' +
-            '<td>' + serviceAreaText + '</td>' +
-            '<td>' + capacityText + '</td>' +
-            '<td><span class="status-badge ' + statusClass + '">' + statusText + '</span></td>' +
+        html += '发展' +
+            '发展' + (i+1) + '发展' +
+            '发展<i class="fas fa-water"></i> ' + (s.station_name || '---') + '发展' +
+            '发展' + (s.station_code || '---') + '发展' +
+            '发展' + typeIcon + typeText + '发展' +
+            '发展' + downstreamName + '发展' +
+            '发展' + locationText + '发展' +
+            '发展' + serviceAreaText + '发展' +
+            '发展' + capacityText + '发展' +
+            '发展' + dischargeDiameterText + '发展' +
+            '发展' + dischargeLengthText + '发展' +
+            '发展' + pipeTypeText + '发展' +
+            '发展' + manholeDiameterText + '发展' +
+            '发展' + manholeDepthText + '发展' +
+            '发展' + inletDiameterText + '发展' +
+            '发展' + gravityLengthText + '发展' +
+            '发展<span class="status-badge ' + statusClass + '">' + statusText + '</span>发展' +
             '<td class="action-buttons">';
         
         if (user.role !== 'viewer') {
-            html += '<button class="btn btn-sm btn-primary" onclick="editStation(' + s.id + ')"><i class="fas fa-edit"></i> عرض</button>';
+            html += '<button class="btn btn-sm btn-primary" onclick="editStation(' + s.id + ')"><i class="fas fa-edit"></i> تعديل</button>';
             html += '<button class="btn btn-sm btn-danger" onclick="deleteStation(' + s.id + ')"><i class="fas fa-trash"></i> حذف</button>';
         } else {
             html += '<span class="status-badge" style="background:rgba(0,212,255,0.1);">عرض فقط</span>';
         }
         
-        html += '</td></tr>';
+        html += '发展发展';
     }
-    html += '</tbody></table></div>';
+    html += '</tbody> </div>';
     document.getElementById('stationsList').innerHTML = html;
 }
     // ========== دوال المودال ==========
@@ -546,6 +628,13 @@ function renderTable() {
             location: document.getElementById('stationLocation').value,
             service_area: document.getElementById('serviceArea').value,
             capacity: parseFloat(document.getElementById('stationCapacity').value) || 0,
+            discharge_pipe_diameter: parseFloat(document.getElementById('dischargePipeDiameter').value) || null,
+            discharge_pipe_length: parseFloat(document.getElementById('dischargePipeLength').value) || null,
+            pipe_type: document.getElementById('pipeType').value || null,
+            manhole_diameter: parseFloat(document.getElementById('manholeDiameter').value) || null,
+            manhole_depth: parseFloat(document.getElementById('manholeDepth').value) || null,
+            inlet_pipe_diameter: parseFloat(document.getElementById('inletPipeDiameter').value) || null,
+            gravity_network_length: parseFloat(document.getElementById('gravityNetworkLength').value) || null,
             status: document.getElementById('stationStatus').value,
             notes: document.getElementById('stationNotes').value
         };
@@ -588,6 +677,13 @@ function renderTable() {
             document.getElementById('stationLocation').value = station.location || '';
             document.getElementById('serviceArea').value = station.service_area || '';
             document.getElementById('stationCapacity').value = station.capacity || '';
+            document.getElementById('dischargePipeDiameter').value = station.discharge_pipe_diameter_mm || '';
+            document.getElementById('dischargePipeLength').value = station.discharge_pipe_length_m || '';
+            document.getElementById('pipeType').value = station.pipe_type || '';
+            document.getElementById('manholeDiameter').value = station.manhole_diameter_m || '';
+            document.getElementById('manholeDepth').value = station.manhole_depth_m || '';
+            document.getElementById('inletPipeDiameter').value = station.inlet_pipe_diameter_mm || '';
+            document.getElementById('gravityNetworkLength').value = station.gravity_network_length_km || '';
             document.getElementById('stationStatus').value = station.status || 'active';
             document.getElementById('stationNotes').value = station.notes || '';
             
