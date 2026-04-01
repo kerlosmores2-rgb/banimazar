@@ -108,12 +108,12 @@
                 <div class="section-box">
                     <div class="section-title">ثالثاً: وقود المولد (السولار)</div>
                     <div class="form-grid row-line">
-                        <div class="input-group"><label>معدل الحمل (تلقائي)</label><input type="number" id="g_rate_load" readonly></div>
+                        <div class="input-group"><label>معدل الحمل (لتر/ساعة)</label><input type="number" id="g_rate_load" readonly></div>
                         <div class="input-group"><label>ساعات التشغيل ع الحمل</label><input type="number" id="s_h_load" value="0" step="0.1" oninput="calc()"></div>
                         <div class="input-group"><label>كمية مستهلكة بحمل</label><input type="number" id="s_q_load" readonly></div>
                     </div>
                     <div class="form-grid row-line">
-                        <div class="input-group"><label>معدل بدون حمل (تلقائي)</label><input type="number" id="g_rate_no" readonly></div>
+                        <div class="input-group"><label>معدل بدون حمل (لتر/ساعة)</label><input type="number" id="g_rate_no" readonly></div>
                         <div class="input-group"><label>ساعات تشغيل بدون حمل</label><input type="number" id="s_h_no" value="0" step="0.1" oninput="calc()"></div>
                         <div class="input-group"><label>كمية مستهلكة بدون حمل</label><input type="number" id="s_q_no" readonly></div>
                     </div>
@@ -167,7 +167,9 @@
             if(!sid) return;
             const sPumps = DB.pumps.filter(p => String(p.station_id) === String(sid));
             ['p1_sel', 'p2_sel'].forEach(id => {
-                document.getElementById(id).innerHTML = '<option value="0" data-flow="0">-- اختر --</option>' + sPumps.map(p => `<option value="${p.id}" data-flow="${p.flow_rate_m3h || 0}">${p.pump_number || 'بدون رقم'}</option>`).join('');
+                const select = document.getElementById(id);
+                select.innerHTML = '<option value="0" data-flow="0">-- اختر --</option>' + sPumps.map(p => `<option value="${p.id}" data-flow="${p.flow_rate_m3h || 0}">${p.pump_number || 'بدون رقم'}</option>`).join('');
+                select.dataset.flow = 0;
             });
             const gen = DB.gens.find(g => String(g.station_id) === String(sid));
             document.getElementById('g_rate_load').value = gen?.fuel_rate_with_load || 0;
@@ -187,7 +189,8 @@
 
         function upPump(n) {
             const sel = document.getElementById(`p${n}_sel`);
-            sel.dataset.flow = sel.options[sel.selectedIndex].dataset.flow || 0;
+            const selectedOption = sel.options[sel.selectedIndex];
+            sel.dataset.flow = selectedOption?.getAttribute('data-flow') || 0;
             calc();
         }
 
@@ -199,16 +202,22 @@
             // 1. مياه
             const h1 = parseFloat(document.getElementById('h1').value)||0;
             const h2 = parseFloat(document.getElementById('h2').value)||0;
-            const q1 = h1 * (parseFloat(document.getElementById('p1_sel').dataset.flow)||0);
-            const q2 = h2 * (parseFloat(document.getElementById('p2_sel').dataset.flow)||0);
+            const flow1 = parseFloat(document.getElementById('p1_sel').dataset.flow) || 0;
+            const flow2 = parseFloat(document.getElementById('p2_sel').dataset.flow) || 0;
+            const q1 = h1 * flow1;
+            const q2 = h2 * flow2;
             document.getElementById('q1').value = q1.toFixed(2);
             document.getElementById('q2').value = q2.toFixed(2);
             document.getElementById('res_total_h').innerText = (h1 + h2).toFixed(1);
             document.getElementById('res_total_q').innerText = (q1 + q2).toFixed(2);
 
             // 2. كهرباء
-            const d1 = Math.max(0, (parseFloat(document.getElementById('e1_c').value)||0) - (parseFloat(document.getElementById('e1_p').value)||0));
-            const d2 = Math.max(0, (parseFloat(document.getElementById('e2_c').value)||0) - (parseFloat(document.getElementById('e2_p').value)||0));
+            const e1_p = parseFloat(document.getElementById('e1_p').value)||0;
+            const e1_c = parseFloat(document.getElementById('e1_c').value)||0;
+            const e2_p = parseFloat(document.getElementById('e2_p').value)||0;
+            const e2_c = parseFloat(document.getElementById('e2_c').value)||0;
+            const d1 = Math.max(0, e1_c - e1_p);
+            const d2 = Math.max(0, e2_c - e2_p);
             document.getElementById('e1_diff').value = d1;
             document.getElementById('e2_diff').value = d2;
             document.getElementById('e1_cost').value = (d1 * pE).toFixed(2);
@@ -216,23 +225,32 @@
             document.getElementById('res_total_kw').innerText = d1 + d2;
             document.getElementById('res_total_e_cost').innerText = ((d1+d2)*pE).toLocaleString();
 
-            // 3. سولار
-            const sL = (parseFloat(document.getElementById('s_h_load').value)||0) * (parseFloat(document.getElementById('fuel_rate_with_load').value)||0);
-            const sN = (parseFloat(document.getElementById('s_h_no').value)||0) * (parseFloat(document.getElementById('fuel_rate_no_load').value)||0);
+            // 3. سولار - التعديل المطلوب (استخدام g_rate_load و g_rate_no)
+            const rateLoad = parseFloat(document.getElementById('g_rate_load').value) || 0;
+            const rateNo = parseFloat(document.getElementById('g_rate_no').value) || 0;
+            const s_h_load = parseFloat(document.getElementById('s_h_load').value)||0;
+            const s_h_no = parseFloat(document.getElementById('s_h_no').value)||0;
+            const sL = s_h_load * rateLoad;
+            const sN = s_h_no * rateNo;
+            const totS = sL + sN;
             document.getElementById('s_q_load').value = sL.toFixed(2);
             document.getElementById('s_q_no').value = sN.toFixed(2);
-            const totS = sL + sN;
             document.getElementById('s_cons').value = totS.toFixed(2);
+            
             const sAdd = parseFloat(document.getElementById('s_added').value)||0;
             const sPrev = parseFloat(document.getElementById('s_prev_bal').value)||0;
             document.getElementById('s_curr_bal').value = (sPrev + sAdd - totS).toFixed(2);
 
             // 4. مياه شرب
-            const wD = Math.max(0, (parseFloat(document.getElementById('w_curr').value)||0) - (parseFloat(document.getElementById('w_prev').value)||0));
+            const wPrev = parseFloat(document.getElementById('w_prev').value)||0;
+            const wCurr = parseFloat(document.getElementById('w_curr').value)||0;
+            const wD = Math.max(0, wCurr - wPrev);
             document.getElementById('w_diff').value = wD.toFixed(2);
             document.getElementById('w_cost').value = (wD * pW).toFixed(2);
 
-            document.getElementById('grand_total').innerText = ((d1+d2)*pE + totS*pS + wD*pW).toLocaleString();
+            // الإجمالي
+            const total = ((d1+d2)*pE) + (totS*pS) + (wD*pW);
+            document.getElementById('grand_total').innerText = total.toLocaleString();
         }
 
         document.getElementById('mainForm').onsubmit = async (e) => {
@@ -261,7 +279,18 @@
             const { data } = await _supabase.from('station_costs').select('*').order('accounting_month',{ascending:false});
             const pE = parseFloat(localStorage.getItem('cfg_elec'))||0;
             const pS = parseFloat(localStorage.getItem('cfg_solar'))||0;
-            document.getElementById('tableBody').innerHTML = (data||[]).map(r => `<tr><td>${r.station_name}</td><td>${r.accounting_month.substring(0,7)}</td><td>${r.total_water_produced}</td><td>${r.total_kw}</td><td>${(r.total_kw*pE).toLocaleString()}</td><td>${r.solar_consumed}</td><td>${((r.total_kw*pE)+(r.solar_consumed*pS)).toLocaleString()}</td><td><button onclick="delRec('${r.id}')" style="background:var(--danger); color:white; border:none; padding:5px; border-radius:5px;"><i class="fas fa-trash"></i></button></td></tr>`).join('');
+            document.getElementById('tableBody').innerHTML = (data||[]).map(r => `
+                <tr>
+                    <td>${r.station_name}</td>
+                    <td>${r.accounting_month.substring(0,7)}</td>
+                    <td>${r.total_water_produced}</td>
+                    <td>${r.total_kw}</td>
+                    <td>${(r.total_kw*pE).toLocaleString()}</td>
+                    <td>${r.solar_consumed}</td>
+                    <td>${((r.total_kw*pE)+(r.solar_consumed*pS)).toLocaleString()}</td>
+                    <td><button onclick="delRec('${r.id}')" style="background:var(--danger); color:white; border:none; padding:5px; border-radius:5px;"><i class="fas fa-trash"></i></button></td>
+                </tr>
+            `).join('');
         }
 
         function saveCfg() {
