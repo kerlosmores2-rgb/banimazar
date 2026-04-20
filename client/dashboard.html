@@ -420,18 +420,18 @@
                 <i class="fas fa-chevron-left" style="margin-right: auto; font-size: 0.7rem; transition: transform 0.3s;"></i>
             </div>
             <div class="reports-submenu" id="reportsSubmenu">
-                <div class="nav-item" data-report="asset_status">تقرير حالة أصل</div>
-                <div class="nav-item" data-report="station_assets">تقرير أصول محطة</div>
-                <div class="nav-item" data-report="water_meter">تقرير استهلاك عداد مياه الشرب</div>
-                <div class="nav-item" data-report="diesel_consumption">تقرير استهلاك السولار</div>
-                <div class="nav-item" data-report="monthly_efficiency">تقرير كفاءة التشغيل الشهري</div>
-                <div class="nav-item" data-report="pf_penalty_reg">تسجيل اخطار غرامة معامل قدرة</div>
-                <div class="nav-item" data-report="pf_notifications">تقرير اخطارات معامل قدرة</div>
-                <div class="nav-item" data-report="pf_panels_status">تقرير حالة لوحات معامل القدرة</div>
-                <div class="nav-item" data-report="energy_consumption">تقرير استهلاك الطاقة</div>
-                <div class="nav-item" data-report="faults_reports">تقرير بلاغات أعطال</div>
-                <div class="nav-item" data-report="employees_report">تقرير العاملين</div>
-                <div class="nav-item" data-report="technical_summary">تقرير فني شامل</div>
+                <div class="nav-item" data-report="AssetLifecycleReport">تقرير حالة أصل</div>
+                <div class="nav-item" data-report="SingleStationAssets">تقرير أصول محطة</div>
+                <div class="nav-item" data-report="DomesticWaterReport">تقرير استهلاك عداد مياه الشرب</div>
+                <div class="nav-item" data-report="GeneratorFuelReport">تقرير استهلاك السولار</div>
+                <div class="nav-item" data-report="MonthlyPerformanceReport">تقرير كفاءة التشغيل الشهري</div>
+                <div class="nav-item" data-report="PowerFactorFineNotice">تسجيل اخطار غرامة معامل قدرة</div>
+                <div class="nav-item" data-report="PowerFactorFinesReport">تقرير اخطارات معامل قدرة</div>
+                <div class="nav-item" data-report="PowerFactorReport">تقرير حالة لوحات معامل القدرة</div>
+                <div class="nav-item" data-report="StationElectricityReport">تقرير استهلاك الطاقة</div>
+                <div class="nav-item" data-report="StationFaultsReport">تقرير بلاغات أعطال</div>
+                <div class="nav-item" data-report="StationStaffReport">تقرير العاملين</div>
+                <div class="nav-item" data-report="StationTechnicalReport">تقرير فني شامل</div>
             </div>
 
             <div class="nav-item" data-page="employees">
@@ -647,25 +647,26 @@
         }
     }
 
-    // دالة تحميل التقارير عبر iframe
+    // دالة تحميل التقارير عبر iframe باستخدام أسماء الملفات الصحيحة
     function loadReport(reportKey) {
         currentPage = 'report_' + reportKey;
         let title = '';
         let fileName = '';
         
+        // استخدام أسماء الملفات الصحيحة من المرفق
         const reportMap = {
-            'asset_status': { title: 'تقرير حالة أصل', file: 'report_asset_status.html' },
-            'station_assets': { title: 'تقرير أصول محطة', file: 'report_station_assets.html' },
-            'water_meter': { title: 'تقرير استهلاك عداد مياه الشرب', file: 'report_water_meter.html' },
-            'diesel_consumption': { title: 'تقرير استهلاك السولار', file: 'report_diesel_consumption.html' },
-            'monthly_efficiency': { title: 'تقرير كفاءة التشغيل الشهري', file: 'report_monthly_efficiency.html' },
-            'pf_penalty_reg': { title: 'تسجيل اخطار غرامة معامل قدرة', file: 'report_pf_penalty_reg.html' },
-            'pf_notifications': { title: 'تقرير اخطارات معامل قدرة', file: 'report_pf_notifications.html' },
-            'pf_panels_status': { title: 'تقرير حالة لوحات معامل القدرة', file: 'report_pf_panels_status.html' },
-            'energy_consumption': { title: 'تقرير استهلاك الطاقة', file: 'report_energy_consumption.html' },
-            'faults_reports': { title: 'تقرير بلاغات أعطال', file: 'report_faults_reports.html' },
-            'employees_report': { title: 'تقرير العاملين', file: 'report_employees.html' },
-            'technical_summary': { title: 'تقرير فني شامل', file: 'report_technical_summary.html' }
+            'AssetLifecycleReport': { title: 'تقرير حالة أصل', file: 'AssetLifecycleReport.html' },
+            'SingleStationAssets': { title: 'تقرير أصول محطة', file: 'SingleStationAssets.html' },
+            'DomesticWaterReport': { title: 'تقرير استهلاك عداد مياه الشرب', file: 'DomesticWaterReport.html' },
+            'GeneratorFuelReport': { title: 'تقرير استهلاك السولار', file: 'GeneratorFuelReport.html' },
+            'MonthlyPerformanceReport': { title: 'تقرير كفاءة التشغيل الشهري', file: 'MonthlyPerformanceReport.html' },
+            'PowerFactorFineNotice': { title: 'تسجيل اخطار غرامة معامل قدرة', file: 'PowerFactorFineNotice.html' },
+            'PowerFactorFinesReport': { title: 'تقرير اخطارات معامل قدرة', file: 'PowerFactorFinesReport.html' },
+            'PowerFactorReport': { title: 'تقرير حالة لوحات معامل القدرة', file: 'PowerFactorReport.html' },
+            'StationElectricityReport': { title: 'تقرير استهلاك الطاقة', file: 'StationElectricityReport.html' },
+            'StationFaultsReport': { title: 'تقرير بلاغات أعطال', file: 'StationFaultsReport.html' },
+            'StationStaffReport': { title: 'تقرير العاملين', file: 'StationStaffReport.html' },
+            'StationTechnicalReport': { title: 'تقرير فني شامل', file: 'StationTechnicalReport.html' }
         };
         
         if(reportMap[reportKey]) {
@@ -705,6 +706,9 @@
                 } catch(e) {
                     console.log('Cannot access iframe content', e);
                 }
+            };
+            iframe.onerror = function() {
+                console.log('Error loading report:', fileName);
             };
         }
     }
@@ -839,7 +843,7 @@
                 document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
                 item.classList.add('active');
                 if(reportsMainItem) reportsMainItem.classList.remove('active');
-                // إغلاق القائمة الفرعية بعد الاختيار (اختياري)
+                // إغلاق القائمة الفرعية بعد الاختيار
                 reportsSubmenu.classList.remove('show');
                 submenuVisible = false;
                 if(chevronIcon) chevronIcon.style.transform = 'rotate(0deg)';
