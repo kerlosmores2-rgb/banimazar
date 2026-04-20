@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تقرير الأداء الشهري (ساعات وتصرفات)</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap');
+        body { font-family: 'Cairo', sans-serif; background: #f8fafc; margin: 0; padding: 20px; direction: rtl; }
+        .filter-panel { background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 25px; border-top: 5px solid #3498db; }
+        .grid-inputs { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; align-items: end; }
+        label { font-weight: bold; font-size: 0.85rem; color: #64748b; margin-bottom: 5px; display: block; }
+        select, input { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-family: 'Cairo'; }
+        .btn-report { background: #3498db; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; }
+
+        /* تنسيق التقرير للطباعة */
+        .report-page { background: white; padding: 30px; border: 1px solid #000; display: none; min-height: 297mm; }
+        .report-header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px; }
+        .station-meta { display: flex; justify-content: space-between; background: #f1f5f9; padding: 15px; border: 1px solid #ddd; margin-bottom: 20px; font-weight: bold; }
+        
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #e2e8f0 !important; color: #000; border: 1px solid #000; padding: 10px; font-size: 13px; }
+        td { border: 1px solid #000; padding: 10px; text-align: center; font-size: 13px; color: #000; }
+        .total-row { background: #e0f2fe; font-weight: bold; }
+
+        @media print {
+            .no-print { display: none !important; }
+            .report-page { display: block !important; border: none; padding: 0; }
+            @page { size: A4 portrait; margin: 10mm; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="filter-panel no-print">
+    <h3><i class="fas fa-chart-bar" style="color: #3498db;"></i> تقرير كفاءة التشغيل الشهري</h3>
+    <div class="grid-inputs">
+        <div>
+            <label>المحطة</label>
+            <select id="stationSelect">
+                <option value="">جاري التحميل...</option>
+            </select>
+        </div>
+        <div>
+            <label>من شهر</label>
+            <input type="month" id="monthStart">
+        </div>
+        <div>
+            <label>إلى شهر</label>
+            <input type="month" id="monthEnd">
+        </div>
+        <div>
+            <button class="btn-report" onclick="generatePerformanceReport()"><i class="fas fa-print"></i> استخراج التقرير الموحد</button>
+        </div>
+    </div>
+</div>
+
+<div id="reportContainer" class="report-page">
+    <div class="report-header">
+        <h2 style="margin:0;">شركة مياه الشرب والصرف الصحي بالمنيا</h2>
+        <h3 style="margin:5px;">إدارة بني مزار - تقرير مؤشرات الأداء (KPIs)</h3>
+        <h4 style="text-decoration: underline;">بيان ساعات التشغيل وكميات المياه المرفوعة</h4>
+    </div>
+
+    <div class="station-meta">
+        <span id="stNameDisp">المحطة: ---</span>
+        <span id="stCodeDisp">الكود: ---</span>
+        <span id="periodDisp">الفترة: ---</span>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>الشهر / السنة</th>
+                <th>إجمالي ساعات التشغيل (ساعة)</th>
+                <th>إجمالي المياه المرفوعة (م3)</th>
+                <th>معدل التصرف الفعلي (م3/ساعة)</th>
+                <th>الحالة الفنية</th>
+            </tr>
+        </thead>
+        <tbody id="reportTbody">
+            </tbody>
+        <tfoot>
+            <tr class="total-row">
+                <td>الإجمالي العام</td>
+                <td id="totalHours">0</td>
+                <td id="totalWater">0</td>
+                <td id="avgRate">0</td>
+                <td>---</td>
+            </tr>
+        </tfoot>
+    </table>
+
+    <div style="margin-top: 60px; display: flex; justify-content: space-around; font-weight: bold;">
+        <div style="text-align: center;">مسؤول السجلات <br><br> ....................</div>
+        <div style="text-align: center;">مهندس المحطة <br><br> ....................</div>
+        <div style="text-align: center;">يعتمد،، مدير الفرع <br><br> ....................</div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+    const SUPABASE_URL = 'https://jvfbkoaeugkeoiccvnkq.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_n64Hnhuruc3Oeolj-Uwg9g_tu-otJlZ';
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    async function init() {
+        const { data } = await _supabase.from('stations').select('id, station_name, station_code').order('station_name');
+        const s = document.getElementById('stationSelect');
+        s.innerHTML = '<option value="">-- اختر المحطة --</option>';
+        data.forEach(item => s.innerHTML += `<option value="${item.id}" data-code="${item.station_code}">${item.station_name}</option>`);
+    }
+
+    async function generatePerformanceReport() {
+        const sid = document.getElementById('stationSelect').value;
+        const from = document.getElementById('monthStart').value;
+        const to = document.getElementById('monthEnd').value;
+
+        if (!sid || !from || !to) return alert("يرجى اختيار المحطة والفترة الزمنية");
+
+        const sel = document.getElementById('stationSelect');
+        const stName = sel.options[sel.selectedIndex].text;
+        const stCode = sel.options[sel.selectedIndex].getAttribute('data-code');
+
+        // جلب البيانات من جدول 'monthly_station_reports' الموحد
+        const { data: logs, error } = await _supabase.from('monthly_station_reports')
+            .select('*')
+            .eq('station_id', sid)
+            .gte('report_month', from)
+            .lte('report_month', to)
+            .order('report_month');
+
+        if (error) return alert("حدث خطأ أثناء جلب البيانات");
+
+        document.getElementById('reportContainer').style.display = 'block';
+        document.getElementById('stNameDisp').innerText = "المحطة: " + stName;
+        document.getElementById('stCodeDisp').innerText = "الكود: " + (stCode || '---');
+        document.getElementById('periodDisp').innerText = `من: ${from} إلى: ${to}`;
+
+        let html = '';
+        let sumHours = 0;
+        let sumWater = 0;
+
+        logs.forEach(r => {
+            const h = parseFloat(r.total_run_hours || 0);
+            const w = parseFloat(r.total_water_lifted || 0);
+            const rate = h > 0 ? (w / h).toFixed(2) : 0;
+            
+            sumHours += h;
+            sumWater += w;
+
+            html += `
+                <tr>
+                    <td>${r.report_month}</td>
+                    <td>${h.toLocaleString()}</td>
+                    <td>${w.toLocaleString()}</td>
+                    <td style="font-weight:bold; color:#2980b9;">${rate}</td>
+                    <td>${r.condition_notes || 'مستقرة'}</td>
+                </tr>`;
+        });
+
+        document.getElementById('reportTbody').innerHTML = html || '<tr><td colspan="5">لا توجد بيانات مسجلة لهذه المحطة</td></tr>';
+        document.getElementById('totalHours').innerText = sumHours.toLocaleString();
+        document.getElementById('totalWater').innerText = sumWater.toLocaleString();
+        document.getElementById('avgRate').innerText = sumHours > 0 ? (sumWater / sumHours).toFixed(2) : 0;
+
+        setTimeout(() => { window.print(); }, 500);
+    }
+
+    init();
+</script>
+</body>
+</html>

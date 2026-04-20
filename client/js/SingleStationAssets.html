@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تقرير أصول المحطة التفصيلي</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap');
+        body { font-family: 'Cairo', sans-serif; background: #1a1a2e; color: #fff; padding: 20px; direction: rtl; }
+        .container { max-width: 1100px; margin: auto; }
+        .selector-card { background: #16213e; padding: 20px; border-radius: 15px; margin-bottom: 20px; border: 1px solid #00d4ff; }
+        select { width: 100%; padding: 12px; border-radius: 8px; background: #1a1a2e; color: #fff; border: 1px solid #00d4ff; font-size: 16px; cursor: pointer; }
+        .report-header { display: flex; justify-content: space-between; align-items: center; background: #fff; color: #000; padding: 15px; border-radius: 10px; margin-bottom: 15px; display: none; }
+        .assets-table { width: 100%; border-collapse: collapse; background: #fff; color: #000; margin-top: 20px; border-radius: 10px; overflow: hidden; display: none; }
+        .assets-table th { background: #2c3e50; color: #fff; padding: 12px; border: 1px solid #ddd; }
+        .assets-table td { padding: 10px; border: 1px solid #ddd; text-align: center; font-size: 14px; }
+        .status-good { color: #27ae60; font-weight: bold; }
+        .status-bad { color: #e74c3c; font-weight: bold; }
+        .btn { padding: 10px 20px; border-radius: 25px; border: none; cursor: pointer; font-weight: bold; }
+        .btn-print { background: #00d4ff; color: #1a1a2e; }
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white; color: black; padding: 0; }
+            .report-header, .assets-table { display: table !important; width: 100%; }
+            .assets-table th { background: #eee !important; color: #000 !important; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="selector-card no-print">
+        <h3 style="margin-bottom:15px;"><i class="fas fa-search"></i> اختر المحطة لعرض الأصول</h3>
+        <select id="stationSelector" onchange="generateAssetReport(this.value)">
+            <option value="">-- جاري تحميل المحطات --</option>
+        </select>
+    </div>
+
+    <div id="reportContent">
+        </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+    const SUPABASE_URL = 'https://jvfbkoaeugkeoiccvnkq.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_n64Hnhuruc3Oeolj-Uwg9g_tu-otJlZ';
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // 1. جلب المحطات عند فتح الصفحة
+    async function init() {
+        const { data: stations } = await _supabase.from('stations').select('id, station_name, station_code').order('station_name');
+        const selector = document.getElementById('stationSelector');
+        selector.innerHTML = '<option value="">-- اختر المحطة من هنا --</option>';
+        stations.forEach(s => {
+            selector.innerHTML += `<option value="${s.id}">${s.station_name} (${s.station_code || 'بدون كود'})</option>`;
+        });
+    }
+
+    // 2. دالة جلب الأصول والتقارير المرتبطة
+    async function generateAssetReport(stationId) {
+        if (!stationId) return;
+        
+        const reportDiv = document.getElementById('reportContent');
+        reportDiv.innerHTML = '<p style="text-align:center;">جاري تجميع سجل الأصول والبلاغات...</p>';
+
+        // جلب بيانات المحطة + الأصول + آخر تقرير مرور + آخر بلاغات أعطال
+        const [resStation, resAssets, resInspection, resFaults] = await Promise.all([
+            _supabase.from('stations').select('*').eq('id', stationId).single(),
+            _supabase.from('station_assets').select('*').eq('station_id', stationId),
+            _supabase.from('inspection_reports').select('*').eq('station_id', stationId).order('created_at', { ascending: false }).limit(20),
+            _supabase.from('fault_reports').select('*').eq('station_id', stationId).order('report_date', { ascending: false })
+        ]);
+
+        const station = resStation.data;
+        const assets = resAssets.data;
+
+        let html = `
+            <div class="report-header" style="display:flex;">
+                <div>
+                    <h2>محطة: ${station.station_name}</h2>
+                    <p>كود المحطة: ${station.station_code || '---'}</p>
+                </div>
+                <button onclick="window.print()" class="btn btn-print no-print"><i class="fas fa-print"></i> طباعة التقرير</button>
+            </div>
+
+            <table class="assets-table" style="display:table;">
+                <thead>
+                    <tr>
+                        <th>م</th>
+                        <th>اسم الأصل (المعدة)</th>
+                        <th>الماركة/الموديل</th>
+                        <th>القدرة/المواصفات</th>
+                        <th>حالة الأصل (آخر مرور)</th>
+                        <th>آخر بلاغ عطل</th>
+                        <th>تاريخ البلاغ</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+
+        if (assets.length === 0) {
+            html += `<tr><td colspan="7">لا توجد أصول مسجلة لهذه المحطة</td></tr>`;
+        } else {
+            assets.forEach((asset, index) => {
+                // البحث عن حالة الأصل في آخر تقارير المرور
+                const lastCheck = resInspection.data?.find(i => i.asset_id === asset.id);
+                const status = lastCheck ? lastCheck.condition : 'غير محدد';
+                const statusClass = (status === 'يعمل' || status === 'جيد') ? 'status-good' : 'status-bad';
+
+                // البحث عن آخر بلاغ عطل لهذا الأصل
+                const lastFault = resFaults.data?.find(f => f.asset_id === asset.id);
+
+                html += `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td style="font-weight:bold;">${asset.asset_name}</td>
+                        <td>${asset.brand || '---'}</td>
+                        <td>${asset.specs || '---'}</td>
+                        <td class="${statusClass}">${status}</td>
+                        <td style="color:#e67e22;">${lastFault ? lastFault.fault_description : 'لا يوجد أعطال حالية'}</td>
+                        <td>${lastFault ? new Date(lastFault.report_date).toLocaleDateString('ar-EG') : '---'}</td>
+                    </tr>`;
+            });
+        }
+
+        html += `</tbody></table>`;
+        reportDiv.innerHTML = html;
+    }
+
+    init();
+</script>
+
+</body>
+</html>

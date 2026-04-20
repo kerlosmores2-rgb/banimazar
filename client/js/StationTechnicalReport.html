@@ -1,0 +1,111 @@
+async function loadFullTechnicalReport() {
+    const container = document.getElementById('reportContainer');
+    container.innerHTML = '<div style="text-align:center; padding:50px; color:#fff;"><i class="fas fa-sync fa-spin fa-2x"></i><p>جاري تجميع التقرير الفني الشامل...</p></div>';
+
+    const [resStations, resPumps, resGens] = await Promise.all([
+        supabaseClient.from('stations').select('*').order('id'),
+        supabaseClient.from('main_pumps').select('*'),
+        supabaseClient.from('generators').select('*')
+    ]);
+
+    if (resStations.error) return alert("خطأ في قاعدة البيانات");
+
+    const stations = resStations.data;
+    const pumps = resPumps.data;
+    const gens = resGens.data;
+
+    let html = `
+    <div class="no-print" style="display:flex; justify-content:space-between; margin-bottom:15px;">
+        <h3 style="color:#00d4ff;">التقرير الفني الشامل - فرع بني مزار</h3>
+        <div>
+            <button onclick="exportFullReport()" class="btn btn-primary" style="background:#27ae60; margin-left:10px;">Excel</button>
+            <button onclick="window.print()" class="btn btn-primary">طباعة A4 بالعرض</button>
+        </div>
+    </div>
+
+    <div id="printableArea">
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap');
+            @page { size: A4 landscape; margin: 5mm; }
+            #techTable { 
+                width: 100%; border-collapse: collapse; direction: rtl; 
+                font-family: 'Cairo', sans-serif; font-size: 8.5px; color: #000; border: 2px solid #000;
+            }
+            #techTable th, #techTable td { border: 1px solid #000; padding: 2px; text-align: center; }
+            #techTable th { background: #f2f2f2 !important; -webkit-print-color-adjust: exact; font-weight: bold; }
+            #techTable tr:nth-child(even) td { background-color: #f9f9f9 !important; -webkit-print-color-adjust: exact; }
+            .print-only { display: none; text-align: center; margin-bottom: 10px; }
+            @media print {
+                .no-print { display: none !important; }
+                .print-only { display: block; }
+                body { background: white; }
+            }
+        </style>
+
+        <div class="print-only">
+            <h2 style="margin:0;">شركة مياه الشرب والصرف الصحي بالمنيا</h2>
+            <h3 style="margin:5px;">بيان الحالة الفنية لمحطات الصرف الصحي بفرع بني مزار</h3>
+        </div>
+
+        <table id="techTable">
+            <thead>
+                <tr>
+                    <th rowspan="2">م</th>
+                    <th rowspan="2" style="width:110px;">اسم المحطة</th>
+                    <th rowspan="2">النوع</th>
+                    <th rowspan="2">الطاقة<br>التصميمية</th>
+                    <th colspan="4">بيانات الطلمبات الرئيسية</th>
+                    <th colspan="3">المحرك الكهربائي</th>
+                    <th colspan="3">خط الطرد</th>
+                    <th rowspan="2">شبكة<br>الانحدار</th>
+                    <th rowspan="2">المصب</th>
+                    <th colspan="3">المولد</th>
+                    <th colspan="3">البيارة (م)</th>
+                </tr>
+                <tr>
+                    <th>العدد</th><th>الماركة</th><th>التصرف</th><th>الرفع</th>
+                    <th>حصان</th><th>RPM</th><th>فولت</th>
+                    <th>قطر</th><th>طول</th><th>نوع</th>
+                    <th>KVA</th><th>KW</th><th>الماركة</th>
+                    <th>قطر</th><th>عمق</th><th>دخول</th>
+                </tr>
+            </thead>
+            <tbody>`;
+
+    stations.forEach((s, index) => {
+        const sPumps = pumps.filter(p => p.station_id === s.id);
+        const sGen = gens.find(g => g.station_id === s.id);
+        const p = sPumps[0] || {}; // أخذ بيانات أول طلمبة كمثال فني
+        
+        const hp = p.motor_power_kw ? (p.motor_power_kw * 1.341).toFixed(1) : '---';
+
+        html += `
+            <tr>
+                <td>${index + 1}</td>
+                <td style="text-align:right; font-weight:bold;">${s.station_name}</td>
+                <td>${s.station_type || '---'}</td>
+                <td>${s.capacity || '---'}</td>
+                <td>${sPumps.length}</td>
+                <td>${p.pump_brand || '---'}</td>
+                <td>${p.flow_rate_m3h || '---'}</td>
+                <td>${p.head_m || '---'}</td>
+                <td>${hp}</td>
+                <td>${p.rpm || '---'}</td>
+                <td>${p.voltage || '---'}</td>
+                <td>${s.pipe_diameter || '---'}</td>
+                <td>${s.pipe_length || '---'}</td>
+                <td>${s.pipe_type || '---'}</td>
+                <td>${s.sewage_network || '---'}</td>
+                <td>${s.discharge_point || '---'}</td>
+                <td>${sGen ? sGen.kva : '---'}</td>
+                <td>${sGen ? sGen.kw : '---'}</td>
+                <td>${sGen ? sGen.gen_brand : '---'}</td>
+                <td>${s.well_diameter || '---'}</td>
+                <td>${s.well_depth || '---'}</td>
+                <td>${s.inlet_diameter || '---'}</td>
+            </tr>`;
+    });
+
+    html += `</tbody></table></div>`;
+    container.innerHTML = html;
+}

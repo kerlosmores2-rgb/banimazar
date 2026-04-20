@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تقرير العاملين بالمحطة</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap');
+        body { font-family: 'Cairo', sans-serif; background: #f8fafc; color: #334155; margin: 0; padding: 20px; direction: rtl; }
+        
+        .no-print-area { background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 25px; border-top: 5px solid #6366f1; }
+        .grid-controls { display: grid; grid-template-columns: 1fr 200px; gap: 20px; align-items: end; }
+        
+        label { font-weight: bold; font-size: 0.9rem; color: #475569; display: block; margin-bottom: 8px; }
+        select { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-family: 'Cairo'; cursor: pointer; }
+        .btn-fetch { background: #6366f1; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; font-size: 16px; transition: 0.3s; }
+        .btn-fetch:hover { background: #4f46e5; }
+
+        /* تنسيق صفحة التقرير للطباعة */
+        .report-wrapper { background: white; padding: 40px; border: 1px solid #000; display: none; min-height: 297mm; position: relative; }
+        .report-header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 15px; margin-bottom: 25px; }
+        .station-info { display: flex; justify-content: space-between; background: #f1f5f9; padding: 15px; border: 1px solid #ccc; margin-bottom: 20px; font-size: 15px; font-weight: bold; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th { background: #e2e8f0 !important; color: #000; border: 1px solid #000; padding: 10px; font-size: 14px; }
+        td { border: 1px solid #000; padding: 10px; text-align: center; font-size: 13px; color: #000; }
+        
+        .status-active { color: #16a34a; font-weight: bold; }
+        .status-vacation { color: #ea580c; font-weight: bold; }
+
+        @media print {
+            .no-print-area { display: none !important; }
+            .report-wrapper { display: block !important; border: none; padding: 0; }
+            body { background: white; }
+            @page { size: A4 portrait; margin: 10mm; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="no-print-area">
+    <h3><i class="fas fa-users-cog" style="color: #6366f1;"></i> عرض كشف العاملين بالمحطة</h3>
+    <div class="grid-controls">
+        <div>
+            <label>اختر المحطة</label>
+            <select id="stationSelector">
+                <option value="">جاري تحميل المحطات...</option>
+            </select>
+        </div>
+        <div>
+            <button class="btn-fetch" onclick="generateStaffReport()"><i class="fas fa-print"></i> عرض الكشف</button>
+        </div>
+    </div>
+</div>
+
+<div id="staffReport" class="report-wrapper">
+    <div class="report-header">
+        <h2 style="margin:0;">شركة مياه الشرب والصرف الصحي بالمنيا</h2>
+        <h3 style="margin:5px;">فرع بني مزار - إدارة الصرف الصحي</h3>
+        <h4 style="text-decoration: underline; margin-top:10px;">بيان بأسماء العاملين بمحطة الرفع</h4>
+    </div>
+
+    <div class="station-info">
+        <span id="labelStationName">اسم المحطة: ---</span>
+        <span id="labelStationCode">كود المحطة: ---</span>
+        <span id="reportDate">تاريخ التقرير: ${new Date().toLocaleDateString('ar-EG')}</span>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 50px;">م</th>
+                <th>اسم الموظف / العامل</th>
+                <th style="width: 100px;">الكود الوظيفي</th>
+                <th>الوظيفة</th>
+                <th style="width: 100px;">الحالة</th>
+                <th>رقم التليفون</th>
+            </tr>
+        </thead>
+        <tbody id="staffTableBody">
+            </tbody>
+    </table>
+
+    <div style="margin-top: 60px; display: flex; justify-content: space-around; font-weight: bold;">
+        <div style="text-align: center;">مسؤول السجلات <br><br> ....................</div>
+        <div style="text-align: center;">مدير المحطة <br><br> ....................</div>
+        <div style="text-align: center;">يعتمد،، مدير الفرع <br><br> ....................</div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+    const SUPABASE_URL = 'https://jvfbkoaeugkeoiccvnkq.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_n64Hnhuruc3Oeolj-Uwg9g_tu-otJlZ';
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    async function init() {
+        const { data } = await _supabase.from('stations').select('id, station_name, station_code').order('station_name');
+        const s = document.getElementById('stationSelector');
+        s.innerHTML = '<option value="">-- اختر المحطة --</option>';
+        data.forEach(item => {
+            s.innerHTML += `<option value="${item.id}" data-code="${item.station_code}">${item.station_name}</option>`;
+        });
+    }
+
+    async function generateStaffReport() {
+        const sid = document.getElementById('stationSelector').value;
+        if (!sid) return alert("برجاء اختيار المحطة أولاً");
+
+        const sel = document.getElementById('stationSelector');
+        const stName = sel.options[sel.selectedIndex].text;
+        const stCode = sel.options[sel.selectedIndex].getAttribute('data-code');
+
+        // جلب بيانات العاملين من جدول 'staff' المرتبط بهذه المحطة
+        const { data: employees, error } = await _supabase.from('staff')
+            .select('*')
+            .eq('station_id', sid)
+            .order('job_title');
+
+        if (error) return alert("خطأ في جلب بيانات العاملين");
+
+        document.getElementById('staffReport').style.display = 'block';
+        document.getElementById('labelStationName').innerText = "اسم المحطة: " + stName;
+        document.getElementById('labelStationCode').innerText = "كود المحطة: " + (stCode || '---');
+        document.getElementById('reportDate').innerText = "تاريخ التقرير: " + new Date().toLocaleDateString('ar-EG');
+
+        let html = '';
+        employees.forEach((emp, index) => {
+            const statusClass = emp.status === 'على رأس العمل' ? 'status-active' : 'status-vacation';
+            html += `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td style="text-align:right; font-weight:bold; padding-right:15px;">${emp.full_name}</td>
+                    <td>${emp.employee_code || '---'}</td>
+                    <td>${emp.job_title || '---'}</td>
+                    <td class="${statusClass}">${emp.status || 'نشط'}</td>
+                    <td dir="ltr">${emp.phone_number || '---'}</td>
+                </tr>`;
+        });
+
+        document.getElementById('staffTableBody').innerHTML = html || '<tr><td colspan="6">لا يوجد موظفين مسجلين لهذه المحطة</td></tr>';
+
+        // طباعة تلقائية
+        setTimeout(() => { window.print(); }, 500);
+    }
+
+    init();
+</script>
+</body>
+</html>
