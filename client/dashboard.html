@@ -443,7 +443,7 @@
                 <span>التقارير الشهرية</span>
             </div>
             
-            <!-- عنصر مستخدمين البرنامج (جديد) -->
+            <!-- عنصر مستخدمين البرنامج -->
             <div class="nav-item" data-page="app-users">
                 <i class="fas fa-user-friends"></i>
                 <span>مستخدمين البرنامج</span>
@@ -647,44 +647,66 @@
         }
     }
 
-    // دالة عرض رسالة أن التقرير قيد الإنشاء
-    function showUnderConstruction(reportName) {
-        const pageContent = document.getElementById('pageContent');
-        pageContent.innerHTML = `
-            <div class="welcome-section" style="text-align: center;">
-                <i class="fas fa-chart-pie" style="font-size: 4rem; color: #00d4ff; margin-bottom: 20px;"></i>
-                <h2>${reportName}</h2>
-                <p>هذا التقرير قيد الإنشاء وسيتم إضافته قريباً</p>
-                <button class="btn-outline" onclick="loadPage('dashboard')" style="margin-top: 20px;">
-                    <i class="fas fa-arrow-right"></i> العودة للرئيسية
-                </button>
-            </div>
-        `;
-    }
-
-    // دالة تحميل التقارير
+    // دالة تحميل التقارير عبر iframe
     function loadReport(reportKey) {
         currentPage = 'report_' + reportKey;
         let title = '';
+        let fileName = '';
         
         const reportMap = {
-            'asset_status': 'تقرير حالة أصل',
-            'station_assets': 'تقرير أصول محطة',
-            'water_meter': 'تقرير استهلاك عداد مياه الشرب',
-            'diesel_consumption': 'تقرير استهلاك السولار',
-            'monthly_efficiency': 'تقرير كفاءة التشغيل الشهري',
-            'pf_penalty_reg': 'تسجيل اخطار غرامة معامل قدرة',
-            'pf_notifications': 'تقرير اخطارات معامل قدرة',
-            'pf_panels_status': 'تقرير حالة لوحات معامل القدرة',
-            'energy_consumption': 'تقرير استهلاك الطاقة',
-            'faults_reports': 'تقرير بلاغات أعطال',
-            'employees_report': 'تقرير العاملين',
-            'technical_summary': 'تقرير فني شامل'
+            'asset_status': { title: 'تقرير حالة أصل', file: 'report_asset_status.html' },
+            'station_assets': { title: 'تقرير أصول محطة', file: 'report_station_assets.html' },
+            'water_meter': { title: 'تقرير استهلاك عداد مياه الشرب', file: 'report_water_meter.html' },
+            'diesel_consumption': { title: 'تقرير استهلاك السولار', file: 'report_diesel_consumption.html' },
+            'monthly_efficiency': { title: 'تقرير كفاءة التشغيل الشهري', file: 'report_monthly_efficiency.html' },
+            'pf_penalty_reg': { title: 'تسجيل اخطار غرامة معامل قدرة', file: 'report_pf_penalty_reg.html' },
+            'pf_notifications': { title: 'تقرير اخطارات معامل قدرة', file: 'report_pf_notifications.html' },
+            'pf_panels_status': { title: 'تقرير حالة لوحات معامل القدرة', file: 'report_pf_panels_status.html' },
+            'energy_consumption': { title: 'تقرير استهلاك الطاقة', file: 'report_energy_consumption.html' },
+            'faults_reports': { title: 'تقرير بلاغات أعطال', file: 'report_faults_reports.html' },
+            'employees_report': { title: 'تقرير العاملين', file: 'report_employees.html' },
+            'technical_summary': { title: 'تقرير فني شامل', file: 'report_technical_summary.html' }
         };
         
-        title = reportMap[reportKey] || 'تقرير';
+        if(reportMap[reportKey]) {
+            title = reportMap[reportKey].title;
+            fileName = reportMap[reportKey].file;
+        } else {
+            title = 'تقرير';
+            fileName = 'report_generic.html';
+        }
+        
         document.getElementById('pageTitle').innerHTML = `<i class="fas fa-chart-pie"></i> ${title}`;
-        showUnderConstruction(title);
+        const pageContent = document.getElementById('pageContent');
+        const hideCSS = getIframeHideSidebarCSS();
+        
+        pageContent.innerHTML = `
+            <div class="iframe-container">
+                <iframe id="reportFrame" src="${fileName}" frameborder="0" style="width:100%; min-height:600px; border:none; border-radius:15px; background:rgba(255,255,255,0.02);"></iframe>
+            </div>
+        `;
+        
+        const iframe = document.getElementById('reportFrame');
+        if(iframe) {
+            iframe.onload = function() {
+                try {
+                    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                    if (iframeDoc) {
+                        const style = iframeDoc.createElement('style');
+                        style.textContent = hideCSS;
+                        iframeDoc.head.appendChild(style);
+                        const resizeIframe = () => {
+                            const height = iframeDoc.body.scrollHeight;
+                            iframe.style.height = Math.max(height + 50, 500) + 'px';
+                        };
+                        resizeIframe();
+                        setTimeout(resizeIframe, 500);
+                    }
+                } catch(e) {
+                    console.log('Cannot access iframe content', e);
+                }
+            };
+        }
     }
 
     // ============================================
@@ -817,6 +839,10 @@
                 document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
                 item.classList.add('active');
                 if(reportsMainItem) reportsMainItem.classList.remove('active');
+                // إغلاق القائمة الفرعية بعد الاختيار (اختياري)
+                reportsSubmenu.classList.remove('show');
+                submenuVisible = false;
+                if(chevronIcon) chevronIcon.style.transform = 'rotate(0deg)';
                 loadReport(reportKey);
             });
         });
