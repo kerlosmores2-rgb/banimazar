@@ -41,7 +41,7 @@
         <div>
             <label>اختر المحطة</label>
             <select id="stationId" onchange="fetchAssets(this.value)">
-                <option value="">جاري التحميل...</option>
+                <option value="">جاري تحميل المحطات...</option>
             </select>
         </div>
         <div>
@@ -99,108 +99,36 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-    const SUPABASE_URL = 'https://jvfbkoaeugkeoiccvnkq.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_n64Hnhuruc3Oeolj-Uwg9g_tu-otJlZ';
-    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-    async function init() {
-        const { data } = await _supabase.from('stations').select('id, station_name').order('station_name');
-        const s = document.getElementById('stationId');
-        s.innerHTML = '<option value="">-- اختر المحطة --</option>';
-        data.forEach(item => s.innerHTML += `<option value="${item.id}">${item.station_name}</option>`);
-    }
-
-    async function fetchAssets(sid) {
-        if(!sid) return;
-        const a = document.getElementById('assetId');
-        a.innerHTML = '<option value="">جاري فحص فئات الأصول...</option>';
-
-        const stationIdInt = parseInt(sid);
-        
-        // خريطة الجداول مع أسماء الأعمدة الخاصة بها كما ذكرت
-        const tableMapping = {
-            'transformers': 'transformer_number',
-            'generators': 'generator_number',
-            'electrical_panels': 'panel_number',
-            'main_pumps': 'pump_number',
-            'sub_pumps': 'pump_number',
-            'other_assets': 'assets_number',
-            'buildings': 'building_number'
-        };
-
-        const tables = Object.keys(tableMapping);
-
-        try {
-            const requests = tables.map(table => 
-                _supabase.from(table).select('*').eq('station_id', stationIdInt)
-            );
-
-            const results = await Promise.all(requests);
-            let allAssets = [];
-
-            results.forEach((res, index) => {
-                if (res.data && res.data.length > 0) {
-                    const tableName = tables[index];
-                    const columnName = tableMapping[tableName];
-
-                    res.data.forEach(item => {
-                        allAssets.push({
-                            id: item.id,
-                            name: item[columnName] || "بدون اسم",
-                            table_name: tableName,
-                            display_column: columnName // هنحتاجه في التقرير
-                        });
-                    });
-                }
-            });
-
-            if (allAssets.length > 0) {
-                a.innerHTML = `<option value="">-- اختر المعدة (${allAssets.length}) --</option>`;
-                allAssets.forEach(item => {
-                    a.innerHTML += `<option value="${item.id}" data-table="${item.table_name}" data-col="${item.display_column}">${item.name}</option>`;
-                });
-            } else {
-                a.innerHTML = '<option value="">لا توجد أصول مسجلة لهذه المحطة</option>';
-            }
-        } catch (err) {
-            console.error("Error fetching assets:", err);
-            a.innerHTML = '<option value="">خطأ في جلب البيانات</option>';
-        }
-    }
-
-
 
 <script>
     const SUPABASE_URL = 'https://jvfbkoaeugkeoiccvnkq.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_n64Hnhuruc3Oeolj-Uwg9g_tu-otJlZ';
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // دالة التشغيل الأولي لجلب المحطات
+    // دالة التشغيل الأولي
     async function init() {
         const s = document.getElementById('stationId');
         try {
             const { data, error } = await _supabase.from('stations').select('id, station_name').order('station_name');
             if (error) throw error;
+
             s.innerHTML = '<option value="">-- اختر المحطة --</option>';
-            data.forEach(item => s.innerHTML += `<option value="${item.id}">${item.station_name}</option>`);
+            data.forEach(item => {
+                s.innerHTML += `<option value="${item.id}">${item.station_name}</option>`;
+            });
         } catch (err) {
             console.error("Init Error:", err);
             s.innerHTML = '<option value="">خطأ في تحميل المحطات</option>';
         }
     }
 
-    // دالة جلب الأصول بناءً على المحطة المختارة
-
-
-    // دالة جلب الأصول بناءً على المحطة المختارة
-async function fetchAssets(sid) {
+    // دالة جلب الأصول
+    async function fetchAssets(sid) {
         if(!sid) return;
         const a = document.getElementById('assetId');
-        a.innerHTML = '<option value="">جاري فحص جميع الفئات...</option>';
-        const stationIdInt = parseInt(sid);
+        a.innerHTML = '<option value="">جاري الفحص...</option>';
 
-        // قائمة الجداول (تأكد من مطابقتها للـ Database عندك حرفياً)
+        const stationIdInt = parseInt(sid);
         const assetTables = [
             { table: 'transformers', col: 'transformer_number', label: 'محول' },
             { table: 'generators', col: 'generator_number', label: 'مولد' },
@@ -212,89 +140,64 @@ async function fetchAssets(sid) {
         ];
 
         try {
+            const requests = assetTables.map(item => 
+                _supabase.from(item.table).select('*').eq('station_id', stationIdInt)
+            );
+
+            const results = await Promise.all(requests);
             let allAssets = [];
 
-            // بنجرب جدول جدول بشكل منفصل
-            for (const item of assetTables) {
-                try {
-                    const { data, error } = await _supabase
-                        .from(item.table)
-                        .select('*')
-                        .eq('station_id', stationIdInt);
-                    
-                    if (error) {
-                        // لو الجدول مش موجود هيطبع اسمه هنا في الـ Console (F12)
-                        console.error(`مشكلة في جدول ${item.table}:`, error.message);
-                        continue; // كمل اللي بعده متبوظش الدنيا
-                    }
-
-                    if (data && data.length > 0) {
-                        data.forEach(asset => {
-                            allAssets.push({
-                                id: asset.id,
-                                name: asset[item.col] || "بدون اسم",
-                                table: item.table,
-                                col: item.col,
-                                typeLabel: item.label
-                            });
+            results.forEach((res, index) => {
+                if (res.data) {
+                    const info = assetTables[index];
+                    res.data.forEach(item => {
+                        allAssets.push({
+                            id: item.id,
+                            name: item[info.col] || "معدة",
+                            table: info.table,
+                            col: info.col,
+                            label: info.label
                         });
-                    }
-                } catch (innerErr) {
-                    console.error(`خطأ غير متوقع في ${item.table}:`, innerErr);
+                    });
                 }
-            }
+            });
 
             if (allAssets.length > 0) {
                 a.innerHTML = `<option value="">-- اختر المعدة (${allAssets.length}) --</option>`;
                 allAssets.forEach(item => {
-                    a.innerHTML += `<option value="${item.id}" data-table="${item.table}" data-col="${item.col}">${item.typeLabel}: ${item.name}</option>`;
+                    a.innerHTML += `<option value="${item.id}" data-table="${item.table}" data-col="${item.col}">${item.label}: ${item.name}</option>`;
                 });
             } else {
-                a.innerHTML = '<option value="">لا توجد أصول مسجلة لهذه المحطة</option>';
+                a.innerHTML = '<option value="">لا توجد أصول</option>';
             }
         } catch (err) {
-            console.error("General Error:", err);
-            a.innerHTML = '<option value="">خطأ في الاتصال بقاعدة البيانات</option>';
+            a.innerHTML = '<option value="">خطأ في الجلب</option>';
         }
     }
-    
-    // دالة توليد التقرير
+
+    // دالة التقرير
     async function generateReport() {
         const assetSelect = document.getElementById('assetId');
-        const aid = assetSelect.value; 
+        const aid = assetSelect.value;
         const selected = assetSelect.options[assetSelect.selectedIndex];
         
-        if(!aid) return alert("اختر المعدة أولاً");
+        if(!aid) return alert("اختر المعدة");
 
         const tableName = selected.getAttribute('data-table');
         const columnName = selected.getAttribute('data-col');
         const from = document.getElementById('dateFrom').value;
         const to = document.getElementById('dateTo').value;
 
-        if(!from || !to) return alert("حدد الفترة الزمنية");
+        if(!from || !to) return alert("حدد التاريخ");
 
         try {
-            // جلب بيانات الأصل
-            const { data: asset, error: assetErr } = await _supabase.from(tableName).select('*').eq('id', aid).single();
-            if(assetErr) throw assetErr;
-
-            const assetRealValue = asset[columnName]; 
-
-            // جلب سجلات المرور (تأكد من الاسم الصحيح inspection_report أم inspection_reports)
-            const { data: ins, error: insErr } = await _supabase
-                .from('inspection_report') 
-                .select('*')
-                .eq('asset_id', assetRealValue);
-
-            // جلب سجلات الأعطال
-            const { data: flt, error: fltErr } = await _supabase
-                .from('maintenance_tickets')
-                .select('*')
-                .eq('asset_id', assetRealValue);
+            const { data: asset } = await _supabase.from(tableName).select('*').eq('id', aid).single();
+            const { data: ins } = await _supabase.from('inspection_reports').select('*').eq('asset_id', aid).gte('created_at', from).lte('created_at', to);
+            const { data: flt } = await _supabase.from('fault_reports').select('*').eq('asset_id', aid).gte('report_date', from).lte('report_date', to);
 
             document.getElementById('reportContent').style.display = 'block';
             document.getElementById('assetDetails').innerHTML = `
-                <div><strong>اسم المعدة:</strong> ${assetRealValue}</div>
+                <div><strong>المعدة:</strong> ${asset[columnName]}</div>
                 <div><strong>الفئة:</strong> ${tableName}</div>
                 <div><strong>المواصفات:</strong> ${asset.rated_power_kva || asset.capacity || '---'}</div>
                 <div><strong>الفترة:</strong> من ${from} إلى ${to}</div>
@@ -304,47 +207,20 @@ async function fetchAssets(sid) {
             const fBody = document.querySelector('#faultTable tbody');
             iBody.innerHTML = ""; fBody.innerHTML = "";
 
-            if (ins && ins.length > 0) {
-                ins.filter(i => {
-                    const d = i.created_at.split('T')[0];
-                    return d >= from && d <= to;
-                }).forEach(i => {
-                    const state = i.checklist_data?.state || '---';
-                    const note = i.checklist_data?.note || '---';
-                    iBody.innerHTML += `<tr>
-                        <td>${i.created_at.split('T')[0]}</td>
-                        <td>${state}</td>
-                        <td>${note}</td>
-                        <td>${i.inspector_name || '---'}</td>
-                    </tr>`;
-                });
-            }
+            ins?.forEach(i => {
+                iBody.innerHTML += `<tr><td>${i.created_at.split('T')[0]}</td><td>${i.status}</td><td>${i.notes}</td><td>${i.inspector_name}</td></tr>`;
+            });
+            flt?.forEach(f => {
+                fBody.innerHTML += `<tr><td>${f.report_date}</td><td>${f.fault_description}</td><td>${f.repair_action}</td><td>${f.spare_parts}</td><td>${f.repair_status}</td></tr>`;
+            });
 
-            if (flt && flt.length > 0) {
-                flt.filter(f => {
-                    const d = f.created_at.split('T')[0];
-                    return d >= from && d <= to;
-                }).forEach(f => {
-                    fBody.innerHTML += `<tr>
-                        <td>${f.created_at.split('T')[0]}</td>
-                        <td>${f.fault_description || '---'}</td>
-                        <td>${f.repair_action || '---'}</td>
-                        <td>${f.spare_part || '---'}</td>
-                        <td>${f.stauts || '---'}</td>
-                    </tr>`;
-                });
-            }
-
-            if (iBody.innerHTML === "") iBody.innerHTML = '<tr><td colspan="4">لا توجد سجلات مرور</td></tr>';
-            if (fBody.innerHTML === "") fBody.innerHTML = '<tr><td colspan="5">لا توجد بلاغات أعطال</td></tr>';
-
-            setTimeout(() => { window.print(); }, 1000);
-            
-        } catch (err) {
-            console.error("Report Error:", err);
-            alert("حدث خطأ أثناء جلب البيانات.");
-        }
+            setTimeout(() => window.print(), 500);
+        } catch (e) { alert("حدث خطأ في جلب بيانات التقرير"); }
     }
-    init();
+
+    // التشغيل
+    window.onload = init;
 </script>
 
+</body>
+</html>
