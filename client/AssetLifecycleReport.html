@@ -112,35 +112,67 @@
     }
 
 // 1. دالة جلب المعدات (الأصول) عند اختيار المحطة
-    async function fetchAssets(sid) {
+   async function fetchAssets(sid) {
         if(!sid) return;
         const a = document.getElementById('assetId');
-        a.innerHTML = '<option value="">جاري تحميل المعدات...</option>';
+        a.innerHTML = '<option value="">جاري فحص الفئات...</option>';
 
-        // تعديل اسم الجدول ليتطابق مع قاعدة بياناتك الفعلي
-        const { data, error } = await _supabase
-            .from('station_assets') // تأكد أن الاسم في سوبا بيز هو station_assets
-            .select('id, asset_name')
-            .eq('station_id', sid);
+        // قائمة الجداول التي ذكرتها
+        const tables = [
+            'transformers', 'generators', 'electrical_panels', 
+            'main_pump', 'sub_pump', 'other_assets', 'buildings'
+        ];
 
-        if (error) {
-            console.error("تفاصيل الخطأ:", error);
-            // لو طلع خطأ 404 تاني، جرب تغير اسم الجدول فوق لـ 'assets'
-            a.innerHTML = '<option value="">خطأ في التحميل</option>';
-            return;
-        }
+        try {
+            // جلب البيانات من كل الجداول بالتوازي
+            const results = await Promise.all(
+                tables.map(table => 
+                    _supabase.from(table).select('id, asset_name').eq('station_id', sid)
+                )
+            );
 
-        if (data && data.length > 0) {
-            a.innerHTML = '<option value="">-- اختر المعدة --</option>';
-            data.forEach(item => {
-                a.innerHTML += `<option value="${item.id}">${item.asset_name}</option>`;
+            let allAssets = [];
+            results.forEach((res, index) => {
+                if (res.data) {
+                    // إضافة اسم الجدول لكل أصل لنعرف مكانه لاحقاً عند توليد التقرير
+                    const assetsWithTable = res.data.map(item => ({
+                        ...item,
+                        table_name: tables[index]
+                    }));
+                    allAssets = allAssets.concat(assetsWithTable);
+                }
             });
-        } else {
-            a.innerHTML = '<option value="">لا توجد معدات مسجلة</option>';
+
+            if (allAssets.length > 0) {
+                a.innerHTML = '<option value="">-- اختر المعدة --</option>';
+                allAssets.forEach(item => {
+                    // تخزين اسم الجدول في الـ value لسهولة جلب البيانات لاحقاً
+                    a.innerHTML += `<option value="${item.id}" data-table="${item.table_name}">${item.asset_name}</option>`;
+                });
+            } else {
+                a.innerHTML = '<option value="">لا توجد أصول مسجلة</option>';
+            }
+        } catch (err) {
+            console.error(err);
+            a.innerHTML = '<option value="">خطأ في جلب البيانات</option>';
         }
     }
-    
-    
+
+
+    async function generateReport() {
+        const assetSelect = document.getElementById('assetId');
+        const aid = assetSelect.value;
+        const tableName = assetSelect.options[assetSelect.selectedIndex].getAttribute('data-table');
+        const from = document.getElementById('dateFrom').value;
+        const to = document.getElementById('dateTo').value;
+
+        if(!aid || !tableName || !from || !to) return alert("برجاء استكمال البيانات");
+
+        // جلب بيانات الأصل من الجدول الصحيح الذي ينتمي إليه
+        const { data: asset } = await _supabase.from(tableName).select('*').eq('id', aid).single();
+        
+        // ... باقي كود جلب تقارير المرور والأعطال كما هو ...
+    }
 
     init();
 </script>
