@@ -112,29 +112,33 @@
     }
 
 // 1. دالة جلب المعدات (الأصول) عند اختيار المحطة
-   async function fetchAssets(sid) {
+
+    async function fetchAssets(sid) {
         if(!sid) return;
         const a = document.getElementById('assetId');
         a.innerHTML = '<option value="">جاري فحص الفئات...</option>';
 
-        // قائمة الجداول التي ذكرتها
+        // تحويل المعرف لرقم لضمان توافقه مع قاعدة البيانات
+        const stationIdInt = parseInt(sid);
+
         const tables = [
             'transformers', 'generators', 'electrical_panels', 
             'main_pump', 'sub_pump', 'other_assets', 'buildings'
         ];
 
         try {
-            // جلب البيانات من كل الجداول بالتوازي
-            const results = await Promise.all(
-                tables.map(table => 
-                    _supabase.from(table).select('id, asset_name').eq('station_id', sid)
-                )
+            // طلب البيانات مع التأكد من إرسال المعرف كـ Number
+            const requests = tables.map(table => 
+                _supabase.from(table)
+                .select('id, asset_name')
+                .eq('station_id', stationIdInt)
             );
+
+            const results = await Promise.all(requests);
 
             let allAssets = [];
             results.forEach((res, index) => {
-                if (res.data) {
-                    // إضافة اسم الجدول لكل أصل لنعرف مكانه لاحقاً عند توليد التقرير
+                if (res.data && res.data.length > 0) {
                     const assetsWithTable = res.data.map(item => ({
                         ...item,
                         table_name: tables[index]
@@ -144,20 +148,20 @@
             });
 
             if (allAssets.length > 0) {
-                a.innerHTML = '<option value="">-- اختر المعدة --</option>';
+                a.innerHTML = '<option value="">-- اختر المعدة (${allAssets.length}) --</option>';
                 allAssets.forEach(item => {
-                    // تخزين اسم الجدول في الـ value لسهولة جلب البيانات لاحقاً
                     a.innerHTML += `<option value="${item.id}" data-table="${item.table_name}">${item.asset_name}</option>`;
                 });
             } else {
-                a.innerHTML = '<option value="">لا توجد أصول مسجلة</option>';
+                // لو وصل هنا يبقى فعلاً مفيش بيانات مطابقة للـ ID ده في الـ 7 جداول
+                a.innerHTML = '<option value="">لا توجد أصول مسجلة لهذه المحطة</option>';
+                console.log("No assets found for station ID:", stationIdInt);
             }
         } catch (err) {
-            console.error(err);
+            console.error("Error fetching assets:", err);
             a.innerHTML = '<option value="">خطأ في جلب البيانات</option>';
         }
     }
-
 
     async function generateReport() {
         const assetSelect = document.getElementById('assetId');
