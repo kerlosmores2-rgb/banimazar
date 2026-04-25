@@ -117,26 +117,25 @@
     async function fetchAssets(sid) {
         if(!sid) return;
         const a = document.getElementById('assetId');
-        a.innerHTML = '<option value="">جاري فحص فئات الأصول...</option>';
+        a.innerHTML = '<option value="">جاري فحص جميع الفئات...</option>';
 
         const stationIdInt = parseInt(sid);
         
-        // خريطة الجداول مع أسماء الأعمدة الخاصة بها كما ذكرت
-        const tableMapping = {
-            'transformers': 'transformer_number',
-            'generators': 'generator_number',
-            'electrical_panels': 'panel_number',
-            'main_pump': 'pump_number',
-           // 'sub_pump': 'pump_number',
-            'other_assets': 'asset_number',
-            'buildings': 'building_number'
-        };
-
-        const tables = Object.keys(tableMapping);
+        // مصفوفة من الكائنات لتجنب تكرار المفاتيح
+        const assetTables = [
+            { table: 'transformers', col: 'transformer_number', label: 'محول' },
+            { table: 'generators', col: 'generator_number', label: 'مولد' },
+            { table: 'electrical_panels', col: 'panel_number', label: 'لوحة' },
+            { table: 'main_pump', col: 'pump_number', label: 'طلمبة رئيسية' },
+            { table: 'sub_pump', col: 'pump_number', label: 'طلمبة غاطسة/مساعدة' },
+            { table: 'other_assets', col: 'assets_number', label: 'أصل آخر' },
+            { table: 'buildings', col: 'building_number', label: 'مبنى' }
+        ];
 
         try {
-            const requests = tables.map(table => 
-                _supabase.from(table).select('*').eq('station_id', stationIdInt)
+            // تنفيذ الطلبات لكل جدول على حدة لضمان عدم التداخل
+            const requests = assetTables.map(item => 
+                _supabase.from(item.table).select('*').eq('station_id', stationIdInt)
             );
 
             const results = await Promise.all(requests);
@@ -144,24 +143,30 @@
 
             results.forEach((res, index) => {
                 if (res.data && res.data.length > 0) {
-                    const tableName = tables[index];
-                    const columnName = tableMapping[tableName];
-
-                    res.data.forEach(item => {
+                    const tableInfo = assetTables[index];
+                    
+                    res.data.forEach(asset => {
                         allAssets.push({
-                            id: item.id,
-                            name: item[columnName] || "بدون اسم",
-                            table_name: tableName,
-                            display_column: columnName // هنحتاجه في التقرير
+                            id: asset.id,
+                            name: asset[tableInfo.col] || "بدون اسم",
+                            table: tableInfo.table,
+                            col: tableInfo.col,
+                            typeLabel: tableInfo.label
                         });
                     });
                 }
             });
 
             if (allAssets.length > 0) {
-                a.innerHTML = `<option value="">-- اختر المعدة (${allAssets.length}) --</option>`;
+                // ترتيب الأصول أبجدياً حسب النوع ثم الاسم
+                allAssets.sort((a, b) => a.typeLabel.localeCompare(b.typeLabel));
+
+                a.innerHTML = `<option value="">-- اختر المعدة (${allAssets.length} أصل) --</option>`;
                 allAssets.forEach(item => {
-                    a.innerHTML += `<option value="${item.id}" data-table="${item.table_name}" data-col="${item.display_column}">${item.name}</option>`;
+                    // إضافة نوع الأصل بجانب الاسم للتوضيح (مثلاً: طلمبة رئيسية - طلمبة 1)
+                    a.innerHTML += `<option value="${item.id}" data-table="${item.table}" data-col="${item.col}">
+                        ${item.typeLabel}: ${item.name}
+                    </option>`;
                 });
             } else {
                 a.innerHTML = '<option value="">لا توجد أصول مسجلة لهذه المحطة</option>';
@@ -172,6 +177,8 @@
         }
     }
 
+
+    
     async function generateReport() {
         const assetSelect = document.getElementById('assetId');
         const aid = assetSelect.value;
