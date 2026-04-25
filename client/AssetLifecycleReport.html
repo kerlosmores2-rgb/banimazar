@@ -1,31 +1,134 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سجل الحالة التاريخي للأصل</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap');
+        body { font-family: 'Cairo', sans-serif; background: #f4f7f6; color: #333; margin: 0; padding: 20px; direction: rtl; }
+        .no-print-zone { background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px; border-top: 5px solid #2980b9; }
+        .grid-select { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        label { font-weight: bold; display: block; margin-bottom: 8px; color: #2c3e50; }
+        select, input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: 'Cairo'; }
+        .btn-query { background: #2980b9; color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; width: 100%; margin-top: 20px; font-size: 16px; transition: 0.3s; }
+        .btn-query:hover { background: #1f6391; }
+
+        /* تنسيق التقرير المطبوع */
+        .report-paper { background: white; padding: 30px; border: 1px solid #000; min-height: 297mm; display: none; }
+        .header-logo { text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px; }
+        .asset-summary { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; background: #f9f9f9; padding: 15px; border: 1px solid #ddd; margin-bottom: 20px; }
+        
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        th { background: #eee !important; color: #000; border: 1px solid #000; padding: 8px; font-size: 12px; }
+        td { border: 1px solid #000; padding: 8px; text-align: center; font-size: 11px; }
+        .section-head { background: #2c3e50; color: white; padding: 5px 10px; margin-top: 20px; font-size: 14px; }
+
+        @media print {
+            @page { size: A4 portrait; margin: 10mm; }
+            .no-print-zone { display: none; }
+            .report-paper { display: block !important; }
+            body { background: white; padding: 0; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="no-print-zone">
+    <h3><i class="fas fa-filter"></i> إعداد تقرير حالة أصل (فترة محددة)</h3>
+    <div class="grid-select">
+        <div>
+            <label>اختر المحطة</label>
+            <select id="stationId" onchange="fetchAssets(this.value)">
+                <option value="">جاري تحميل المحطات...</option>
+            </select>
+        </div>
+        <div>
+            <label>اختر الأصل</label>
+            <select id="assetId">
+                <option value="">اختر المحطة أولاً</option>
+            </select>
+        </div>
+        <div>
+            <label>من تاريخ</label>
+            <input type="date" id="dateFrom">
+        </div>
+        <div>
+            <label>إلى تاريخ</label>
+            <input type="date" id="dateTo">
+        </div>
+    </div>
+    <button class="btn-query" onclick="generateReport()"><i class="fas fa-file-contract"></i> توليد التقرير التاريخي</button>
+</div>
+
+<div id="reportContent" class="report-paper">
+    <div class="header-logo">
+        <h2>شركة مياه الشرب والصرف الصحي بالمنيا</h2>
+        <h3>إدارة صرف بني مزار - سجل صيانة وحالة معدة</h3>
+    </div>
+
+    <div id="assetDetails" class="asset-summary"></div>
+
+    <div class="section-head">أولاً: سجل تقارير المرور والمتابعة</div>
+    <table id="inspectionTable">
+        <thead>
+            <tr>
+                <th style="width: 15%;">التاريخ</th>
+                <th style="width: 20%;">حالة الأصل</th>
+                <th>ملاحظات الحالة الفنية</th>
+                <th style="width: 15%;">المسؤول</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <div class="section-head">ثانياً: سجل بلاغات الأعطال والإصلاحات المنفذة</div>
+    <table id="faultTable">
+        <thead>
+            <tr>
+                <th style="width: 12%;">التاريخ</th>
+                <th style="width: 20%;">وصف العطل</th>
+                <th style="width: 25%;">إجراءات الإصلاح</th>
+                <th>قطع الغيار المستخدمة</th>
+                <th style="width: 10%;">الحالة</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <script>
     const SUPABASE_URL = 'https://jvfbkoaeugkeoiccvnkq.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_n64Hnhuruc3Oeolj-Uwg9g_tu-otJlZ';
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // دالة التشغيل الأولي لجلب المحطات
+    // دالة التشغيل الأولي
     async function init() {
+        const s = document.getElementById('stationId');
         try {
             const { data, error } = await _supabase.from('stations').select('id, station_name').order('station_name');
             if (error) throw error;
-            const s = document.getElementById('stationId');
+
             s.innerHTML = '<option value="">-- اختر المحطة --</option>';
-            data.forEach(item => s.innerHTML += `<option value="${item.id}">${item.station_name}</option>`);
+            data.forEach(item => {
+                s.innerHTML += `<option value="${item.id}">${item.station_name}</option>`;
+            });
         } catch (err) {
             console.error("Init Error:", err);
-            document.getElementById('stationId').innerHTML = '<option value="">خطأ في تحميل المحطات</option>';
+            s.innerHTML = '<option value="">خطأ في تحميل المحطات</option>';
         }
     }
 
-    // دالة جلب الأصول بناءً على المحطة المختارة
+    // دالة جلب الأصول
     async function fetchAssets(sid) {
         if(!sid) return;
         const a = document.getElementById('assetId');
-        a.innerHTML = '<option value="">جاري فحص جميع الفئات...</option>';
+        a.innerHTML = '<option value="">جاري الفحص...</option>';
 
         const stationIdInt = parseInt(sid);
-
-        // المصفوفة الصحيحة والنهائية للأسماء التي ذكرتها يا هندسة
         const assetTables = [
             { table: 'transformers', col: 'transformer_number', label: 'محول' },
             { table: 'generators', col: 'generator_number', label: 'مولد' },
@@ -45,108 +148,79 @@
             let allAssets = [];
 
             results.forEach((res, index) => {
-                if (res.data && res.data.length > 0) {
-                    const tableInfo = assetTables[index];
-                    res.data.forEach(asset => {
+                if (res.data) {
+                    const info = assetTables[index];
+                    res.data.forEach(item => {
                         allAssets.push({
-                            id: asset.id,
-                            name: asset[tableInfo.col] || "بدون اسم",
-                            table: tableInfo.table,
-                            col: tableInfo.col,
-                            typeLabel: tableInfo.label
+                            id: item.id,
+                            name: item[info.col] || "معدة",
+                            table: info.table,
+                            col: info.col,
+                            label: info.label
                         });
                     });
                 }
             });
 
             if (allAssets.length > 0) {
-                allAssets.sort((a, b) => a.typeLabel.localeCompare(b.typeLabel));
                 a.innerHTML = `<option value="">-- اختر المعدة (${allAssets.length}) --</option>`;
                 allAssets.forEach(item => {
-                    a.innerHTML += `<option value="${item.id}" data-table="${item.table}" data-col="${item.col}">
-                        ${item.typeLabel}: ${item.name}
-                    </option>`;
+                    a.innerHTML += `<option value="${item.id}" data-table="${item.table}" data-col="${item.col}">${item.label}: ${item.name}</option>`;
                 });
             } else {
-                a.innerHTML = '<option value="">لا توجد أصول مسجلة</option>';
+                a.innerHTML = '<option value="">لا توجد أصول</option>';
             }
         } catch (err) {
-            console.error("Error fetching assets:", err);
-            a.innerHTML = '<option value="">خطأ في جلب البيانات</option>';
+            a.innerHTML = '<option value="">خطأ في الجلب</option>';
         }
     }
 
-    // دالة توليد التقرير
+    // دالة التقرير
     async function generateReport() {
         const assetSelect = document.getElementById('assetId');
         const aid = assetSelect.value;
-        const selectedOption = assetSelect.options[assetSelect.selectedIndex];
+        const selected = assetSelect.options[assetSelect.selectedIndex];
         
-        if(!aid || aid === "") return alert("برجاء اختيار المعدة أولاً");
+        if(!aid) return alert("اختر المعدة");
 
-        const tableName = selectedOption.getAttribute('data-table');
-        const columnName = selectedOption.getAttribute('data-col');
+        const tableName = selected.getAttribute('data-table');
+        const columnName = selected.getAttribute('data-col');
         const from = document.getElementById('dateFrom').value;
         const to = document.getElementById('dateTo').value;
 
-        if(!from || !to) return alert("برجاء تحديد الفترة الزمنية");
+        if(!from || !to) return alert("حدد التاريخ");
 
         try {
-            // 1. جلب بيانات الأصل
-            const { data: asset, error: assetErr } = await _supabase.from(tableName).select('*').eq('id', aid).single();
-            if(assetErr) throw assetErr;
+            const { data: asset } = await _supabase.from(tableName).select('*').eq('id', aid).single();
+            const { data: ins } = await _supabase.from('inspection_reports').select('*').eq('asset_id', aid).gte('created_at', from).lte('created_at', to);
+            const { data: flt } = await _supabase.from('fault_reports').select('*').eq('asset_id', aid).gte('report_date', from).lte('report_date', to);
 
-            // 2. جلب سجلات المرور والأعطال
-            const { data: ins } = await _supabase.from('inspection_reports').select('*')
-                .eq('asset_id', aid).gte('created_at', from).lte('created_at', to).order('created_at');
-
-            const { data: flt } = await _supabase.from('fault_reports').select('*')
-                .eq('asset_id', aid).gte('report_date', from).lte('report_date', to).order('report_date');
-
-            // عرض البيانات في التقرير
             document.getElementById('reportContent').style.display = 'block';
             document.getElementById('assetDetails').innerHTML = `
-                <div><strong>اسم المعدة:</strong> ${asset[columnName]}</div>
-                <div><strong>نوع الفئة:</strong> ${tableName}</div>
+                <div><strong>المعدة:</strong> ${asset[columnName]}</div>
+                <div><strong>الفئة:</strong> ${tableName}</div>
                 <div><strong>المواصفات:</strong> ${asset.rated_power_kva || asset.capacity || '---'}</div>
                 <div><strong>الفترة:</strong> من ${from} إلى ${to}</div>
             `;
 
-            // تنظيف الجداول قبل التعبئة
-            document.querySelector('#inspectionTable tbody').innerHTML = "";
-            document.querySelector('#faultTable tbody').innerHTML = "";
+            const iBody = document.querySelector('#inspectionTable tbody');
+            const fBody = document.querySelector('#faultTable tbody');
+            iBody.innerHTML = ""; fBody.innerHTML = "";
 
-            // تعبئة جدول المرور
             ins?.forEach(i => {
-                document.querySelector('#inspectionTable tbody').innerHTML += `
-                    <tr>
-                        <td>${new Date(i.created_at).toLocaleDateString('ar-EG')}</td>
-                        <td>${i.status || '---'}</td>
-                        <td>${i.notes || 'لا يوجد'}</td>
-                        <td>${i.inspector_name || '---'}</td>
-                    </tr>`;
+                iBody.innerHTML += `<tr><td>${i.created_at.split('T')[0]}</td><td>${i.status}</td><td>${i.notes}</td><td>${i.inspector_name}</td></tr>`;
             });
-
-            // تعبئة جدول الأعطال
             flt?.forEach(f => {
-                document.querySelector('#faultTable tbody').innerHTML += `
-                    <tr>
-                        <td>${new Date(f.report_date).toLocaleDateString('ar-EG')}</td>
-                        <td>${f.fault_description}</td>
-                        <td>${f.repair_action || 'تحت الإصلاح'}</td>
-                        <td>${f.spare_parts || '---'}</td>
-                        <td>${f.repair_status}</td>
-                    </tr>`;
+                fBody.innerHTML += `<tr><td>${f.report_date}</td><td>${f.fault_description}</td><td>${f.repair_action}</td><td>${f.spare_parts}</td><td>${f.repair_status}</td></tr>`;
             });
 
-            setTimeout(() => { window.print(); }, 500);
-            
-        } catch (err) {
-            console.error("Report Error:", err);
-            alert("حدث خطأ أثناء توليد التقرير");
-        }
+            setTimeout(() => window.print(), 500);
+        } catch (e) { alert("حدث خطأ في جلب بيانات التقرير"); }
     }
 
-    // تشغيل الدالة الأولى عند تحميل الصفحة
-    init();
+    // التشغيل
+    window.onload = init;
 </script>
+
+</body>
+</html>
