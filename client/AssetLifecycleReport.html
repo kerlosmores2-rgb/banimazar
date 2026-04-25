@@ -172,101 +172,102 @@
 
 
 
-    async function generateReport() {
-        const assetSelect = document.getElementById('assetId');
-        const aid = assetSelect.value;
-        const selected = assetSelect.options[assetSelect.selectedIndex];
-        
-        if(!aid) return alert("اختر المعدة أولاً");
+async function generateReport() {
+    const assetSelect = document.getElementById('assetId');
+    const aid = assetSelect.value;
+    const selected = assetSelect.options[assetSelect.selectedIndex];
+    
+    if(!aid) return alert("اختر المعدة أولاً");
 
-        const tableName = selected.getAttribute('data-table');
-        const columnName = selected.getAttribute('data-col');
-        const from = document.getElementById('dateFrom').value;
-        const to = document.getElementById('dateTo').value;
+    const tableName = selected.getAttribute('data-table');
+    const columnName = selected.getAttribute('data-col');
+    const from = document.getElementById('dateFrom').value;
+    const to = document.getElementById('dateTo').value;
 
-        if(!from || !to) return alert("حدد التاريخ من وإلى");
+    if(!from || !to) return alert("حدد التاريخ من وإلى");
 
-        try {
-            // 1. جلب بيانات الأصل
-            const { data: asset, error: assetErr } = await _supabase.from(tableName).select('*').eq('id', aid).single();
-            if (assetErr) throw assetErr;
+    try {
+        // 1. جلب بيانات الأصل
+        const { data: asset, error: assetErr } = await _supabase.from(tableName).select('*').eq('id', aid).single();
+        if (assetErr) throw assetErr;
 
-            // 2. جلب تقارير المرور (بدون فلتر تاريخ مؤقتاً للتأكد من الاتصال)
-            const { data: ins, error: insErr } = await _supabase.from('inspection_reports')
-                .select('*')
-                .eq('asset_id', aid); 
+        // 2. جلب تقارير المرور (من جدول inspection_report)
+        // بنجيب البيانات ونفلترها يدوياً لضمان الدقة مع الـ JSON
+        const { data: ins, error: insErr } = await _supabase.from('inspection_report')
+            .select('*')
+            .eq('asset_id', aid);
 
-            // 3. جلب بلاغات الأعطال
-            const { data: flt, error: fltErr } = await _supabase.from('fault_reports')
-                .select('*')
-                .eq('asset_id', aid);
+        // 3. جلب سجلات الأعطال (من جدول maintenance_tickets)
+        const { data: flt, error: fltErr } = await _supabase.from('maintenance_tickets')
+            .select('*')
+            .eq('asset_id', aid);
 
-            // --- منطقة كشف الأخطاء (Check the Console F12) ---
-            console.log("--- فحص البيانات القادمة من سوبا بيز ---");
-            if (ins) console.log("سجلات المرور المتاحة:", ins);
-            if (flt) console.log("سجلات الأعطال المتاحة:", flt);
-            
-            if (insErr) console.error("خطأ في جدول المرور (تأكد من اسم العمود asset_id):", insErr);
-            if (fltErr) console.error("خطأ في جدول الأعطال (تأكد من اسم العمود asset_id):", fltErr);
+        if (insErr) console.error("Inspection Table Error:", insErr);
+        if (fltErr) console.error("Maintenance Table Error:", fltErr);
 
-            // عرض محتوى التقرير
-            document.getElementById('reportContent').style.display = 'block';
-            document.getElementById('assetDetails').innerHTML = `
-                <div><strong>اسم المعدة:</strong> ${asset[columnName]}</div>
-                <div><strong>الفئة:</strong> ${tableName}</div>
-                <div><strong>المواصفات:</strong> ${asset.rated_power_kva || asset.capacity || '---'}</div>
-                <div><strong>الفترة:</strong> من ${from} إلى ${to}</div>
-            `;
+        // إظهار التقرير وتعبئة البيانات الأساسية
+        document.getElementById('reportContent').style.display = 'block';
+        document.getElementById('assetDetails').innerHTML = `
+            <div><strong>اسم المعدة:</strong> ${asset[columnName]}</div>
+            <div><strong>الفئة:</strong> ${tableName}</div>
+            <div><strong>المواصفات:</strong> ${asset.rated_power_kva || asset.capacity || '---'}</div>
+            <div><strong>الفترة:</strong> من ${from} إلى ${to}</div>
+        `;
 
-            const iBody = document.querySelector('#inspectionTable tbody');
-            const fBody = document.querySelector('#faultTable tbody');
-            iBody.innerHTML = ""; fBody.innerHTML = "";
+        const iBody = document.querySelector('#inspectionTable tbody');
+        const fBody = document.querySelector('#faultTable tbody');
+        iBody.innerHTML = ""; fBody.innerHTML = "";
 
-            // تعبئة جدول المرور بفلترة يدوية للتأكد
-            const filteredIns = ins?.filter(i => {
+        // تعبئة جدول المرور (التعامل مع عمود checklist_data كـ JSON)
+        if (ins && ins.length > 0) {
+            const filteredIns = ins.filter(i => {
                 const d = i.created_at.split('T')[0];
                 return d >= from && d <= to;
             });
 
-            if (filteredIns && filteredIns.length > 0) {
-                filteredIns.forEach(i => {
-                    iBody.innerHTML += `<tr>
-                        <td>${i.created_at.split('T')[0]}</td>
-                        <td>${i.status || i.asset_status || '---'}</td>
-                        <td>${i.notes || i.technical_notes || '---'}</td>
-                        <td>${i.inspector_name || i.responsible || '---'}</td>
-                    </tr>`;
-                });
-            } else {
-                iBody.innerHTML = '<tr><td colspan="4">لا توجد سجلات مرور مطابقة لهذه الفترة</td></tr>';
-            }
-
-            // تعبئة جدول الأعطال بفلترة يدوية
-            const filteredFlt = flt?.filter(f => f.report_date >= from && f.report_date <= to);
-
-            if (filteredFlt && filteredFlt.length > 0) {
-                filteredFlt.forEach(f => {
-                    fBody.innerHTML += `<tr>
-                        <td>${f.report_date}</td>
-                        <td>${f.fault_description || f.description}</td>
-                        <td>${f.repair_action || f.actions}</td>
-                        <td>${f.spare_parts || 'لا يوجد'}</td>
-                        <td>${f.repair_status || f.status}</td>
-                    </tr>`;
-                });
-            } else {
-                fBody.innerHTML = '<tr><td colspan="5">لا توجد بلاغات أعطال مطابقة لهذه الفترة</td></tr>';
-            }
-
-            setTimeout(() => { window.print(); }, 1000);
-
-        } catch (e) {
-            console.error("Report Error:", e);
-            alert("فشل في جلب البيانات: " + e.message);
+            filteredIns.forEach(i => {
+                // استخراج البيانات من داخل الـ JSON
+                const state = i.checklist_data?.state || '---';
+                const note = i.checklist_data?.note || '---';
+                
+                iBody.innerHTML += `<tr>
+                    <td>${i.created_at.split('T')[0]}</td>
+                    <td>${state}</td>
+                    <td>${note}</td>
+                    <td>${i.inspector_name || '---'}</td>
+                </tr>`;
+            });
         }
+        if (iBody.innerHTML === "") iBody.innerHTML = '<tr><td colspan="4">لا توجد سجلات مرور في هذه الفترة</td></tr>';
+
+        // تعبئة جدول الأعطال (جدول maintenance_tickets)
+        if (flt && flt.length > 0) {
+            const filteredFlt = flt.filter(f => {
+                const d = f.created_at.split('T')[0];
+                return d >= from && d <= to;
+            });
+
+            filteredFlt.forEach(f => {
+                iBody.innerHTML === "" // تصحيح بسيط للجدول الثاني
+                fBody.innerHTML += `<tr>
+                    <td>${f.created_at.split('T')[0]}</td>
+                    <td>${f.fault_description || '---'}</td>
+                    <td>${f.repair_action || '---'}</td>
+                    <td>${f.spare_part || '---'}</td>
+                    <td>${f.stauts || '---'}</td>
+                </tr>`;
+            });
+        }
+        if (fBody.innerHTML === "") fBody.innerHTML = '<tr><td colspan="5">لا توجد بلاغات أعطال في هذه الفترة</td></tr>';
+
+        // تشغيل الطباعة
+        setTimeout(() => { window.print(); }, 1000);
+
+    } catch (e) {
+        console.error("Report Generation Error:", e);
+        alert("حدث خطأ: " + e.message);
     }
-
-
+}
 
 
     
