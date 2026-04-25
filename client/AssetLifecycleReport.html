@@ -19,28 +19,41 @@
     }
 
     // 2. جلب الأصول من كل الجداول الفئوية (المصلحة)
+// دالة جلب الأصول بناءً على المحطة المختارة
     async function fetchAssets(sid) {
         if(!sid) return;
         const a = document.getElementById('assetId');
         a.innerHTML = '<option value="">جاري فحص جميع الفئات...</option>';
         const stationIdInt = parseInt(sid);
 
+        // تأكد من أسماء الجداول هنا (لو المفرد هو اللي شغال خليه مفرد)
         const assetTables = [
             { table: 'transformers', col: 'transformer_number', label: 'محول' },
             { table: 'generators', col: 'generator_number', label: 'مولد' },
             { table: 'electrical_panels', col: 'panel_number', label: 'لوحة' },
-            { table: 'main_pump', col: 'pump_number', label: 'طلمبة رئيسية' },
-            { table: 'sub_pump', col: 'pump_number', label: 'طلمبة غاطسة' },
+            { table: 'main_pump', col: 'pump_number', label: 'طلمبة رئيسية' }, // تأكد: main_pump أم main_pumps
+            { table: 'sub_pump', col: 'pump_number', label: 'طلمبة غاطسة' },   // تأكد: sub_pump أم sub_pumps
             { table: 'other_assets', col: 'assets_number', label: 'أصل آخر' },
             { table: 'buildings', col: 'building_number', label: 'مبنى' }
         ];
 
         try {
             let allAssets = [];
+
+            // تنفيذ الطلبات بشكل منفصل عشان لو جدول مش موجود ميوصلناش لـ Error كلي
             for (const item of assetTables) {
                 try {
-                    const { data, error } = await _supabase.from(item.table).select('*').eq('station_id', stationIdInt);
-                    if (!error && data) {
+                    const { data, error } = await _supabase
+                        .from(item.table)
+                        .select('*')
+                        .eq('station_id', stationIdInt);
+                    
+                    if (error) {
+                        console.warn(`Table ${item.table} not found or error:`, error.message);
+                        continue; 
+                    }
+
+                    if (data && data.length > 0) {
                         data.forEach(asset => {
                             allAssets.push({
                                 id: asset.id,
@@ -51,7 +64,9 @@
                             });
                         });
                     }
-                } catch (e) { console.error(`Error in ${item.table}`); }
+                } catch (innerErr) {
+                    console.error(`Error in table ${item.table}:`, innerErr);
+                }
             }
 
             if (allAssets.length > 0) {
@@ -60,13 +75,105 @@
                     a.innerHTML += `<option value="${item.id}" data-table="${item.table}" data-col="${item.col}">${item.typeLabel}: ${item.name}</option>`;
                 });
             } else {
-                a.innerHTML = '<option value="">لا توجد أصول مسجلة</option>';
+                a.innerHTML = '<option value="">لا توجد أصول مسجلة لهذه المحطة</option>';
             }
         } catch (err) {
+            console.error("General Error fetching assets:", err);
             a.innerHTML = '<option value="">خطأ في جلب البيانات</option>';
         }
     }
 
+    // دالة توليد التقرير
+    async function generateReport() {
+        const assetSelect = document.getElementById('assetId');
+        const aid = assetSelect.value; 
+        const selected = assetSelect.options[assetSelect.selectedIndex];
+        
+        if(!aid) return alert("اختر المعدة أولاً");
+
+        const tableName = selected.getAttribute('data-table');
+        const columnName = selected.getAttribute('data-col');
+        const from = document.getElementById('dateFrom').value;
+        const to = document.getElementById('dateTo').value;
+
+        if(!from || !to) return alert("حدد الفترة الزمنية");
+
+        try {
+            // جلب بيانات الأصل
+            const { data: asset, error: assetErr } = await _supabase.from(tableName).select('*').eq('id', aid).single();
+            if(assetErr) throw assetErr;
+
+            const assetRealValue = asset[columnName]; 
+
+            // جلب سجلات المرور (تأكد من الاسم الصحيح inspection_report أم inspection_reports)
+            const { data: ins, error: insErr } = await _supabase
+                .from('inspection_report') 
+                .select('*')
+                .eq('asset_id', assetRealValue);
+
+            // جلب سجلات الأعطال
+            const { data: flt, error: fltErr } = await _supabase
+                .from('maintenance_tickets')
+                .select('*')
+                .eq('asset_id', assetRealValue);
+
+            document.getElementById('reportContent').style.display = 'block';
+            document.getElementById('assetDetails').innerHTML = `
+                <div><strong>اسم المعدة:</strong> ${assetRealValue}</div>
+                <div><strong>الفئة:</strong> ${tableName}</div>
+                <div><strong>المواصفات:</strong> ${asset.rated_power_kva || asset.capacity || '---'}</div>
+                <div><strong>الفترة:</strong> من ${from} إلى ${to}</div>
+            `;
+
+            const iBody = document.querySelector('#inspectionTable tbody');
+            const fBody = document.querySelector('#faultTable tbody');
+            iBody.innerHTML = ""; fBody.innerHTML = "";
+
+            if (ins && ins.length > 0) {
+                ins.filter(i => {
+                    const d = i.created_at.split('T')[0];
+                    return d >= from && d <= to;
+                }).forEach(i => {
+                    const state = i.checklist_data?.state || '---';
+                    const note = i.checklist_data?.note || '---';
+                    iBody.innerHTML += `<tr>
+                        <td>${i.created_at.split('T')[0]}</td>
+                        <td>${state}</td>
+                        <td>${note}</td>
+                        <td>${i.inspector_name || '---'}</td>
+                    </tr>`;
+                });
+            }
+
+            if (flt && flt.length > 0) {
+                flt.filter(f => {
+                    const d = f.created_at.split('T')[0];
+                    return d >= from && d <= to;
+                }).forEach(f => {
+                    fBody.innerHTML += `<tr>
+                        <td>${f.created_at.split('T')[0]}</td>
+                        <td>${f.fault_description || '---'}</td>
+                        <td>${f.repair_action || '---'}</td>
+                        <td>${f.spare_part || '---'}</td>
+                        <td>${f.stauts || '---'}</td>
+                    </tr>`;
+                });
+            }
+
+            if (iBody.innerHTML === "") iBody.innerHTML = '<tr><td colspan="4">لا توجد سجلات مرور</td></tr>';
+            if (fBody.innerHTML === "") fBody.innerHTML = '<tr><td colspan="5">لا توجد بلاغات أعطال</td></tr>';
+
+            setTimeout(() => { window.print(); }, 1000);
+            
+        } catch (err) {
+            console.error("Report Error:", err);
+            alert("حدث خطأ أثناء جلب البيانات.");
+        }
+    }
+
+
+
+    
     // 3. توليد التقرير التاريخي
     async function generateReport() {
         const assetSelect = document.getElementById('assetId');
