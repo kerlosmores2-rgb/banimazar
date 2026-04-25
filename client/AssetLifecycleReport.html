@@ -194,19 +194,19 @@
 
 
     // دالة جلب الأصول بناءً على المحطة المختارة
-    async function fetchAssets(sid) {
+async function fetchAssets(sid) {
         if(!sid) return;
         const a = document.getElementById('assetId');
         a.innerHTML = '<option value="">جاري فحص جميع الفئات...</option>';
         const stationIdInt = parseInt(sid);
 
-        // تأكد من أسماء الجداول هنا (لو المفرد هو اللي شغال خليه مفرد)
+        // قائمة الجداول (تأكد من مطابقتها للـ Database عندك حرفياً)
         const assetTables = [
             { table: 'transformers', col: 'transformer_number', label: 'محول' },
             { table: 'generators', col: 'generator_number', label: 'مولد' },
             { table: 'electrical_panels', col: 'panel_number', label: 'لوحة' },
-            { table: 'main_pump', col: 'pump_number', label: 'طلمبة رئيسية' }, // تأكد: main_pump أم main_pumps
-            { table: 'sub_pump', col: 'pump_number', label: 'طلمبة غاطسة' },   // تأكد: sub_pump أم sub_pumps
+            { table: 'main_pump', col: 'pump_number', label: 'طلمبة رئيسية' },
+            { table: 'sub_pump', col: 'pump_number', label: 'طلمبة غاطسة' },
             { table: 'other_assets', col: 'assets_number', label: 'أصل آخر' },
             { table: 'buildings', col: 'building_number', label: 'مبنى' }
         ];
@@ -214,7 +214,7 @@
         try {
             let allAssets = [];
 
-            // تنفيذ الطلبات بشكل منفصل عشان لو جدول مش موجود ميوصلناش لـ Error كلي
+            // بنجرب جدول جدول بشكل منفصل
             for (const item of assetTables) {
                 try {
                     const { data, error } = await _supabase
@@ -223,8 +223,9 @@
                         .eq('station_id', stationIdInt);
                     
                     if (error) {
-                        console.warn(`Table ${item.table} not found or error:`, error.message);
-                        continue; 
+                        // لو الجدول مش موجود هيطبع اسمه هنا في الـ Console (F12)
+                        console.error(`مشكلة في جدول ${item.table}:`, error.message);
+                        continue; // كمل اللي بعده متبوظش الدنيا
                     }
 
                     if (data && data.length > 0) {
@@ -239,7 +240,7 @@
                         });
                     }
                 } catch (innerErr) {
-                    console.error(`Error in table ${item.table}:`, innerErr);
+                    console.error(`خطأ غير متوقع في ${item.table}:`, innerErr);
                 }
             }
 
@@ -252,11 +253,11 @@
                 a.innerHTML = '<option value="">لا توجد أصول مسجلة لهذه المحطة</option>';
             }
         } catch (err) {
-            console.error("General Error fetching assets:", err);
-            a.innerHTML = '<option value="">خطأ في جلب البيانات</option>';
+            console.error("General Error:", err);
+            a.innerHTML = '<option value="">خطأ في الاتصال بقاعدة البيانات</option>';
         }
     }
-
+    
     // دالة توليد التقرير
     async function generateReport() {
         const assetSelect = document.getElementById('assetId');
