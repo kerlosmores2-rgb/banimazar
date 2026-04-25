@@ -111,19 +111,20 @@
         data.forEach(item => s.innerHTML += `<option value="${item.id}">${item.station_name}</option>`);
     }
 
+// 1. دالة جلب المعدات (الأصول) عند اختيار المحطة
     async function fetchAssets(sid) {
         if(!sid) return;
         const a = document.getElementById('assetId');
         a.innerHTML = '<option value="">جاري تحميل المعدات...</option>';
 
-        // ملاحظة: تم تغيير اسم الجدول ليكون 'assets' بدلاً من 'station_assets'
+        // ملاحظة: غيرنا الاسم لـ 'assets' لأنه الاسم الفعلي عندك في سوبا بيز
         const { data, error } = await _supabase
             .from('assets') 
             .select('id, asset_name')
-            .eq('station_id', sid); // التأكد من أن الربط يتم عبر معرف المحطة
+            .eq('station_id', sid); // لو استمر الخطأ، جرب تغيير station_id لـ station_name
 
         if (error) {
-            console.error("Error details:", error);
+            console.error("خطأ:", error);
             a.innerHTML = '<option value="">خطأ في التحميل</option>';
             return;
         }
@@ -134,61 +135,21 @@
                 a.innerHTML += `<option value="${item.id}">${item.asset_name}</option>`;
             });
         } else {
-            a.innerHTML = '<option value="">لا توجد معدات لهذه المحطة</option>';
+            a.innerHTML = '<option value="">لا يوجد معدات مسجلة لهذه المحطة</option>';
         }
     }
-    
-    
-    
-    
+
+    // 2. تعديل بسيط في دالة توليد التقرير
     async function generateReport() {
         const aid = document.getElementById('assetId').value;
-        const from = document.getElementById('dateFrom').value;
-        const to = document.getElementById('dateTo').value;
+        // ... باقي الكود ...
 
-        if(!aid || !from || !to) return alert("برجاء استكمال البيانات");
-
-        // 1. جلب بيانات الأصل
-        const { data: asset } = await _supabase.from('station_assets').select('*').eq('id', aid).single();
+        // تأكد أن هذا السطر يستخدم جدول 'assets'
+        const { data: asset } = await _supabase.from('assets').select('*').eq('id', aid).single();
         
-        // 2. جلب تقارير المرور
-        const { data: ins } = await _supabase.from('inspection_reports')
-            .select('*').eq('asset_id', aid).gte('created_at', from).lte('created_at', to).order('created_at');
-
-        // 3. جلب بلاغات الأعطال
-        const { data: flt } = await _supabase.from('fault_reports')
-            .select('*').eq('asset_id', aid).gte('report_date', from).lte('report_date', to).order('report_date');
-
-        // عرض التقرير وتعبئته
-        document.getElementById('reportContent').style.display = 'block';
-        
-        document.getElementById('assetDetails').innerHTML = `
-            <div><strong>اسم المعدة:</strong> ${asset.asset_name}</div>
-            <div><strong>الماركة:</strong> ${asset.brand || '---'}</div>
-            <div><strong>الكود الرقمي:</strong> ${asset.asset_code || '---'}</div>
-            <div><strong>الفترة من:</strong> ${from} <strong>إلى:</strong> ${to}</div>
-        `;
-
-        const insBody = document.querySelector('#inspectionTable tbody');
-        insBody.innerHTML = ins.length ? '' : '<tr><td colspan="4">لا توجد سجلات مرور</td></tr>';
-        ins.forEach(row => {
-            insBody.innerHTML += `<tr><td>${new Date(row.created_at).toLocaleDateString('ar-EG')}</td><td>${row.condition}</td><td>${row.notes || '---'}</td><td>${row.inspector_name || '---'}</td></tr>`;
-        });
-
-        const fltBody = document.querySelector('#faultTable tbody');
-        fltBody.innerHTML = flt.length ? '' : '<tr><td colspan="5">لا توجد بلاغات أعطال</td></tr>';
-        flt.forEach(row => {
-            fltBody.innerHTML += `<tr>
-                <td>${new Date(row.report_date).toLocaleDateString('ar-EG')}</td>
-                <td>${row.fault_description}</td>
-                <td>${row.repair_actions || '---'}</td>
-                <td>${row.spare_parts || '---'}</td>
-                <td>${row.status}</td>
-            </tr>`;
-        });
-
-        window.print();
+        // ... باقي الكود ...
     }
+    
 
     init();
 </script>
