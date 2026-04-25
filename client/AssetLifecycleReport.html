@@ -169,12 +169,15 @@
         }
     }
 
-      async function generateReport() {
+
+
+
+    async function generateReport() {
         const assetSelect = document.getElementById('assetId');
         const aid = assetSelect.value;
         const selected = assetSelect.options[assetSelect.selectedIndex];
         
-        if(!aid) return alert("اختر المعدة");
+        if(!aid) return alert("اختر المعدة أولاً");
 
         const tableName = selected.getAttribute('data-table');
         const columnName = selected.getAttribute('data-col');
@@ -184,34 +187,32 @@
         if(!from || !to) return alert("حدد التاريخ من وإلى");
 
         try {
-            // 1. جلب بيانات الأصل الأساسية
+            // 1. جلب بيانات الأصل
             const { data: asset, error: assetErr } = await _supabase.from(tableName).select('*').eq('id', aid).single();
             if (assetErr) throw assetErr;
 
-            // 2. جلب تقارير المرور (تأكد أن العمود هو asset_id)
-            // أضفنا .gte و .lte مع تعديل بسيط للتاريخ
+            // 2. جلب تقارير المرور (بدون فلتر تاريخ مؤقتاً للتأكد من الاتصال)
             const { data: ins, error: insErr } = await _supabase.from('inspection_reports')
                 .select('*')
-                .eq('asset_id', aid)
-                .filter('created_at', 'gte', `${from}T00:00:00`)
-                .filter('created_at', 'lte', `${to}T23:59:59`)
-                .order('created_at');
+                .eq('asset_id', aid); 
 
             // 3. جلب بلاغات الأعطال
             const { data: flt, error: fltErr } = await _supabase.from('fault_reports')
                 .select('*')
-                .eq('asset_id', aid)
-                .filter('report_date', 'gte', from)
-                .filter('report_date', 'lte', to)
-                .order('report_date');
+                .eq('asset_id', aid);
 
-            // التحقق من وصول البيانات في الـ Console
-            console.log("Reports Found:", { inspections: ins, faults: flt });
+            // --- منطقة كشف الأخطاء (Check the Console F12) ---
+            console.log("--- فحص البيانات القادمة من سوبا بيز ---");
+            if (ins) console.log("سجلات المرور المتاحة:", ins);
+            if (flt) console.log("سجلات الأعطال المتاحة:", flt);
+            
+            if (insErr) console.error("خطأ في جدول المرور (تأكد من اسم العمود asset_id):", insErr);
+            if (fltErr) console.error("خطأ في جدول الأعطال (تأكد من اسم العمود asset_id):", fltErr);
 
-            // إظهار المحتوى
+            // عرض محتوى التقرير
             document.getElementById('reportContent').style.display = 'block';
             document.getElementById('assetDetails').innerHTML = `
-                <div><strong>المعدة:</strong> ${asset[columnName]}</div>
+                <div><strong>اسم المعدة:</strong> ${asset[columnName]}</div>
                 <div><strong>الفئة:</strong> ${tableName}</div>
                 <div><strong>المواصفات:</strong> ${asset.rated_power_kva || asset.capacity || '---'}</div>
                 <div><strong>الفترة:</strong> من ${from} إلى ${to}</div>
@@ -221,43 +222,49 @@
             const fBody = document.querySelector('#faultTable tbody');
             iBody.innerHTML = ""; fBody.innerHTML = "";
 
-            if (ins && ins.length > 0) {
-                ins.forEach(i => {
+            // تعبئة جدول المرور بفلترة يدوية للتأكد
+            const filteredIns = ins?.filter(i => {
+                const d = i.created_at.split('T')[0];
+                return d >= from && d <= to;
+            });
+
+            if (filteredIns && filteredIns.length > 0) {
+                filteredIns.forEach(i => {
                     iBody.innerHTML += `<tr>
-                        <td>${i.created_at ? i.created_at.split('T')[0] : '---'}</td>
-                        <td>${i.status || '---'}</td>
-                        <td>${i.notes || 'لا يوجد'}</td>
-                        <td>${i.inspector_name || '---'}</td>
+                        <td>${i.created_at.split('T')[0]}</td>
+                        <td>${i.status || i.asset_status || '---'}</td>
+                        <td>${i.notes || i.technical_notes || '---'}</td>
+                        <td>${i.inspector_name || i.responsible || '---'}</td>
                     </tr>`;
                 });
             } else {
-                iBody.innerHTML = '<tr><td colspan="4">لا توجد تقارير مرور في هذه الفترة</td></tr>';
+                iBody.innerHTML = '<tr><td colspan="4">لا توجد سجلات مرور مطابقة لهذه الفترة</td></tr>';
             }
 
-            if (flt && flt.length > 0) {
-                flt.forEach(f => {
+            // تعبئة جدول الأعطال بفلترة يدوية
+            const filteredFlt = flt?.filter(f => f.report_date >= from && f.report_date <= to);
+
+            if (filteredFlt && filteredFlt.length > 0) {
+                filteredFlt.forEach(f => {
                     fBody.innerHTML += `<tr>
-                        <td>${f.report_date || '---'}</td>
-                        <td>${f.fault_description || '---'}</td>
-                        <td>${f.repair_action || 'جاري الإصلاح'}</td>
-                        <td>${f.spare_parts || '---'}</td>
-                        <td>${f.repair_status || '---'}</td>
+                        <td>${f.report_date}</td>
+                        <td>${f.fault_description || f.description}</td>
+                        <td>${f.repair_action || f.actions}</td>
+                        <td>${f.spare_parts || 'لا يوجد'}</td>
+                        <td>${f.repair_status || f.status}</td>
                     </tr>`;
                 });
             } else {
-                fBody.innerHTML = '<tr><td colspan="5">لا توجد بلاغات أعطال في هذه الفترة</td></tr>';
+                fBody.innerHTML = '<tr><td colspan="5">لا توجد بلاغات أعطال مطابقة لهذه الفترة</td></tr>';
             }
 
-            // تأخير الطباعة قليلاً لضمان رص البيانات
-            setTimeout(() => { window.print(); }, 800);
+            setTimeout(() => { window.print(); }, 1000);
 
         } catch (e) {
-            console.error("Full Report Error:", e);
-            alert("حدث خطأ أثناء جلب تفاصيل التقارير: " + e.message);
+            console.error("Report Error:", e);
+            alert("فشل في جلب البيانات: " + e.message);
         }
     }
-
-
 
 
 
