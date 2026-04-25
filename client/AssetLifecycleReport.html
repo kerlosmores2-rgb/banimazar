@@ -195,7 +195,7 @@ async function generateReport() {
         // 2. جلب تقارير المرور بالربط مع "رقم المعدة"
         // ملاحظة: افترضت هنا أن اسم العمود في جدول التقارير هو asset_id ولكنه يحتوي على "رقم المعدة"
         // إذا كان اسم العمود في جدول التقارير مختلف (مثل pump_id)، يرجى إبلاغي
-        const { data: ins } = await _supabase.from('inspection_report')
+        const { data: ins } = await _supabase.from('inspection_reports')
             .select('*')
             .eq('asset_id', assetRealNumber); 
 
