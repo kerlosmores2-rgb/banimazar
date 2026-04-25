@@ -113,12 +113,101 @@
 
     async function fetchAssets(sid) {
         if(!sid) return;
-        const { data } = await _supabase.from('station_assets').select('id, asset_name').eq('station_id', sid);
         const a = document.getElementById('assetId');
-        a.innerHTML = '<option value="">-- اختر المعدة --</option>';
-        data.forEach(item => a.innerHTML += `<option value="${item.id}">${item.asset_name}</option>`);
+        a.innerHTML = '<option value="">جاري فحص فئات الأصول...</option>';
+
+        const stationIdInt = parseInt(sid);
+        
+        // خريطة الجداول مع أسماء الأعمدة الخاصة بها كما ذكرت
+        const tableMapping = {
+            'transformers': 'transformer_number',
+            'generators': 'generator_number',
+            'electrical_panels': 'panel_number',
+            'main_pumps': 'pump_number',
+            'sub_pumps': 'pump_number',
+            'other_assets': 'assets_number',
+            'buildings': 'building_number'
+        };
+
+        const tables = Object.keys(tableMapping);
+
+        try {
+            const requests = tables.map(table => 
+                _supabase.from(table).select('*').eq('station_id', stationIdInt)
+            );
+
+            const results = await Promise.all(requests);
+            let allAssets = [];
+
+            results.forEach((res, index) => {
+                if (res.data && res.data.length > 0) {
+                    const tableName = tables[index];
+                    const columnName = tableMapping[tableName];
+
+                    res.data.forEach(item => {
+                        allAssets.push({
+                            id: item.id,
+                            name: item[columnName] || "بدون اسم",
+                            table_name: tableName,
+                            display_column: columnName // هنحتاجه في التقرير
+                        });
+                    });
+                }
+            });
+
+            if (allAssets.length > 0) {
+                a.innerHTML = `<option value="">-- اختر المعدة (${allAssets.length}) --</option>`;
+                allAssets.forEach(item => {
+                    a.innerHTML += `<option value="${item.id}" data-table="${item.table_name}" data-col="${item.display_column}">${item.name}</option>`;
+                });
+            } else {
+                a.innerHTML = '<option value="">لا توجد أصول مسجلة لهذه المحطة</option>';
+            }
+        } catch (err) {
+            console.error("Error fetching assets:", err);
+            a.innerHTML = '<option value="">خطأ في جلب البيانات</option>';
+        }
     }
 
+    async function generateReport() {
+        const assetSelect = document.getElementById('assetId');
+        const aid = assetSelect.value;
+        const selectedOption = assetSelect.options[assetSelect.selectedIndex];
+        
+        const tableName = selectedOption.getAttribute('data-table');
+        const columnName = selectedOption.getAttribute('data-col');
+        
+        const from = document.getElementById('dateFrom').value;
+        const to = document.getElementById('dateTo').value;
+
+        if(!aid || !from || !to) return alert("برجاء استكمال البيانات");
+
+        // جلب بيانات الأصل من جدوله الصحيح
+        const { data: asset } = await _supabase.from(tableName).select('*').eq('id', aid).single();
+        
+        // جلب تقارير المرور وبلاغات الأعطال (تأكد أن asset_id في هذه الجداول يربط مع id الأصل)
+        const { data: ins } = await _supabase.from('inspection_reports')
+            .select('*').eq('asset_id', aid).gte('created_at', from).lte('created_at', to).order('created_at');
+
+        const { data: flt } = await _supabase.from('fault_reports')
+            .select('*').eq('asset_id', aid).gte('report_date', from).lte('report_date', to).order('report_date');
+
+        // عرض التقرير
+        document.getElementById('reportContent').style.display = 'block';
+        
+        // عرض تفاصيل الأصل بناءً على العمود الصحيح
+        document.getElementById('assetDetails').innerHTML = `
+            <div><strong>اسم المعدة:</strong> ${asset[columnName]}</div>
+            <div><strong>الفئة:</strong> ${tableName}</div>
+            <div><strong>المواصفات:</strong> ${asset.rated_power_kva || asset.capacity || '---'}</div>
+            <div><strong>الفترة من:</strong> ${from} <strong>إلى:</strong> ${to}</div>
+        `;
+
+        // تعبئة الجداول (بقية الكود كما هو في ملفك الأصلي)
+        renderTables(ins, flt);
+        
+        window.print();
+    }
     async function generateReport() {
         const aid = document.getElementById('assetId').value;
         const from = document.getElementById('dateFrom').value;
