@@ -125,15 +125,18 @@
         a.innerHTML = '<option value="">جاري فحص جميع الفئات...</option>';
         const stationIdInt = parseInt(sid);
 
+        
+           
         const assetTables = [
             { table: 'transformers', col: 'transformer_number', label: 'محول' },
             { table: 'generators', col: 'generator_number', label: 'مولد' },
             { table: 'electrical_panels', col: 'panel_number', label: 'لوحة' },
-            { table: 'main_pumpS', col: 'pump_number', label: 'طلمبة رئيسية' },
-            { table: 'sub_pumps', col: 'pump_number', label: 'طلمبة غاطسة' },
+            { table: 'main_pumps', col: 'pump_number', label: 'طلمبة رئيسية' }, // جرب إضافة حرف s هنا
+            { table: 'sub_pumps', col: 'pump_number', label: 'طلمبة غاطسة' },   // جرب إضافة حرف s هنا
             { table: 'other_assets', col: 'assets_number', label: 'أصل آخر' },
             { table: 'buildings', col: 'building_number', label: 'مبنى' }
         ];
+        
 
         try {
             let allAssets = [];
