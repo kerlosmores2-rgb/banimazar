@@ -110,15 +110,33 @@
         s.innerHTML = '<option value="">-- اختر المحطة --</option>';
         data.forEach(item => s.innerHTML += `<option value="${item.id}">${item.station_name}</option>`);
     }
-
-    async function fetchAssets(sid) {
+async function fetchAssets(sid) {
         if(!sid) return;
-        const { data } = await _supabase.from('station_assets').select('id, asset_name').eq('station_id', sid);
+        
+        // تم تغيير اسم الجدول إلى assets واسم العمود المرجعي إلى station_id
+        // تأكد أن sid المرسل هو القيمة الرقمية للمحطة
+        const { data, error } = await _supabase
+            .from('assets') // اسم الجدول الصحيح عندك
+            .select('id, asset_name')
+            .eq('station_id', sid); // الربط يتم عبر الرقم التعريفى للمحطة
+
         const a = document.getElementById('assetId');
         a.innerHTML = '<option value="">-- اختر المعدة --</option>';
-        data.forEach(item => a.innerHTML += `<option value="${item.id}">${item.asset_name}</option>`);
-    }
+        
+        if (error) {
+            console.error("Error fetching assets:", error);
+            a.innerHTML = '<option value="">خطأ في التحميل</option>';
+            return;
+        }
 
+        if (data && data.length > 0) {
+            data.forEach(item => {
+                a.innerHTML += `<option value="${item.id}">${item.asset_name}</option>`;
+            });
+        } else {
+            a.innerHTML = '<option value="">لا توجد معدات مسجلة</option>';
+        }
+    }
     async function generateReport() {
         const aid = document.getElementById('assetId').value;
         const from = document.getElementById('dateFrom').value;
