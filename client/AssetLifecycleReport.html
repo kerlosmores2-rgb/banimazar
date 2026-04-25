@@ -191,7 +191,7 @@ async function generateReport() {
         const { data: asset, error: assetErr } = await _supabase.from(tableName).select('*').eq('id', aid).single();
         if (assetErr) throw assetErr;
 
-        // 2. جلب تقارير المرور (من جدول inspection_report)
+        // 2. جلب تقارير المرور (من جدول inspection_reports)
         // بنجيب البيانات ونفلترها يدوياً لضمان الدقة مع الـ JSON
         const { data: ins, error: insErr } = await _supabase.from('inspection_report')
             .select('*')
