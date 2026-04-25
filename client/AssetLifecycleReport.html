@@ -169,94 +169,100 @@
         }
     }
 
-    async function generateReport() {
+      async function generateReport() {
         const assetSelect = document.getElementById('assetId');
         const aid = assetSelect.value;
-        const selectedOption = assetSelect.options[assetSelect.selectedIndex];
+        const selected = assetSelect.options[assetSelect.selectedIndex];
         
-        const tableName = selectedOption.getAttribute('data-table');
-        const columnName = selectedOption.getAttribute('data-col');
-        
+        if(!aid) return alert("اختر المعدة");
+
+        const tableName = selected.getAttribute('data-table');
+        const columnName = selected.getAttribute('data-col');
         const from = document.getElementById('dateFrom').value;
         const to = document.getElementById('dateTo').value;
 
-        if(!aid || !from || !to) return alert("برجاء استكمال البيانات");
+        if(!from || !to) return alert("حدد التاريخ من وإلى");
 
-        // جلب بيانات الأصل من جدوله الصحيح
-        const { data: asset } = await _supabase.from(tableName).select('*').eq('id', aid).single();
-        
-        // جلب تقارير المرور وبلاغات الأعطال (تأكد أن asset_id في هذه الجداول يربط مع id الأصل)
-        const { data: ins } = await _supabase.from('inspection_reports')
-            .select('*').eq('asset_id', aid).gte('created_at', from).lte('created_at', to).order('created_at');
+        try {
+            // 1. جلب بيانات الأصل الأساسية
+            const { data: asset, error: assetErr } = await _supabase.from(tableName).select('*').eq('id', aid).single();
+            if (assetErr) throw assetErr;
 
-        const { data: flt } = await _supabase.from('fault_reports')
-            .select('*').eq('asset_id', aid).gte('report_date', from).lte('report_date', to).order('report_date');
+            // 2. جلب تقارير المرور (تأكد أن العمود هو asset_id)
+            // أضفنا .gte و .lte مع تعديل بسيط للتاريخ
+            const { data: ins, error: insErr } = await _supabase.from('inspection_reports')
+                .select('*')
+                .eq('asset_id', aid)
+                .filter('created_at', 'gte', `${from}T00:00:00`)
+                .filter('created_at', 'lte', `${to}T23:59:59`)
+                .order('created_at');
 
-        // عرض التقرير
-        document.getElementById('reportContent').style.display = 'block';
-        
-        // عرض تفاصيل الأصل بناءً على العمود الصحيح
-        document.getElementById('assetDetails').innerHTML = `
-            <div><strong>اسم المعدة:</strong> ${asset[columnName]}</div>
-            <div><strong>الفئة:</strong> ${tableName}</div>
-            <div><strong>المواصفات:</strong> ${asset.rated_power_kva || asset.capacity || '---'}</div>
-            <div><strong>الفترة من:</strong> ${from} <strong>إلى:</strong> ${to}</div>
-        `;
+            // 3. جلب بلاغات الأعطال
+            const { data: flt, error: fltErr } = await _supabase.from('fault_reports')
+                .select('*')
+                .eq('asset_id', aid)
+                .filter('report_date', 'gte', from)
+                .filter('report_date', 'lte', to)
+                .order('report_date');
 
-        // تعبئة الجداول (بقية الكود كما هو في ملفك الأصلي)
-        renderTables(ins, flt);
-        
-        window.print();
+            // التحقق من وصول البيانات في الـ Console
+            console.log("Reports Found:", { inspections: ins, faults: flt });
+
+            // إظهار المحتوى
+            document.getElementById('reportContent').style.display = 'block';
+            document.getElementById('assetDetails').innerHTML = `
+                <div><strong>المعدة:</strong> ${asset[columnName]}</div>
+                <div><strong>الفئة:</strong> ${tableName}</div>
+                <div><strong>المواصفات:</strong> ${asset.rated_power_kva || asset.capacity || '---'}</div>
+                <div><strong>الفترة:</strong> من ${from} إلى ${to}</div>
+            `;
+
+            const iBody = document.querySelector('#inspectionTable tbody');
+            const fBody = document.querySelector('#faultTable tbody');
+            iBody.innerHTML = ""; fBody.innerHTML = "";
+
+            if (ins && ins.length > 0) {
+                ins.forEach(i => {
+                    iBody.innerHTML += `<tr>
+                        <td>${i.created_at ? i.created_at.split('T')[0] : '---'}</td>
+                        <td>${i.status || '---'}</td>
+                        <td>${i.notes || 'لا يوجد'}</td>
+                        <td>${i.inspector_name || '---'}</td>
+                    </tr>`;
+                });
+            } else {
+                iBody.innerHTML = '<tr><td colspan="4">لا توجد تقارير مرور في هذه الفترة</td></tr>';
+            }
+
+            if (flt && flt.length > 0) {
+                flt.forEach(f => {
+                    fBody.innerHTML += `<tr>
+                        <td>${f.report_date || '---'}</td>
+                        <td>${f.fault_description || '---'}</td>
+                        <td>${f.repair_action || 'جاري الإصلاح'}</td>
+                        <td>${f.spare_parts || '---'}</td>
+                        <td>${f.repair_status || '---'}</td>
+                    </tr>`;
+                });
+            } else {
+                fBody.innerHTML = '<tr><td colspan="5">لا توجد بلاغات أعطال في هذه الفترة</td></tr>';
+            }
+
+            // تأخير الطباعة قليلاً لضمان رص البيانات
+            setTimeout(() => { window.print(); }, 800);
+
+        } catch (e) {
+            console.error("Full Report Error:", e);
+            alert("حدث خطأ أثناء جلب تفاصيل التقارير: " + e.message);
+        }
     }
-    async function generateReport() {
-        const aid = document.getElementById('assetId').value;
-        const from = document.getElementById('dateFrom').value;
-        const to = document.getElementById('dateTo').value;
 
-        if(!aid || !from || !to) return alert("برجاء استكمال البيانات");
 
-        // 1. جلب بيانات الأصل
-        const { data: asset } = await _supabase.from('station_assets').select('*').eq('id', aid).single();
-        
-        // 2. جلب تقارير المرور
-        const { data: ins } = await _supabase.from('inspection_reports')
-            .select('*').eq('asset_id', aid).gte('created_at', from).lte('created_at', to).order('created_at');
 
-        // 3. جلب بلاغات الأعطال
-        const { data: flt } = await _supabase.from('fault_reports')
-            .select('*').eq('asset_id', aid).gte('report_date', from).lte('report_date', to).order('report_date');
 
-        // عرض التقرير وتعبئته
-        document.getElementById('reportContent').style.display = 'block';
-        
-        document.getElementById('assetDetails').innerHTML = `
-            <div><strong>اسم المعدة:</strong> ${asset.asset_name}</div>
-            <div><strong>الماركة:</strong> ${asset.brand || '---'}</div>
-            <div><strong>الكود الرقمي:</strong> ${asset.asset_code || '---'}</div>
-            <div><strong>الفترة من:</strong> ${from} <strong>إلى:</strong> ${to}</div>
-        `;
 
-        const insBody = document.querySelector('#inspectionTable tbody');
-        insBody.innerHTML = ins.length ? '' : '<tr><td colspan="4">لا توجد سجلات مرور</td></tr>';
-        ins.forEach(row => {
-            insBody.innerHTML += `<tr><td>${new Date(row.created_at).toLocaleDateString('ar-EG')}</td><td>${row.condition}</td><td>${row.notes || '---'}</td><td>${row.inspector_name || '---'}</td></tr>`;
-        });
 
-        const fltBody = document.querySelector('#faultTable tbody');
-        fltBody.innerHTML = flt.length ? '' : '<tr><td colspan="5">لا توجد بلاغات أعطال</td></tr>';
-        flt.forEach(row => {
-            fltBody.innerHTML += `<tr>
-                <td>${new Date(row.report_date).toLocaleDateString('ar-EG')}</td>
-                <td>${row.fault_description}</td>
-                <td>${row.repair_actions || '---'}</td>
-                <td>${row.spare_parts || '---'}</td>
-                <td>${row.status}</td>
-            </tr>`;
-        });
-
-        window.print();
-    }
-
+    
     init();
 </script>
 </body>
