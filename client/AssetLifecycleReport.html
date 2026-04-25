@@ -117,14 +117,15 @@
         const a = document.getElementById('assetId');
         a.innerHTML = '<option value="">جاري تحميل المعدات...</option>';
 
-        // ملاحظة: غيرنا الاسم لـ 'assets' لأنه الاسم الفعلي عندك في سوبا بيز
+        // تعديل اسم الجدول ليتطابق مع قاعدة بياناتك الفعلي
         const { data, error } = await _supabase
-            .from('assets') 
+            .from('station_assets') // تأكد أن الاسم في سوبا بيز هو station_assets
             .select('id, asset_name')
-            .eq('station_id', sid); // لو استمر الخطأ، جرب تغيير station_id لـ station_name
+            .eq('station_id', sid);
 
         if (error) {
-            console.error("خطأ:", error);
+            console.error("تفاصيل الخطأ:", error);
+            // لو طلع خطأ 404 تاني، جرب تغير اسم الجدول فوق لـ 'assets'
             a.innerHTML = '<option value="">خطأ في التحميل</option>';
             return;
         }
@@ -135,20 +136,10 @@
                 a.innerHTML += `<option value="${item.id}">${item.asset_name}</option>`;
             });
         } else {
-            a.innerHTML = '<option value="">لا يوجد معدات مسجلة لهذه المحطة</option>';
+            a.innerHTML = '<option value="">لا توجد معدات مسجلة</option>';
         }
     }
-
-    // 2. تعديل بسيط في دالة توليد التقرير
-    async function generateReport() {
-        const aid = document.getElementById('assetId').value;
-        // ... باقي الكود ...
-
-        // تأكد أن هذا السطر يستخدم جدول 'assets'
-        const { data: asset } = await _supabase.from('assets').select('*').eq('id', aid).single();
-        
-        // ... باقي الكود ...
-    }
+    
     
 
     init();
