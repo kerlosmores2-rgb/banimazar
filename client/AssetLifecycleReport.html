@@ -120,15 +120,19 @@
         a.innerHTML = '<option value="">جاري فحص جميع الفئات...</option>';
 
         const stationIdInt = parseInt(sid);
+
+
+
         
         // مصفوفة من الكائنات لتجنب تكرار المفاتيح
         const assetTables = [
+   const assetTables = [
             { table: 'transformers', col: 'transformer_number', label: 'محول' },
             { table: 'generators', col: 'generator_number', label: 'مولد' },
             { table: 'electrical_panels', col: 'panel_number', label: 'لوحة' },
-            { table: 'main_pump', col: 'pump_number', label: 'طلمبة رئيسية' },
-            { table: 'sub_pump', col: 'pump_number', label: 'طلمبة غاطسة/مساعدة' },
-            { table: 'other_assets', col: 'asset_number', label: 'أصل آخر' },
+            { table: '"main_pump"', col: 'pump_number', label: 'طلمبة رئيسية' }, // أضفنا علامات التنصيص الثنائية
+            { table: '"sub_pump"', col: 'pump_number', label: 'طلمبة غاطسة' },   // أضفنا علامات التنصيص الثنائية
+            { table: 'other_assets', col: 'assets_number', label: 'أصل آخر' },
             { table: 'buildings', col: 'building_number', label: 'مبنى' }
         ];
 
