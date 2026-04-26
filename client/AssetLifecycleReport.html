@@ -73,13 +73,14 @@
     <table id="inspectionTable">
         <thead>
             <tr>
-                <th style="width: 25%;">التاريخ</th>
-                <th style="width: 35%;">حالة الأصل</th>
+                <th style="width: 15%;">التاريخ</th>
+                <th style="width: 20%;">حالة الأصل</th>
                 <th>ملاحظات الحالة الفنية</th>
+                <th style="width: 15%;">المسؤول</th>
             </tr>
         </thead>
         <tbody></tbody>
-     </table>
+    </table>
 
     <div class="section-head">ثانياً: سجل بلاغات الأعطال والإصلاحات المنفذة</div>
     <table id="faultTable">
@@ -93,7 +94,7 @@
             </tr>
         </thead>
         <tbody></tbody>
-     </table>
+    </table>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -197,7 +198,7 @@
         }
     }
 
-    // دالة استخراج البيانات من checklist_data
+    // ✅ الدالة المعدلة لقراءة status و note
     function getChecklistData(checklistData) {
         if (!checklistData) return { status: '---', note: '---' };
         try {
@@ -247,9 +248,9 @@
         const fltBody = document.querySelector('#faultTable tbody');
         
         // ========================================
-        // 1. جلب سجلات المرور (3 أعمدة فقط)
+        // 1. جلب سجلات المرور من inspection_reports
         // ========================================
-        insBody.innerHTML = '<tr><td colspan="3">جاري التحميل...</td></tr>';
+        insBody.innerHTML = '<tr><td colspan="4">جاري التحميل...</td></tr>';
         try {
             const { data: insData, error: insError } = await _supabase
                 .from('inspection_reports')
@@ -268,28 +269,27 @@
                 if (filtered.length > 0) {
                     filtered.forEach(row => {
                         const checklist = getChecklistData(row.checklist_data);
-                        // ✅ 3 أعمدة فقط: التاريخ - حالة الأصل - الملاحظات (بدون مسؤول)
-                        insBody.innerHTML += `
-                            <tr>
-                                <td>${formatDate(row.created_at) || '---'}</td>
-                                <td>${checklist.status}</td>
-                                <td>${checklist.note}</td>
-                            </tr>
-                        `;
+                        // ✅ تم التعديل هنا: checklist.status بدلاً من checklist.state
+                        insBody.innerHTML += `<tr>
+                            <td>${formatDate(row.created_at) || '---'}</td>
+                            <td>${checklist.status}</td>
+                            <td>${checklist.note}</td>
+                            <td>${row.manager_name || '---'}</td>
+                        </tr>`;
                     });
                 } else {
-                    insBody.innerHTML = '<tr><td colspan="3">⚠️ لا توجد سجلات مرور في الفترة المحددة</td></tr>';
+                    insBody.innerHTML = '<tr><td colspan="4">⚠️ لا توجد سجلات مرور في الفترة المحددة</td></tr>';
                 }
             } else {
-                insBody.innerHTML = '<tr><td colspan="3">📭 لا توجد سجلات مرور مسجلة لهذه المحطة</td></tr>';
+                insBody.innerHTML = '<tr><td colspan="4">📭 لا توجد سجلات مرور مسجلة لهذه المحطة</td></tr>';
             }
         } catch (e) {
             console.error("Error fetching inspections:", e);
-            insBody.innerHTML = '<tr><td colspan="3">❌ خطأ في جلب بيانات المرور</td></tr>';
+            insBody.innerHTML = '<td><td colspan="4">❌ خطأ في جلب بيانات المرور</td></tr>';
         }
 
         // ========================================
-        // 2. جلب سجلات الأعطال
+        // 2. جلب سجلات الأعطال من maintenance_tickets
         // ========================================
         fltBody.innerHTML = '<tr><td colspan="5">جاري التحميل...</td></tr>';
         try {
@@ -311,15 +311,13 @@
                 fltBody.innerHTML = "";
                 if (filtered.length > 0) {
                     filtered.forEach(row => {
-                        fltBody.innerHTML += `
-                            <tr>
-                                <td>${formatDate(row.created_at) || '---'}</td>
-                                <td>${row.fault_description || '---'}</td>
-                                <td>${row.repair_actions || row.repair_action || '---'}</td>
-                                <td>${row.spare_parts || '---'}</td>
-                                <td>${row.status || '---'}</td>
-                            </tr>
-                        `;
+                        fltBody.innerHTML += `<tr>
+                            <td>${formatDate(row.created_at) || '---'}</td>
+                            <td>${row.fault_description || '---'}</td>
+                            <td>${row.repair_actions || row.repair_action || '---'}</td>
+                            <td>${row.spare_parts || '---'}</td>
+                            <td>${row.status || '---'}</td>
+                        </tr>`;
                     });
                 } else {
                     fltBody.innerHTML = '<tr><td colspan="5">🔧 لا توجد بلاغات أعطال في الفترة المحددة</td></tr>';
@@ -338,4 +336,4 @@
     init();
 </script>
 </body>
-</html>
+</html> 
