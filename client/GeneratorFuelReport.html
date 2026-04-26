@@ -3,98 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تقرير استهلاك سولار المولدات</title>
+    <title>تقرير استهلاك السولار - مياه المنيا</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap');
-        body { font-family: 'Cairo', sans-serif; background: #f8fafc; color: #1e293b; margin: 0; padding: 20px; direction: rtl; }
-        .filter-panel { background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 25px; border-right: 6px solid #e67e22; }
-        .grid-inputs { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; align-items: end; }
-        label { font-weight: bold; font-size: 0.85rem; color: #64748b; margin-bottom: 5px; display: block; }
-        select, input { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-family: 'Cairo'; }
-        .btn-generate { background: #e67e22; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; transition: 0.2s; }
-        .btn-generate:hover { background: #d35400; }
-
-        /* تنسيق ورقة التقرير */
-        .report-page { background: white; padding: 40px; border: 1px solid #333; display: none; min-height: 297mm; }
-        .report-header { text-align: center; border-bottom: 3px double #333; padding-bottom: 15px; margin-bottom: 20px; }
-        .info-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; background: #f1f5f9; padding: 15px; border: 1px solid #ccc; margin-bottom: 20px; font-size: 13px; }
+        body { font-family: 'Cairo', sans-serif; background: #f0f2f5; color: #333; padding: 20px; direction: rtl; margin: 0; }
+        .container { max-width: 1400px; margin: auto; }
+        .selector-card { background: linear-gradient(135deg, #1e5434 0%, #2e7d32 100%); padding: 25px; border-radius: 15px; margin-bottom: 25px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        .selector-card h3 { color: white; margin: 0 0 15px 0; }
+        .filter-row { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 15px; align-items: end; }
+        .filter-item label { display: block; color: white; margin-bottom: 5px; font-weight: bold; }
+        select, input { width: 100%; padding: 12px 15px; border-radius: 10px; border: none; font-size: 16px; font-family: 'Cairo'; background: white; cursor: pointer; }
+        .btn-generate { background: #ff9800; color: white; border: none; padding: 12px 25px; border-radius: 10px; cursor: pointer; font-size: 16px; font-weight: bold; margin-top: 20px; width: 100%; }
+        .btn-generate:hover { background: #f57c00; }
         
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th { background: #334155 !important; color: #fff; border: 1px solid #000; padding: 8px; font-size: 13px; }
-        td { border: 1px solid #000; padding: 8px; text-align: center; font-size: 12px; color: #000; }
-        .total-box { background: #fef3c7; font-weight: bold; }
-
+        .station-header { background: white; padding: 20px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-right: 5px solid #2e7d32; }
+        .station-header h2 { color: #333; margin: 0 0 5px 0; }
+        .station-header p { color: #666; margin: 0; }
+        
+        .section-card { background: white; border-radius: 12px; margin-bottom: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); overflow: hidden; }
+        .section-title { background: linear-gradient(135deg, #1e5434 0%, #2e7d32 100%); color: white; padding: 15px 20px; margin: 0; font-size: 18px; display: flex; align-items: center; gap: 10px; }
+        .section-title i { font-size: 22px; }
+        
+        .summary-card { background: #e8f5e9; padding: 20px; border-radius: 12px; margin-bottom: 25px; display: flex; justify-content: space-around; flex-wrap: wrap; gap: 15px; }
+        .summary-item { text-align: center; flex: 1; min-width: 150px; }
+        .summary-item .label { font-size: 14px; color: #2e7d32; font-weight: bold; }
+        .summary-item .value { font-size: 28px; font-weight: bold; color: #1b5e20; }
+        
+        .assets-table { width: 100%; border-collapse: collapse; }
+        .assets-table th { background: #f8f9fa; color: #333; padding: 12px; border: 1px solid #dee2e6; font-weight: bold; font-size: 13px; text-align: center; }
+        .assets-table td { padding: 10px; border: 1px solid #dee2e6; text-align: center; font-size: 13px; }
+        .assets-table tr:hover { background: #f8f9fa; }
+        .total-row { background: #e8f5e9; font-weight: bold; }
+        .total-row td { background: #e8f5e9; }
+        
+        .empty-msg { text-align: center; padding: 30px; color: #999; font-size: 14px; }
+        
+        .btn-print { background: #27ae60; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; margin-left: 15px; }
+        .btn-print:hover { background: #219a52; }
+        
         @media print {
             .no-print { display: none !important; }
-            .report-page { display: block !important; border: none; padding: 0; }
-            body { background: white; }
-            @page { size: A4 portrait; margin: 10mm; }
+            body { background: white; padding: 0; margin: 0; }
+            .container { margin: 0; padding: 10px; }
+            .section-card { break-inside: avoid; page-break-inside: avoid; box-shadow: none; border: 1px solid #ddd; }
+            .section-title { background: #2e7d32 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .summary-card { background: #e8f5e9 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         }
     </style>
 </head>
 <body>
 
-<div class="filter-panel no-print">
-    <h3><i class="fas fa-gas-pump" style="color: #e67e22;"></i> تقرير استهلاك السولار للمولد</h3>
-    <div class="grid-inputs">
-        <div>
-            <label>المحطة</label>
-            <select id="stationId">
-                <option value="">جاري التحميل...</option>
-            </select>
+<div class="container">
+    <div class="selector-card no-print">
+        <h3><i class="fas fa-oil-can"></i> تقرير استهلاك السولار - المولدات</h3>
+        <div class="filter-row">
+            <div class="filter-item">
+                <label><i class="fas fa-building"></i> اختر المحطة</label>
+                <select id="stationSelector">
+                    <option value="">-- جاري تحميل المحطات --</option>
+                </select>
+            </div>
+            <div class="filter-item">
+                <label><i class="fas fa-calendar-alt"></i> من تاريخ (شهر/سنة)</label>
+                <input type="month" id="dateFrom">
+            </div>
+            <div class="filter-item">
+                <label><i class="fas fa-calendar-alt"></i> إلى تاريخ (شهر/سنة)</label>
+                <input type="month" id="dateTo">
+            </div>
+            <div class="filter-item">
+                <button class="btn-generate" onclick="generateFuelReport()"><i class="fas fa-chart-line"></i> عرض التقرير</button>
+            </div>
         </div>
-        <div>
-            <label>من تاريخ</label>
-            <input type="date" id="dateFrom">
-        </div>
-        <div>
-            <label>إلى تاريخ</label>
-            <input type="date" id="dateTo">
-        </div>
-        <div>
-            <button class="btn-generate" onclick="generateFuelReport()"><i class="fas fa-file-pdf"></i> استخراج التقرير</button>
+        <div style="margin-top: 15px; text-align: left;">
+            <button onclick="window.print()" class="btn-print"><i class="fas fa-print"></i> طباعة التقرير</button>
         </div>
     </div>
-</div>
 
-<div id="printableReport" class="report-page">
-    <div class="report-header">
-        <h2 style="margin:0;">شركة مياه الشرب والصرف الصحي بالمنيا</h2>
-        <h3 style="margin:5px;">فرع بني مزار - قسم الصرف الصحي</h3>
-        <h4 style="text-decoration: underline;">بيان استهلاك السولار وساعات تشغيل المولد</h4>
-    </div>
-
-    <div id="genDetails" class="info-grid">
-        </div>
-
-    <table>
-        <thead>
-            <tr>
-                <th>التاريخ</th>
-                <th>كمية السولار (لتر)</th>
-                <th>ساعات التشغيل</th>
-                <th>القائم بالتموين / التشغيل</th>
-                <th>ملاحظات</th>
-            </tr>
-        </thead>
-        <tbody id="fuelTableBody">
-            </tbody>
-        <tfoot>
-            <tr class="total-box">
-                <td>الإجماليات خلال الفترة</td>
-                <td id="totalLiters">0</td>
-                <td id="totalHours">0</td>
-                <td colspan="2">معدل الاستهلاك: <span id="consumptionRate">0</span> لتر/ساعة</td>
-            </tr>
-        </tfoot>
-    </table>
-
-    <div style="margin-top: 30px; display: flex; justify-content: space-around; font-weight: bold;">
-        <p>مسؤول المحطة</p>
-        <p>رئيس القسم</p>
-        <p>مدير الإدارة</p>
-    </div>
+    <div id="reportContent"></div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -103,73 +90,214 @@
     const SUPABASE_KEY = 'sb_publishable_n64Hnhuruc3Oeolj-Uwg9g_tu-otJlZ';
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+    // جلب المحطات
     async function init() {
-        const { data } = await _supabase.from('stations').select('id, station_name').order('station_name');
-        const s = document.getElementById('stationId');
-        s.innerHTML = '<option value="">-- اختر المحطة --</option>';
-        data.forEach(item => s.innerHTML += `<option value="${item.id}">${item.station_name}</option>`);
+        const selector = document.getElementById('stationSelector');
+        try {
+            const { data, error } = await _supabase.from('stations').select('id, station_name, station_code').order('station_name');
+            if (error) throw error;
+            selector.innerHTML = '<option value="">-- اختر المحطة --</option>';
+            data.forEach(s => {
+                selector.innerHTML += `<option value="${s.id}" data-name="${s.station_name}" data-code="${s.station_code || ''}">${s.station_name} (${s.station_code || 'بدون كود'})</option>`;
+            });
+        } catch (err) {
+            console.error("خطأ:", err);
+            selector.innerHTML = '<option value="">خطأ في تحميل المحطات</option>';
+        }
     }
 
+    // تنسيق التاريخ من month (2025-01) إلى عرض عربي
+    function formatMonth(dateStr) {
+        if (!dateStr) return '---';
+        const [year, month] = dateStr.split('-');
+        const months = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+        return `${months[parseInt(month) - 1]} ${year}`;
+    }
+
+    // حساب إجمالي الاستهلاك
+    function calculateTotals(data, fields) {
+        let totals = {};
+        fields.forEach(field => {
+            totals[field] = data.reduce((sum, row) => sum + (parseFloat(row[field]) || 0), 0);
+        });
+        return totals;
+    }
+
+    // توليد التقرير
     async function generateFuelReport() {
-        const sid = document.getElementById('stationId').value;
+        const stationSelect = document.getElementById('stationSelector');
+        const stationId = stationSelect.value;
         const from = document.getElementById('dateFrom').value;
         const to = document.getElementById('dateTo').value;
-
-        if (!sid || !from || !to) return alert("يرجى استكمال اختيارات البحث");
-
-        // 1. جلب بيانات المولد الخاص بالمحطة
-        const { data: generator } = await _supabase.from('generators')
-            .select('*').eq('station_id', sid).single();
-
-        // 2. جلب سجلات السولار والتشغيل
-        const { data: logs } = await _supabase.from('generator_logs')
-            .select('*').eq('station_id', sid)
-            .gte('log_date', from).lte('log_date', to)
-            .order('log_date');
-
-        if (!generator) return alert("لا توجد بيانات مولد مسجلة لهذه المحطة");
-
-        document.getElementById('printableReport').style.display = 'block';
-
-        // عرض بيانات المولد (بيانات الأصل)
-        document.getElementById('genDetails').innerHTML = `
-            <div><strong>اسم المحطة:</strong> ${generator.station_name || 'بني مزار'}</div>
-            <div><strong>ماركة المولد:</strong> ${generator.gen_brand || '---'}</div>
-            <div><strong>القدرة:</strong> ${generator.kva || '0'} KVA</div>
-            <div><strong>موديل المحرك:</strong> ${generator.engine_brand || '---'}</div>
-            <div><strong>الفترة من:</strong> ${from}</div>
-            <div><strong>إلى تاريخ:</strong> ${to}</div>
-        `;
-
-        let html = '';
-        let sumLiters = 0;
-        let sumHours = 0;
-
-        logs.forEach(row => {
-            const liters = parseFloat(row.fuel_liters || 0);
-            const hours = parseFloat(row.work_hours || 0);
-            sumLiters += liters;
-            sumHours += hours;
-
-            html += `
-                <tr>
-                    <td>${row.log_date}</td>
-                    <td>${liters}</td>
-                    <td>${hours}</td>
-                    <td>${row.operator_name || '---'}</td>
-                    <td>${row.notes || '---'}</td>
-                </tr>`;
-        });
-
-        document.getElementById('fuelTableBody').innerHTML = html || '<tr><td colspan="5">لا توجد سجلات استهلاك خلال هذه الفترة</td></tr>';
-        document.getElementById('totalLiters').innerText = sumLiters + " لتر";
-        document.getElementById('totalHours').innerText = sumHours + " ساعة";
         
-        // حساب معدل الاستهلاك (لتر لكل ساعة)
-        const rate = sumHours > 0 ? (sumLiters / sumHours).toFixed(2) : 0;
-        document.getElementById('consumptionRate').innerText = rate;
-
-        setTimeout(() => { window.print(); }, 500);
+        if (!stationId) {
+            alert("برجاء اختيار المحطة");
+            return;
+        }
+        if (!from || !to) {
+            alert("برجاء اختيار المدة (من شهر إلى شهر)");
+            return;
+        }
+        
+        const selectedOption = stationSelect.options[stationSelect.selectedIndex];
+        const stationName = selectedOption.getAttribute('data-name');
+        const stationCode = selectedOption.getAttribute('data-code');
+        
+        const reportDiv = document.getElementById('reportContent');
+        reportDiv.innerHTML = '<div style="text-align:center; padding:50px;"><i class="fas fa-spinner fa-spin"></i> جاري تحميل بيانات الاستهلاك...</div>';
+        
+        try {
+            // جلب بيانات التقارير الشهرية للمحطة
+            const { data, error } = await _supabase
+                .from('monthly_reports')
+                .select('*')
+                .eq('station_id', parseInt(stationId))
+                .order('report_date', { ascending: true });
+            
+            if (error) throw error;
+            
+            // فلترة البيانات حسب المدة
+            let filteredData = data || [];
+            if (from && to) {
+                filteredData = filteredData.filter(item => {
+                    const itemDate = item.report_date;
+                    return itemDate >= from && itemDate <= to;
+                });
+            }
+            
+            // تحديد أعمدة المولدات الموجودة في البيانات
+            const sampleRow = filteredData[0] || {};
+            const generatorFields = [];
+            for (const key in sampleRow) {
+                if (key.includes('total_consumption') || key.includes('balance')) {
+                    generatorFields.push(key);
+                }
+            }
+            
+            // تجميع المولدات بشكل منظم
+            const generators = [];
+            const genNumbers = new Set();
+            generatorFields.forEach(field => {
+                const match = field.match(/generator_(\d+)_/);
+                if (match) {
+                    genNumbers.add(match[1]);
+                }
+            });
+            
+            const sortedGenNumbers = Array.from(genNumbers).sort((a,b) => parseInt(a) - parseInt(b));
+            sortedGenNumbers.forEach(genNum => {
+                generators.push({
+                    number: genNum,
+                    consumptionField: `generator_${genNum}_total_consumption`,
+                    balanceField: `generator_${genNum}_balance`
+                });
+            });
+            
+            // حساب المجاميع
+            let totalConsumption = 0;
+            let totalBalance = 0;
+            generators.forEach(gen => {
+                totalConsumption += filteredData.reduce((sum, row) => sum + (parseFloat(row[gen.consumptionField]) || 0), 0);
+                totalBalance += filteredData.reduce((sum, row) => sum + (parseFloat(row[gen.balanceField]) || 0), 0);
+            });
+            
+            // بناء HTML التقرير
+            let html = `
+                <div class="station-header">
+                    <h2><i class="fas fa-oil-can"></i> تقرير استهلاك السولار - ${stationName}</h2>
+                    <p><i class="fas fa-code-branch"></i> كود المحطة: ${stationCode || '---'} | <i class="fas fa-calendar-alt"></i> الفترة: من ${formatMonth(from)} إلى ${formatMonth(to)}</p>
+                </div>
+                
+                <div class="summary-card">
+                    <div class="summary-item">
+                        <div class="label"><i class="fas fa-tachometer-alt"></i> إجمالي الاستهلاك</div>
+                        <div class="value">${totalConsumption.toLocaleString()} لتر</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="label"><i class="fas fa-gas-pump"></i> إجمالي الرصيد</div>
+                        <div class="value">${totalBalance.toLocaleString()} لتر</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="label"><i class="fas fa-chart-line"></i> عدد الأشهر</div>
+                        <div class="value">${filteredData.length} شهر</div>
+                    </div>
+                </div>
+            `;
+            
+            // جدول لكل مولد على حدة
+            for (const gen of generators) {
+                // جمع بيانات هذا المولد فقط
+                const genData = filteredData.map(row => ({
+                    month: row.report_date,
+                    consumption: row[gen.consumptionField] || 0,
+                    balance: row[gen.balanceField] || 0
+                }));
+                
+                const genTotalConsumption = genData.reduce((sum, item) => sum + (parseFloat(item.consumption) || 0), 0);
+                const genTotalBalance = genData.reduce((sum, item) => sum + (parseFloat(item.balance) || 0), 0);
+                
+                html += `
+                    <div class="section-card">
+                        <div class="section-title">
+                            <i class="fas fa-microphone-alt"></i>
+                            مولد رقم ${gen.number}
+                        </div>
+                        <table class="assets-table">
+                            <thead>
+                                <tr>
+                                    <th style="width:30%;">الشهر</th>
+                                    <th style="width:35%;">الاستهلاك (لتر)</th>
+                                    <th style="width:35%;">الرصيد (لتر)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+                
+                if (genData.length === 0) {
+                    html += `<tr><td colspan="3" class="empty-msg">⚠️ لا توجد بيانات استهلاك لهذا المولد في الفترة المحددة</td></tr>`;
+                } else {
+                    genData.forEach(item => {
+                        html += `
+                            <tr>
+                                <td>${formatMonth(item.month)}</td>
+                                <td>${parseFloat(item.consumption).toLocaleString() || '0'}</td>
+                                <td>${parseFloat(item.balance).toLocaleString() || '0'}</td>
+                            </tr>
+                        `;
+                    });
+                    // صف الإجمالي
+                    html += `
+                        <tr class="total-row">
+                            <td><strong>الإجمالي</strong></td>
+                            <td><strong>${genTotalConsumption.toLocaleString()} لتر</strong></td>
+                            <td><strong>${genTotalBalance.toLocaleString()} لتر</strong></td>
+                        </tr>
+                    `;
+                }
+                
+                html += `
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            }
+            
+            if (generators.length === 0) {
+                html += `
+                    <div class="section-card">
+                        <div class="empty-msg" style="padding: 40px;">
+                            <i class="fas fa-exclamation-triangle"></i> لا توجد بيانات استهلاك مسجلة للمدة المحددة
+                        </div>
+                    </div>
+                `;
+            }
+            
+            reportDiv.innerHTML = html;
+            
+        } catch (err) {
+            console.error("خطأ:", err);
+            reportDiv.innerHTML = `<div class="station-header" style="color: red;">❌ خطأ في جلب البيانات: ${err.message}</div>`;
+        }
     }
 
     init();
