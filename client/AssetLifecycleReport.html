@@ -73,14 +73,13 @@
     <table id="inspectionTable">
         <thead>
             <tr>
-                <th style="width: 15%;">التاريخ</th>
-                <th style="width: 20%;">حالة الأصل</th>
+                <th style="width: 25%;">التاريخ</th>
+                <th style="width: 35%;">حالة الأصل</th>
                 <th>ملاحظات الحالة الفنية</th>
-                <th style="width: 15%;">المسؤول</th>
             </tr>
         </thead>
         <tbody></tbody>
-    </table>
+     </table>
 
     <div class="section-head">ثانياً: سجل بلاغات الأعطال والإصلاحات المنفذة</div>
     <table id="faultTable">
@@ -94,7 +93,7 @@
             </tr>
         </thead>
         <tbody></tbody>
-    </table>
+     </table>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -198,7 +197,7 @@
         }
     }
 
-    // ✅ الدالة المعدلة لقراءة status و note
+    // دالة استخراج البيانات من checklist_data
     function getChecklistData(checklistData) {
         if (!checklistData) return { status: '---', note: '---' };
         try {
@@ -248,55 +247,49 @@
         const fltBody = document.querySelector('#faultTable tbody');
         
         // ========================================
-        // 1. جلب سجلات المرور من inspection_reports
+        // 1. جلب سجلات المرور (3 أعمدة فقط)
         // ========================================
-// داخل generateReport()، جزء المرور:
-
-const insBody = document.querySelector('#inspectionTable tbody');
-
-// جلب سجلات المرور
-insBody.innerHTML = '<tr><td colspan="3">جاري التحميل...</td></tr>';
-try {
-    const { data: insData, error: insError } = await _supabase
-        .from('inspection_reports')
-        .select('*')
-        .eq('station_id', currentStationId);
-    
-    if (!insError && insData && insData.length > 0) {
-        const filtered = insData.filter(item => {
-            const itemDate = formatDate(item.created_at);
-            return itemDate && itemDate >= from && itemDate <= to;
-        });
-        
-        insBody.innerHTML = "";
-        if (filtered.length > 0) {
-            filtered.forEach(row => {
-                const checklist = getChecklistData(row.checklist_data);
-                insBody.innerHTML += `
-                    <tr>
-                        <td>${formatDate(row.created_at) || '---'}</td>
-                        <td>${checklist.status}</td>
-                        <td>${checklist.note}</td>
-                    </tr>
-                `;
-            });
-        } else {
-            insBody.innerHTML = '<tr><td colspan="3">⚠️ لا توجد سجلات مرور في الفترة المحددة</td></tr>';
+        insBody.innerHTML = '<tr><td colspan="3">جاري التحميل...</td></tr>';
+        try {
+            const { data: insData, error: insError } = await _supabase
+                .from('inspection_reports')
+                .select('*')
+                .eq('station_id', currentStationId);
+            
+            console.log('Inspection Data:', insData);
+            
+            if (!insError && insData && insData.length > 0) {
+                const filtered = insData.filter(item => {
+                    const itemDate = formatDate(item.created_at);
+                    return itemDate && itemDate >= from && itemDate <= to;
+                });
+                
+                insBody.innerHTML = "";
+                if (filtered.length > 0) {
+                    filtered.forEach(row => {
+                        const checklist = getChecklistData(row.checklist_data);
+                        // ✅ 3 أعمدة فقط: التاريخ - حالة الأصل - الملاحظات (بدون مسؤول)
+                        insBody.innerHTML += `
+                            <tr>
+                                <td>${formatDate(row.created_at) || '---'}</td>
+                                <td>${checklist.status}</td>
+                                <td>${checklist.note}</td>
+                            </tr>
+                        `;
+                    });
+                } else {
+                    insBody.innerHTML = '<tr><td colspan="3">⚠️ لا توجد سجلات مرور في الفترة المحددة</td></tr>';
+                }
+            } else {
+                insBody.innerHTML = '<tr><td colspan="3">📭 لا توجد سجلات مرور مسجلة لهذه المحطة</td></tr>';
+            }
+        } catch (e) {
+            console.error("Error fetching inspections:", e);
+            insBody.innerHTML = '<tr><td colspan="3">❌ خطأ في جلب بيانات المرور</td></tr>';
         }
-    } else {
-        insBody.innerHTML = '<tr><td colspan="3">📭 لا توجد سجلات مرور مسجلة</td></tr>';
-    }
-} catch (e) {
-    console.error("Error fetching inspections:", e);
-    insBody.innerHTML = '<tr><td colspan="3">❌ خطأ في جلب بيانات المرور</td></tr>';
-}
 
-
-
-
-        
         // ========================================
-        // 2. جلب سجلات الأعطال من maintenance_tickets
+        // 2. جلب سجلات الأعطال
         // ========================================
         fltBody.innerHTML = '<tr><td colspan="5">جاري التحميل...</td></tr>';
         try {
@@ -318,13 +311,15 @@ try {
                 fltBody.innerHTML = "";
                 if (filtered.length > 0) {
                     filtered.forEach(row => {
-                        fltBody.innerHTML += `<tr>
-                            <td>${formatDate(row.created_at) || '---'}</td>
-                            <td>${row.fault_description || '---'}</td>
-                            <td>${row.repair_actions || row.repair_action || '---'}</td>
-                            <td>${row.spare_parts || '---'}</td>
-                            <td>${row.status || '---'}</td>
-                        </tr>`;
+                        fltBody.innerHTML += `
+                            <tr>
+                                <td>${formatDate(row.created_at) || '---'}</td>
+                                <td>${row.fault_description || '---'}</td>
+                                <td>${row.repair_actions || row.repair_action || '---'}</td>
+                                <td>${row.spare_parts || '---'}</td>
+                                <td>${row.status || '---'}</td>
+                            </tr>
+                        `;
                     });
                 } else {
                     fltBody.innerHTML = '<tr><td colspan="5">🔧 لا توجد بلاغات أعطال في الفترة المحددة</td></tr>';
