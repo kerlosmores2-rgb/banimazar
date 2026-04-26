@@ -198,22 +198,23 @@
         }
     }
 
+    // ✅ الدالة المعدلة لقراءة status و note
     function getChecklistData(checklistData) {
-        if (!checklistData) return { state: '---', note: '---' };
+        if (!checklistData) return { status: '---', note: '---' };
         try {
             if (typeof checklistData === 'string') {
                 const parsed = JSON.parse(checklistData);
                 return {
-                    state: parsed.state || parsed.Status || '---',
-                    note: parsed.note || parsed.Notes || '---'
+                    status: parsed.status || parsed.state || '---',
+                    note: parsed.note || '---'
                 };
             }
             return {
-                state: checklistData.state || checklistData.Status || '---',
-                note: checklistData.note || checklistData.Notes || '---'
+                status: checklistData.status || checklistData.state || '---',
+                note: checklistData.note || '---'
             };
         } catch (e) {
-            return { state: '---', note: '---' };
+            return { status: '---', note: '---' };
         }
     }
 
@@ -247,22 +248,20 @@
         const fltBody = document.querySelector('#faultTable tbody');
         
         // ========================================
-        // 1. جلب سجلات المرور من inspection_reports (بـ s)
+        // 1. جلب سجلات المرور من inspection_reports
         // ========================================
         insBody.innerHTML = '<tr><td colspan="4">جاري التحميل...</td></tr>';
         try {
-            // جلب كل سجلات المرور للمحطة
             const { data: insData, error: insError } = await _supabase
-                .from('inspection_reports')  // ✅ التصحيح: inspection_reports بدلاً من inspection_report
+                .from('inspection_reports')
                 .select('*')
                 .eq('station_id', currentStationId);
             
             console.log('Inspection Data:', insData);
             
             if (!insError && insData && insData.length > 0) {
-                // فلترة حسب التاريخ
                 const filtered = insData.filter(item => {
-                    const itemDate = formatDate(item.created_at || item.created_at);
+                    const itemDate = formatDate(item.created_at);
                     return itemDate && itemDate >= from && itemDate <= to;
                 });
                 
@@ -270,12 +269,13 @@
                 if (filtered.length > 0) {
                     filtered.forEach(row => {
                         const checklist = getChecklistData(row.checklist_data);
+                        // ✅ تم التعديل هنا: checklist.status بدلاً من checklist.state
                         insBody.innerHTML += `<tr>
-                            <td>${formatDate(row.created_at || row.created_at) || '---'}</td>
-                            <td>${checklist.state}</td>
+                            <td>${formatDate(row.created_at) || '---'}</td>
+                            <td>${checklist.status}</td>
                             <td>${checklist.note}</td>
-                            <td>${row.manager_name || row.inspector_name || '---'}</td>
-                        </table>`;
+                            <td>${row.manager_name || '---'}</td>
+                        </tr>`;
                     });
                 } else {
                     insBody.innerHTML = '<tr><td colspan="4">⚠️ لا توجد سجلات مرور في الفترة المحددة</td></tr>';
@@ -285,7 +285,7 @@
             }
         } catch (e) {
             console.error("Error fetching inspections:", e);
-            insBody.innerHTML = '<tr><td colspan="4">❌ خطأ في جلب بيانات المرور</td></tr>';
+            insBody.innerHTML = '<td><td colspan="4">❌ خطأ في جلب بيانات المرور</td></tr>';
         }
 
         // ========================================
@@ -300,7 +300,6 @@
             console.log('Fault Data:', faultData);
             
             if (!faultError && faultData && faultData.length > 0) {
-                // فلترة حسب اسم المحطة واسم الأصل
                 const filtered = faultData.filter(item => {
                     const itemDate = formatDate(item.created_at);
                     const matchesStation = item.station_name === currentStationName;
@@ -331,7 +330,6 @@
             fltBody.innerHTML = '<tr><td colspan="5">❌ خطأ في جلب بيانات الأعطال</td></tr>';
         }
 
-        // طباعة التقرير
         setTimeout(() => window.print(), 500);
     }
 
