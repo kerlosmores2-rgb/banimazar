@@ -7,32 +7,36 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap');
-        body { font-family: 'Cairo', sans-serif; background: #1a1a2e; color: #fff; padding: 20px; direction: rtl; }
-        .container { max-width: 1300px; margin: auto; }
-        .selector-card { background: #16213e; padding: 20px; border-radius: 15px; margin-bottom: 20px; border: 1px solid #00d4ff; }
-        select { width: 100%; padding: 12px; border-radius: 8px; background: #1a1a2e; color: #fff; border: 1px solid #00d4ff; font-size: 16px; cursor: pointer; }
-        .report-header { display: flex; justify-content: space-between; align-items: center; background: #fff; color: #000; padding: 15px; border-radius: 10px; margin-bottom: 15px; }
-        .assets-table { width: 100%; border-collapse: collapse; background: #fff; color: #000; margin-top: 20px; border-radius: 10px; overflow: hidden; }
-        .assets-table th { background: #2c3e50; color: #fff; padding: 12px; border: 1px solid #ddd; }
-        .assets-table td { padding: 10px; border: 1px solid #ddd; text-align: center; font-size: 14px; }
-        .assets-table tr:hover { background: #f5f5f5; }
-        .btn-print { background: #00d4ff; color: #1a1a2e; padding: 10px 20px; border-radius: 25px; border: none; cursor: pointer; font-weight: bold; }
-        .badge { display: inline-block; padding: 3px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; }
-        .badge-transformer { background: #3498db; color: white; }
-        .badge-generator { background: #e67e22; color: white; }
-        .badge-panel { background: #9b59b6; color: white; }
-        .badge-mainpump { background: #27ae60; color: white; }
-        .badge-subpump { background: #1abc9c; color: white; }
-        .badge-other { background: #95a5a6; color: white; }
-        .badge-building { background: #f39c12; color: white; }
+        body { font-family: 'Cairo', sans-serif; background: #f0f2f5; color: #333; padding: 20px; direction: rtl; margin: 0; }
+        .container { max-width: 1400px; margin: auto; }
+        .selector-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 25px; border-radius: 15px; margin-bottom: 25px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        .selector-card h3 { color: white; margin: 0 0 15px 0; }
+        select { width: 100%; padding: 12px 15px; border-radius: 10px; border: none; font-size: 16px; font-family: 'Cairo'; background: white; cursor: pointer; }
+        
+        .station-header { background: white; padding: 20px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-right: 5px solid #667eea; }
+        .station-header h2 { color: #333; margin: 0 0 5px 0; }
+        .station-header p { color: #666; margin: 0; }
+        
+        .section-card { background: white; border-radius: 12px; margin-bottom: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); overflow: hidden; }
+        .section-title { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 20px; margin: 0; font-size: 18px; display: flex; align-items: center; gap: 10px; }
+        .section-title i { font-size: 22px; }
+        .assets-table { width: 100%; border-collapse: collapse; }
+        .assets-table th { background: #f8f9fa; color: #333; padding: 12px; border: 1px solid #dee2e6; font-weight: bold; font-size: 13px; text-align: center; }
+        .assets-table td { padding: 10px; border: 1px solid #dee2e6; text-align: center; font-size: 13px; }
+        .assets-table tr:hover { background: #f8f9fa; }
+        
+        .empty-msg { text-align: center; padding: 30px; color: #999; font-size: 14px; }
+        
+        .btn-print { background: #27ae60; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; margin-left: 15px; }
+        .btn-print:hover { background: #219a52; }
+        
         @media print {
             .no-print { display: none !important; }
-            body { background: white; color: black; padding: 0; margin: 0; }
-            .container { max-width: 100%; padding: 10px; }
-            .selector-card { display: none; }
-            .report-header, .assets-table { display: flex; width: 100%; }
-            .assets-table { display: table; }
-            .assets-table th { background: #eee !important; color: #000 !important; }
+            body { background: white; padding: 0; margin: 0; }
+            .container { margin: 0; padding: 10px; }
+            .section-card { break-inside: avoid; page-break-inside: avoid; box-shadow: none; border: 1px solid #ddd; }
+            .section-title { background: #667eea !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .assets-table th { background: #eee !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         }
     </style>
 </head>
@@ -40,10 +44,13 @@
 
 <div class="container">
     <div class="selector-card no-print">
-        <h3 style="margin-bottom:15px;"><i class="fas fa-building"></i> اختر المحطة لعرض جميع الأصول</h3>
+        <h3><i class="fas fa-building"></i> اختر المحطة لعرض جميع الأصول</h3>
         <select id="stationSelector" onchange="generateAssetReport(this.value)">
             <option value="">-- جاري تحميل المحطات --</option>
         </select>
+        <div style="margin-top: 15px;">
+            <button onclick="window.print()" class="btn-print"><i class="fas fa-print"></i> طباعة التقرير</button>
+        </div>
     </div>
 
     <div id="reportContent"></div>
@@ -55,65 +62,85 @@
     const SUPABASE_KEY = 'sb_publishable_n64Hnhuruc3Oeolj-Uwg9g_tu-otJlZ';
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // تعريف جداول الأصول (كل جدول منفصل)
-    const assetTables = [
-        { table: 'transformers', col: 'transformer_number', label: 'محول', badge: 'badge-transformer', icon: 'fa-charging-station' },
-        { table: 'generators', col: 'generator_number', label: 'مولد', badge: 'badge-generator', icon: 'fa-microphone-alt' },
-        { table: 'electrical_panels', col: 'panel_number', label: 'لوحة كهربائية', badge: 'badge-panel', icon: 'fa-bolt' },
-        { table: 'main_pumps', col: 'pump_number', label: 'طلمبة رئيسية', badge: 'badge-mainpump', icon: 'fa-water' },
-        { table: 'sub_pumps', col: 'pump_number', label: 'طلمبة غاطسة', badge: 'badge-subpump', icon: 'fa-fill-drip' },
-        { table: 'other_assets', col: 'asset_number', label: 'أصل آخر', badge: 'badge-other', icon: 'fa-boxes' },
-        { table: 'buildings', col: 'building_number', label: 'مبنى', badge: 'badge-building', icon: 'fa-building' }
-    ];
-
     let currentStation = null;
 
-    // جلب المحطات عند فتح الصفحة
+    // جلب المحطات
     async function init() {
         const selector = document.getElementById('stationSelector');
         try {
             const { data, error } = await _supabase.from('stations').select('id, station_name, station_code').order('station_name');
             if (error) throw error;
-            
             selector.innerHTML = '<option value="">-- اختر المحطة من هنا --</option>';
             data.forEach(s => {
                 selector.innerHTML += `<option value="${s.id}" data-name="${s.station_name}" data-code="${s.station_code || ''}">${s.station_name} (${s.station_code || 'بدون كود'})</option>`;
             });
         } catch (err) {
-            console.error("خطأ في تحميل المحطات:", err);
+            console.error("خطأ:", err);
             selector.innerHTML = '<option value="">خطأ في تحميل المحطات</option>';
         }
     }
 
-    // دالة استخراج المواصفات من كل أصل حسب نوعه
-    function getSpecs(asset, tableName) {
-        // لكل جدول طريقة مختلفة لاستخراج المواصفات
-        switch(tableName) {
-            case 'transformers':
-                return asset.rated_power_kva ? `${asset.rated_power_kva} ك.ف.أ` : (asset.capacity || '---');
-            case 'generators':
-                return asset.rated_power_kva ? `${asset.rated_power_kva} ك.ف.أ` : (asset.power || '---');
-            case 'electrical_panels':
-                return asset.panel_type || asset.capacity || '---';
-            case 'main_pumps':
-                return asset.flow_rate ? `${asset.flow_rate} ل/ث` : (asset.capacity || asset.power || '---');
-            case 'sub_pumps':
-                return asset.flow_rate ? `${asset.flow_rate} ل/ث` : (asset.capacity || asset.power || '---');
-            case 'other_assets':
-                return asset.specs || asset.model || '---';
-            case 'buildings':
-                return asset.building_type || asset.area ? `${asset.area} م²` : '---';
-            default:
-                return asset.specs || asset.capacity || asset.model || '---';
-        }
+    // ========================================
+    // 1. محولات transformers
+    // ========================================
+    async function getTransformers(stationId) {
+        const { data, error } = await _supabase
+            .from('transformers')
+            .select('*')
+            .eq('station_id', parseInt(stationId));
+        if (error) return [];
+        return data;
     }
 
-    // دالة استخراج الماركة/الموديل
-    function getBrand(asset, tableName) {
-        return asset.brand || asset.model || asset.manufacturer || '---';
+    // ========================================
+    // 2. مولدات generators
+    // ========================================
+    async function getGenerators(stationId) {
+        const { data, error } = await _supabase
+            .from('generators')
+            .select('*')
+            .eq('station_id', parseInt(stationId));
+        if (error) return [];
+        return data;
     }
 
-    // دالة توليد التقرير
+    // ========================================
+    // 3. طلمبات رئيسية main_pumps
+    // ========================================
+    async function getMainPumps(stationId) {
+        const { data, error } = await _supabase
+            .from('main_pumps')
+            .select('*')
+            .eq('station_id', parseInt(stationId));
+        if (error) return [];
+        return data;
+    }
+
+    // ========================================
+    // 4. طلمبات فرعية sub_pumps
+    // ========================================
+    async function getSubPumps(stationId) {
+        const { data, error } = await _supabase
+            .from('sub_pumps')
+            .select('*')
+            .eq('station_id', parseInt(stationId));
+        if (error) return [];
+        return data;
+    }
+
+    // ========================================
+    // 5. أصول أخرى other_assets
+    // ========================================
+    async function getOtherAssets(stationId) {
+        const { data, error } = await _supabase
+            .from('other_assets')
+            .select('*')
+            .eq('station_id', parseInt(stationId));
+        if (error) return [];
+        return data;
+    }
+
+    // توليد التقرير
     async function generateAssetReport(stationId) {
         if (!stationId) return;
         
@@ -123,103 +150,185 @@
         const stationCode = selectedOption.getAttribute('data-code');
         
         const reportDiv = document.getElementById('reportContent');
-        reportDiv.innerHTML = '<p style="text-align:center; color:#00d4ff;">جاري تجميع الأصول من جميع الفئات...</p>';
+        reportDiv.innerHTML = '<div style="text-align:center; padding:50px;"><i class="fas fa-spinner fa-spin"></i> جاري تحميل الأصول...</div>';
         
-        let allAssets = [];
+        // جلب جميع الأصول
+        const [transformers, generators, mainPumps, subPumps, otherAssets] = await Promise.all([
+            getTransformers(stationId),
+            getGenerators(stationId),
+            getMainPumps(stationId),
+            getSubPumps(stationId),
+            getOtherAssets(stationId)
+        ]);
         
-        // جلب الأصول من جميع الجداول
-        for (const item of assetTables) {
-            try {
-                const { data, error } = await _supabase
-                    .from(item.table)
-                    .select('*')
-                    .eq('station_id', parseInt(stationId));
-                
-                if (!error && data && data.length > 0) {
-                    data.forEach(asset => {
-                        const assetNumber = asset[item.col];
-                        if (assetNumber) {
-                            allAssets.push({
-                                id: asset.id,
-                                number: assetNumber,
-                                type: item.label,
-                                typeKey: item.table,
-                                badgeClass: item.badge,
-                                icon: item.icon,
-                                brand: getBrand(asset, item.table),
-                                specs: getSpecs(asset, item.table),
-                                rawAsset: asset
-                            });
-                        }
-                    });
-                }
-            } catch (e) {
-                console.error(`خطأ في جدول ${item.table}:`, e);
-            }
-        }
-        
-        // ترتيب الأصول حسب النوع
-        allAssets.sort((a, b) => a.type.localeCompare(b.type));
-        
-        // بناء HTML التقرير
         let html = `
-            <div class="report-header">
-                <div>
-                    <h2><i class="fas fa-tachometer-alt"></i> تقرير أصول محطة ${stationName}</h2>
-                    <p><i class="fas fa-code-branch"></i> كود المحطة: ${stationCode || '---'} | <i class="fas fa-calendar-alt"></i> تاريخ التقرير: ${new Date().toLocaleDateString('ar-EG')}</p>
-                    <p><i class="fas fa-layer-group"></i> إجمالي الأصول المسجلة: ${allAssets.length}</p>
-                </div>
-                <button onclick="window.print()" class="btn-print no-print"><i class="fas fa-print"></i> طباعة التقرير</button>
+            <div class="station-header">
+                <h2><i class="fas fa-tachometer-alt"></i> تقرير أصول محطة ${stationName}</h2>
+                <p><i class="fas fa-code-branch"></i> كود المحطة: ${stationCode || '---'} | <i class="fas fa-calendar-alt"></i> تاريخ التقرير: ${new Date().toLocaleDateString('ar-EG')}</p>
             </div>
-            
-            <table class="assets-table">
-                <thead>
-                    <tr>
-                        <th style="width:5%;">م</th>
-                        <th style="width:15%;">نوع الأصل</th>
-                        <th style="width:20%;">رقم/اسم المعدة</th>
-                        <th style="width:20%;">الماركة/الموديل</th>
-                        <th style="width:25%;">المواصفات</th>
-                        <th style="width:15%;">حالة التشغيل</th>
-                    </tr>
-                </thead>
-                <tbody>
         `;
         
-        if (allAssets.length === 0) {
-            html += `<tr><td colspan="6" style="text-align:center;">⚠️ لا توجد أصول مسجلة لهذه المحطة</td></tr>`;
+        // ========================================
+        // 1. جدول المحولات
+        // ========================================
+        html += `
+            <div class="section-card">
+                <div class="section-title">
+                    <i class="fas fa-charging-station"></i>
+                    أولاً: المحولات
+                </div>
+                <table class="assets-table">
+                    <thead>
+                        <tr><th>م</th><th>رقم/اسم المحول</th><th>القدرة (ك.ف.أ)</th></tr>
+                    </thead>
+                    <tbody>
+        `;
+        
+        if (transformers.length === 0) {
+            html += `<tr><td colspan="3" class="empty-msg">⚠️ لا توجد محولات مسجلة</td></tr>`;
         } else {
-            allAssets.forEach((asset, index) => {
-                // حالة التشغيل (من data لو موجودة)
-                const operationStatus = asset.rawAsset.status || asset.rawAsset.condition || '---';
-                const statusColor = (operationStatus === 'يعمل' || operationStatus === 'جيد' || operationStatus === 'تشغيل') ? 'green' : (operationStatus === 'عاطل' ? 'red' : 'orange');
-                
-                html += `
-                    <tr>
-                        <td>${index + 1}</td>
-                        <td>
-                            <span class="badge ${asset.badgeClass}">
-                                <i class="fas ${asset.icon}"></i> ${asset.type}
-                            </span>
-                        </td>
-                        <td style="font-weight:bold;">${asset.number}</td>
-                        <td>${asset.brand}</td>
-                        <td>${asset.specs}</td>
-                        <td style="color: ${statusColor}; font-weight:bold;">${operationStatus}</td>
-                    </tr>
-                `;
+            transformers.forEach((item, index) => {
+                html += `<tr>
+                    <td>${index + 1}</td>
+                    <td><strong>${item.transformer_number || '---'}</strong></td>
+                    <td>${item.rated_power_kva || '---'}</td>
+                </tr>`;
             });
         }
+        html += `</tbody></table></div>`;
         
+        // ========================================
+        // 2. جدول المولدات
+        // ========================================
         html += `
-                </tbody>
-            </table>
+            <div class="section-card">
+                <div class="section-title">
+                    <i class="fas fa-microphone-alt"></i>
+                    ثانياً: المولدات
+                </div>
+                <table class="assets-table">
+                    <thead>
+                        <tr><th>م</th><th>رقم/اسم المولد</th><th>نوع المحرك</th><th>نوع المولد</th><th>الجهد (فولت)</th><th>القدرة (ك.و)</th></tr>
+                    </thead>
+                    <tbody>
         `;
+        
+        if (generators.length === 0) {
+            html += `<tr><td colspan="6" class="empty-msg">⚠️ لا توجد مولدات مسجلة</td></tr>`;
+        } else {
+            generators.forEach((item, index) => {
+                html += `<tr>
+                    <td>${index + 1}</td>
+                    <td><strong>${item.generator_number || '---'}</strong></td>
+                    <td>${item.engine_type || '---'}</td>
+                    <td>${item.generator_type || '---'}</td>
+                    <td>${item.voltage_v || '---'}</td>
+                    <td>${item.rated_power_kw || '---'}</td>
+                </tr>`;
+            });
+        }
+        html += `</tbody></table></div>`;
+        
+        // ========================================
+        // 3. جدول الطلمبات الرئيسية
+        // ========================================
+        html += `
+            <div class="section-card">
+                <div class="section-title">
+                    <i class="fas fa-water"></i>
+                    ثالثاً: الطلمبات الرئيسية
+                </div>
+                <table class="assets-table">
+                    <thead>
+                        <tr><th>م</th><th>رقم/اسم الطلمبة</th><th>نوع الطلمبة</th><th>التصرف (م³/س)</th><th>الماركة</th><th>الرفع (م)</th><th>قدرة المحرك (ك.و)</th><th>سرعة المحرك (دورة/د)</th></tr>
+                    </thead>
+                    <tbody>
+        `;
+        
+        if (mainPumps.length === 0) {
+            html += `<tr><td colspan="8" class="empty-msg">⚠️ لا توجد طلمبات رئيسية مسجلة</td></tr>`;
+        } else {
+            mainPumps.forEach((item, index) => {
+                html += `<tr>
+                    <td>${index + 1}</td>
+                    <td><strong>${item.pump_number || '---'}</strong></td>
+                    <td>${item.pump_type || '---'}</td>
+                    <td>${item.flow_rate_m3h || '---'}</td>
+                    <td>${item.brand || '---'}</td>
+                    <td>${item.head_m || '---'}</td>
+                    <td>${item.motor_power_kw || '---'}</td>
+                    <td>${item.motor_rpm || '---'}</td>
+                </tr>`;
+            });
+        }
+        html += `</tbody></table></div>`;
+        
+        // ========================================
+        // 4. جدول الطلمبات الفرعية
+        // ========================================
+        html += `
+            <div class="section-card">
+                <div class="section-title">
+                    <i class="fas fa-fill-drip"></i>
+                    رابعاً: الطلمبات الفرعية (الغاطسة)
+                </div>
+                <table class="assets-table">
+                    <thead>
+                        <tr><th>م</th><th>رقم/اسم الطلمبة</th><th>نوع الطلمبة</th><th>التصرف (م³/س)</th><th>الماركة</th><th>الرفع (م)</th><th>قدرة المحرك (ك.و)</th><th>سرعة المحرك (دورة/د)</th></tr>
+                    </thead>
+                    <tbody>
+        `;
+        
+        if (subPumps.length === 0) {
+            html += `<tr><td colspan="8" class="empty-msg">⚠️ لا توجد طلمبات فرعية مسجلة</td></tr>`;
+        } else {
+            subPumps.forEach((item, index) => {
+                html += `<tr>
+                    <td>${index + 1}</td>
+                    <td><strong>${item.pump_number || '---'}</strong></td>
+                    <td>${item.pump_type || '---'}</td>
+                    <td>${item.flow_rate_m3h || '---'}</td>
+                    <td>${item.brand || '---'}</td>
+                    <td>${item.head_m || '---'}</td>
+                    <td>${item.motor_power_kw || '---'}</td>
+                    <td>${item.motor_rpm || '---'}</td>
+                </tr>`;
+            });
+        }
+        html += `</tbody></table></div>`;
+        
+        // ========================================
+        // 5. جدول الأصول الأخرى
+        // ========================================
+        html += `
+            <div class="section-card">
+                <div class="section-title">
+                    <i class="fas fa-boxes"></i>
+                    خامساً: أصول أخرى
+                </div>
+                <table class="assets-table">
+                    <thead>
+                        <tr><th>م</th><th>رقم/اسم الأصل</th><th>الوصف</th></tr>
+                    </thead>
+                    <tbody>
+        `;
+        
+        if (otherAssets.length === 0) {
+            html += `<tr><td colspan="3" class="empty-msg">⚠️ لا توجد أصول أخرى مسجلة</td></tr>`;
+        } else {
+            otherAssets.forEach((item, index) => {
+                html += `<tr>
+                    <td>${index + 1}</td>
+                    <td><strong>${item.asset_number || '---'}</strong></td>
+                    <td>${item.description || '---'}</td>
+                </tr>`;
+            });
+        }
+        html += `</tbody></table></div>`;
         
         reportDiv.innerHTML = html;
     }
 
-    // بدء التشغيل
     init();
 </script>
 </body>
