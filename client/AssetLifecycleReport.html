@@ -186,96 +186,9 @@
         }
     }
 
-    // ✅ الدالة المعدلة لقراءة status و note
-    function getChecklistData(checklistData) {
-        if (!checklistData) return { status: '---', note: '---' };
-        try {
-            if (typeof checklistData === 'string') {
-                const parsed = JSON.parse(checklistData);
-                return {
-                    status: parsed.status || parsed.state || '---',
-                    note: parsed.note || '---'
-                };
-            }
-            return {
-                status: checklistData.status || checklistData.state || '---',
-                note: checklistData.note || '---'
-            };
-        } catch (e) {
-            return { status: '---', note: '---' };
-        }
-    }
-
-    async function generateReport() {
-        const assetSelect = document.getElementById('assetId');
-        const assetNumber = assetSelect.value;
-        const from = document.getElementById('dateFrom').value;
-        const to = document.getElementById('dateTo').value;
-
-        if (!assetNumber || assetNumber === "") {
-            return alert("برجاء اختيار الأصل");
-        }
-        if (!from || !to) {
-            return alert("برجاء اختيار تاريخ البداية والنهاية");
-        }
-
-        const selectedOption = assetSelect.options[assetSelect.selectedIndex];
-        const assetType = selectedOption.getAttribute('data-type') || 'أصل';
-        const specs = selectedOption.getAttribute('data-specs') || '---';
-
-        document.getElementById('reportContent').style.display = 'block';
-        document.getElementById('assetDetails').innerHTML = `
-            <div><strong>رقم المعدة:</strong> ${assetNumber}</div>
-            <div><strong>نوع الأصل:</strong> ${assetType}</div>
-            <div><strong>المواصفات:</strong> ${specs}</div>
-            <div><strong>المحطة:</strong> ${currentStationName || '---'}</div>
-            <div><strong>الفترة:</strong> من ${from} إلى ${to}</div>
-        `;
-
-        const insBody = document.querySelector('#inspectionTable tbody');
-        const fltBody = document.querySelector('#faultTable tbody');
-        
+  
         // ========================================
-        // 1. جلب سجلات المرور من inspection_reports
-        // ========================================
-        insBody.innerHTML = '<tr><td colspan="4">جاري التحميل...</td></tr>';
-        try {
-            const { data: insData, error: insError } = await _supabase
-                .from('inspection_reports')
-                .select('*')
-                .eq('station_id', currentStationId);
-            
-            console.log('Inspection Data:', insData);
-            
-            if (!insError && insData && insData.length > 0) {
-                const filtered = insData.filter(item => {
-                    const itemDate = formatDate(item.created_at);
-                    return itemDate && itemDate >= from && itemDate <= to;
-                });
-                
-                insBody.innerHTML = "";
-                if (filtered.length > 0) {
-                    filtered.forEach(row => {
-                        const checklist = getChecklistData(row.checklist_data);
-                        // ✅ تم التعديل هنا: checklist.status بدلاً من checklist.state
-                        insBody.innerHTML += `<tr>
-                            <td>${formatDate(row.created_at) || '---'}</td>
-                            <td>${checklist.status}</td>
-                            <td>${checklist.note}</td>
-                            <td>${row.manager_name || '---'}</td>
-                        </tr>`;
-                    });
-                } else {
-                    insBody.innerHTML = '<tr><td colspan="4">⚠️ لا توجد سجلات مرور في الفترة المحددة</td></tr>';
-                }
-            } else {
-                insBody.innerHTML = '<tr><td colspan="4">📭 لا توجد سجلات مرور مسجلة لهذه المحطة</td></tr>';
-            }
-        } catch (e) {
-            console.error("Error fetching inspections:", e);
-            insBody.innerHTML = '<td><td colspan="4">❌ خطأ في جلب بيانات المرور</td></tr>';
-        }
-
+      
         // ========================================
         // 2. جلب سجلات الأعطال من maintenance_tickets
         // ========================================
