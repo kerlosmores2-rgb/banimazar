@@ -69,8 +69,7 @@
 
     <div id="assetDetails" class="asset-summary"></div>
 
- 
-    <div class="section-head">ثانياً: سجل بلاغات الأعطال والإصلاحات المنفذة</div>
+    <div class="section-head">سجل بلاغات الأعطال والإصلاحات المنفذة</div>
     <table id="faultTable">
         <thead>
             <tr>
@@ -186,11 +185,36 @@
         }
     }
 
-  
+    async function generateReport() {
+        const assetSelect = document.getElementById('assetId');
+        const assetNumber = assetSelect.value;
+        const from = document.getElementById('dateFrom').value;
+        const to = document.getElementById('dateTo').value;
+
+        if (!assetNumber || assetNumber === "") {
+            return alert("برجاء اختيار الأصل");
+        }
+        if (!from || !to) {
+            return alert("برجاء اختيار تاريخ البداية والنهاية");
+        }
+
+        const selectedOption = assetSelect.options[assetSelect.selectedIndex];
+        const assetType = selectedOption.getAttribute('data-type') || 'أصل';
+        const specs = selectedOption.getAttribute('data-specs') || '---';
+
+        document.getElementById('reportContent').style.display = 'block';
+        document.getElementById('assetDetails').innerHTML = `
+            <div><strong>رقم المعدة:</strong> ${assetNumber}</div>
+            <div><strong>نوع الأصل:</strong> ${assetType}</div>
+            <div><strong>المواصفات:</strong> ${specs}</div>
+            <div><strong>المحطة:</strong> ${currentStationName || '---'}</div>
+            <div><strong>الفترة:</strong> من ${from} إلى ${to}</div>
+        `;
+
+        const fltBody = document.querySelector('#faultTable tbody');
+        
         // ========================================
-      
-        // ========================================
-        // 2. جلب سجلات الأعطال من maintenance_tickets
+        // جلب سجلات الأعطال من maintenance_tickets
         // ========================================
         fltBody.innerHTML = '<tr><td colspan="5">جاري التحميل...</td></tr>';
         try {
@@ -212,13 +236,15 @@
                 fltBody.innerHTML = "";
                 if (filtered.length > 0) {
                     filtered.forEach(row => {
-                        fltBody.innerHTML += `<tr>
-                            <td>${formatDate(row.created_at) || '---'}</td>
-                            <td>${row.fault_description || '---'}</td>
-                            <td>${row.repair_actions || row.repair_action || '---'}</td>
-                            <td>${row.spare_parts || '---'}</td>
-                            <td>${row.status || '---'}</td>
-                        </tr>`;
+                        fltBody.innerHTML += `
+                            <tr>
+                                <td>${formatDate(row.created_at) || '---'}</td>
+                                <td>${row.fault_description || '---'}</td>
+                                <td>${row.repair_actions || row.repair_action || '---'}</td>
+                                <td>${row.spare_parts || '---'}</td>
+                                <td>${row.status || '---'}</td>
+                            </tr>
+                        `;
                     });
                 } else {
                     fltBody.innerHTML = '<tr><td colspan="5">🔧 لا توجد بلاغات أعطال في الفترة المحددة</td></tr>';
@@ -237,4 +263,4 @@
     init();
 </script>
 </body>
-</html> 
+</html>
