@@ -56,7 +56,7 @@
 
 <div class="container">
     <div class="selector-card no-print">
-        <h3><i class="fas fa-oil-can"></i> تقرير استهلاك السولار - المولدات</h3>
+        <h3><i class="fas fa-oil-can"></i> تقرير استهلاك السولار</h3>
         <div class="filter-row">
             <div class="filter-item">
                 <label><i class="fas fa-building"></i> اختر المحطة</label>
@@ -114,15 +114,6 @@
         return `${months[parseInt(month) - 1]} ${year}`;
     }
 
-    // حساب إجمالي الاستهلاك
-    function calculateTotals(data, fields) {
-        let totals = {};
-        fields.forEach(field => {
-            totals[field] = data.reduce((sum, row) => sum + (parseFloat(row[field]) || 0), 0);
-        });
-        return totals;
-    }
-
     // توليد التقرير
     async function generateFuelReport() {
         const stationSelect = document.getElementById('stationSelector');
@@ -147,9 +138,9 @@
         reportDiv.innerHTML = '<div style="text-align:center; padding:50px;"><i class="fas fa-spinner fa-spin"></i> جاري تحميل بيانات الاستهلاك...</div>';
         
         try {
-            // جلب بيانات التقارير الشهرية للمحطة
+            // ✅ التعديل: استخدام جدول station_costos
             const { data, error } = await _supabase
-                .from('monthly_reports')
+                .from('station_costos')
                 .select('*')
                 .eq('station_id', parseInt(stationId))
                 .order('report_date', { ascending: true });
@@ -165,41 +156,12 @@
                 });
             }
             
-            // تحديد أعمدة المولدات الموجودة في البيانات
-            const sampleRow = filteredData[0] || {};
-            const generatorFields = [];
-            for (const key in sampleRow) {
-                if (key.includes('total_consumption') || key.includes('balance')) {
-                    generatorFields.push(key);
-                }
-            }
-            
-            // تجميع المولدات بشكل منظم
-            const generators = [];
-            const genNumbers = new Set();
-            generatorFields.forEach(field => {
-                const match = field.match(/generator_(\d+)_/);
-                if (match) {
-                    genNumbers.add(match[1]);
-                }
-            });
-            
-            const sortedGenNumbers = Array.from(genNumbers).sort((a,b) => parseInt(a) - parseInt(b));
-            sortedGenNumbers.forEach(genNum => {
-                generators.push({
-                    number: genNum,
-                    consumptionField: `generator_${genNum}_total_consumption`,
-                    balanceField: `generator_${genNum}_balance`
-                });
-            });
+            // ✅ التعديل: استخدام الأعمدة الجديدة
+            // solar_consumed (المستهلك) - solar_current_balance (الرصيد الحالي)
             
             // حساب المجاميع
-            let totalConsumption = 0;
-            let totalBalance = 0;
-            generators.forEach(gen => {
-                totalConsumption += filteredData.reduce((sum, row) => sum + (parseFloat(row[gen.consumptionField]) || 0), 0);
-                totalBalance += filteredData.reduce((sum, row) => sum + (parseFloat(row[gen.balanceField]) || 0), 0);
-            });
+            let totalConsumed = filteredData.reduce((sum, row) => sum + (parseFloat(row.solar_consumed) || 0), 0);
+            let totalBalance = filteredData.reduce((sum, row) => sum + (parseFloat(row.solar_current_balance) || 0), 0);
             
             // بناء HTML التقرير
             let html = `
@@ -210,11 +172,11 @@
                 
                 <div class="summary-card">
                     <div class="summary-item">
-                        <div class="label"><i class="fas fa-tachometer-alt"></i> إجمالي الاستهلاك</div>
-                        <div class="value">${totalConsumption.toLocaleString()} لتر</div>
+                        <div class="label"><i class="fas fa-tachometer-alt"></i> إجمالي المستهلك</div>
+                        <div class="value">${totalConsumed.toLocaleString()} لتر</div>
                     </div>
                     <div class="summary-item">
-                        <div class="label"><i class="fas fa-gas-pump"></i> إجمالي الرصيد</div>
+                        <div class="label"><i class="fas fa-gas-pump"></i> إجمالي الرصيد الحالي</div>
                         <div class="value">${totalBalance.toLocaleString()} لتر</div>
                     </div>
                     <div class="summary-item">
@@ -224,73 +186,51 @@
                 </div>
             `;
             
-            // جدول لكل مولد على حدة
-            for (const gen of generators) {
-                // جمع بيانات هذا المولد فقط
-                const genData = filteredData.map(row => ({
-                    month: row.report_date,
-                    consumption: row[gen.consumptionField] || 0,
-                    balance: row[gen.balanceField] || 0
-                }));
-                
-                const genTotalConsumption = genData.reduce((sum, item) => sum + (parseFloat(item.consumption) || 0), 0);
-                const genTotalBalance = genData.reduce((sum, item) => sum + (parseFloat(item.balance) || 0), 0);
-                
-                html += `
-                    <div class="section-card">
-                        <div class="section-title">
-                            <i class="fas fa-microphone-alt"></i>
-                            مولد رقم ${gen.number}
-                        </div>
-                        <table class="assets-table">
-                            <thead>
-                                <tr>
-                                    <th style="width:30%;">الشهر</th>
-                                    <th style="width:35%;">الاستهلاك (لتر)</th>
-                                    <th style="width:35%;">الرصيد (لتر)</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                `;
-                
-                if (genData.length === 0) {
-                    html += `<tr><td colspan="3" class="empty-msg">⚠️ لا توجد بيانات استهلاك لهذا المولد في الفترة المحددة</td></tr>`;
-                } else {
-                    genData.forEach(item => {
-                        html += `
+            // جدول تفصيلي
+            html += `
+                <div class="section-card">
+                    <div class="section-title">
+                        <i class="fas fa-chart-line"></i>
+                        التفاصيل الشهرية
+                    </div>
+                    <table class="assets-table">
+                        <thead>
                             <tr>
-                                <td>${formatMonth(item.month)}</td>
-                                <td>${parseFloat(item.consumption).toLocaleString() || '0'}</td>
-                                <td>${parseFloat(item.balance).toLocaleString() || '0'}</td>
+                                <th style="width:25%;">الشهر</th>
+                                <th style="width:35%;">المستهلك (لتر)</th>
+                                <th style="width:40%;">الرصيد الحالي (لتر)</th>
                             </tr>
-                        `;
-                    });
-                    // صف الإجمالي
+                        </thead>
+                        <tbody>
+            `;
+            
+            if (filteredData.length === 0) {
+                html += `</tr><td colspan="3" class="empty-msg">⚠️ لا توجد بيانات استهلاك في الفترة المحددة</td></tr>`;
+            } else {
+                filteredData.forEach(item => {
                     html += `
-                        <tr class="total-row">
-                            <td><strong>الإجمالي</strong></td>
-                            <td><strong>${genTotalConsumption.toLocaleString()} لتر</strong></td>
-                            <td><strong>${genTotalBalance.toLocaleString()} لتر</strong></td>
+                        <tr>
+                            <td>${formatMonth(item.report_date)}</td>
+                            <td>${parseFloat(item.solar_consumed).toLocaleString() || '0'}</td>
+                            <td>${parseFloat(item.solar_current_balance).toLocaleString() || '0'}</td>
                         </tr>
                     `;
-                }
-                
+                });
+                // صف الإجمالي
                 html += `
-                            </tbody>
-                        </table>
-                    </div>
+                    <tr class="total-row">
+                        <td><strong>الإجمالي</strong></td>
+                        <td><strong>${totalConsumed.toLocaleString()} لتر</strong></td>
+                        <td><strong>${totalBalance.toLocaleString()} لتر</strong></td>
+                    </tr>
                 `;
             }
             
-            if (generators.length === 0) {
-                html += `
-                    <div class="section-card">
-                        <div class="empty-msg" style="padding: 40px;">
-                            <i class="fas fa-exclamation-triangle"></i> لا توجد بيانات استهلاك مسجلة للمدة المحددة
-                        </div>
-                    </div>
-                `;
-            }
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
             
             reportDiv.innerHTML = html;
             
