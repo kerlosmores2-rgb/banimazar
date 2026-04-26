@@ -14,8 +14,8 @@
         select, input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: 'Cairo'; }
         .btn-query { background: #2980b9; color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; width: 100%; margin-top: 20px; font-size: 16px; transition: 0.3s; }
         .btn-query:hover { background: #1f6391; }
+        .loading { text-align: center; padding: 20px; color: #2980b9; }
 
-        /* تنسيق التقرير المطبوع */
         .report-paper { background: white; padding: 30px; border: 1px solid #000; min-height: 297mm; display: none; }
         .header-logo { text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px; }
         .asset-summary { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; background: #f9f9f9; padding: 15px; border: 1px solid #ddd; margin-bottom: 20px; }
@@ -88,9 +88,9 @@
         <thead>
             <tr>
                 <th style="width: 12%;">التاريخ</th>
-                <th style="width: 20%;">وصف العطل</th>
+                <th style="width: 23%;">وصف العطل</th>
                 <th style="width: 25%;">إجراءات الإصلاح</th>
-                <th>قطع الغيار المستخدمة</th>
+                <th style="width: 20%;">قطع الغيار المستخدمة</th>
                 <th style="width: 10%;">الحالة</th>
             </tr>
         </thead>
@@ -104,158 +104,263 @@
     const SUPABASE_KEY = 'sb_publishable_n64Hnhuruc3Oeolj-Uwg9g_tu-otJlZ';
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // 1. جلب المحطات
+    // ============================================
+    // جداول الأصول حسب ما ذكرت (كل جدول لوحده)
+    // ============================================
+    const assetTables = [
+        { table: 'transformers', col: 'transformer_number', label: 'محول' },
+        { table: 'generators', col: 'generator_number', label: 'مولد' },
+        { table: 'electrical_panels', col: 'panel_number', label: 'لوحة كهربائية' },
+        { table: 'main_pumps', col: 'pump_number', label: 'طلمبة رئيسية' },
+        { table: 'sub_pumps', col: 'pump_number', label: 'طلمبة غاطسة' },
+        { table: 'other_assets', col: 'asset_number', label: 'أصل آخر' },
+        { table: 'buildings', col: 'building_number', label: 'مبنى' }
+    ];
+
+    // جلب المحطات
     async function init() {
         const s = document.getElementById('stationId');
         try {
             const { data, error } = await _supabase.from('stations').select('id, station_name').order('station_name');
             if (error) throw error;
             s.innerHTML = '<option value="">-- اختر المحطة --</option>';
-            data.forEach(item => s.innerHTML += `<option value="${item.id}">${item.station_name}</option>`);
+            if (data && data.length > 0) {
+                data.forEach(item => s.innerHTML += `<option value="${item.id}">${item.station_name}</option>`);
+            } else {
+                s.innerHTML = '<option value="">لا توجد محطات مسجلة</option>';
+            }
         } catch (err) {
             console.error("Init Error:", err);
             s.innerHTML = '<option value="">خطأ في تحميل المحطات</option>';
         }
     }
 
-    // 2. جلب الأصول من جميع الجداول الفئوية
-    async function fetchAssets(sid) {
-        if(!sid) return;
-        const a = document.getElementById('assetId');
-        a.innerHTML = '<option value="">جاري فحص جميع الفئات...</option>';
-        const stationIdInt = parseInt(sid);
-
+    // جلب الأصول من جميع الجداول
+    async function fetchAssets(stationId) {
+        if (!stationId) return;
         
-           
-        const assetTables = [
-            { table: 'transformers', col: 'transformer_number', label: 'محول' },
-            { table: 'generators', col: 'generator_number', label: 'مولد' },
-            { table: 'electrical_panels', col: 'panel_number', label: 'لوحة' },
-            { table: 'main_pumps', col: 'pump_number', label: 'طلمبة رئيسية' }, // جرب إضافة حرف s هنا
-            { table: 'sub_pumps', col: 'pump_number', label: 'طلمبة غاطسة' },   // جرب إضافة حرف s هنا
-            { table: 'other_assets', col: 'asset_number', label: 'أصل آخر' },
-            { table: 'buildings', col: 'building_number', label: 'مبنى' }
-        ];
+        const assetSelect = document.getElementById('assetId');
+        assetSelect.innerHTML = '<option value="">جاري تحميل الأصول...</option>';
         
+        const stationIdInt = parseInt(stationId);
+        let allAssets = [];
 
         try {
-            let allAssets = [];
             for (const item of assetTables) {
                 try {
-                    const { data, error } = await _supabase.from(item.table).select('*').eq('station_id', stationIdInt);
-                    if (!error && data) {
+                    const { data, error } = await _supabase
+                        .from(item.table)
+                        .select('*')
+                        .eq('station_id', stationIdInt);
+                    
+                    if (!error && data && data.length > 0) {
                         data.forEach(asset => {
-                            allAssets.push({
-                                id: asset.id,
-                                name: asset[item.col] || "بدون اسم",
-                                table: item.table,
-                                col: item.col,
-                                typeLabel: item.label
-                            });
+                            const assetNumber = asset[item.col];
+                            if (assetNumber) {
+                                allAssets.push({
+                                    id: asset.id,
+                                    assetNumber: assetNumber,
+                                    tableName: item.table,
+                                    typeLabel: item.label,
+                                    specs: asset.rated_power_kva || asset.capacity || asset.model || asset.specs || '---'
+                                });
+                            }
                         });
                     }
-                } catch (e) { console.error(`Error in table: ${item.table}`); }
+                } catch (e) {
+                    console.error(`خطأ في جدول ${item.table}:`, e);
+                }
             }
 
             if (allAssets.length > 0) {
-                a.innerHTML = `<option value="">-- اختر المعدة (${allAssets.length}) --</option>`;
-                allAssets.forEach(item => {
-                    a.innerHTML += `<option value="${item.id}" data-table="${item.table}" data-col="${item.col}">${item.typeLabel}: ${item.name}</option>`;
+                assetSelect.innerHTML = '<option value="">-- اختر الأصل --</option>';
+                allAssets.forEach(asset => {
+                    assetSelect.innerHTML += `
+                        <option value="${asset.assetNumber}" 
+                            data-asset-number="${asset.assetNumber}"
+                            data-type="${asset.typeLabel}"
+                            data-specs="${asset.specs}">
+                            ${asset.typeLabel}: ${asset.assetNumber}
+                        </option>
+                    `;
                 });
             } else {
-                a.innerHTML = '<option value="">لا توجد أصول مسجلة لهذه المحطة</option>';
+                assetSelect.innerHTML = '<option value="">لا توجد أصول مسجلة لهذه المحطة</option>';
             }
         } catch (err) {
             console.error("Fetch Assets Error:", err);
-            a.innerHTML = '<option value="">خطأ في جلب البيانات</option>';
+            assetSelect.innerHTML = '<option value="">خطأ في جلب الأصول</option>';
         }
     }
 
-    // 3. توليد التقرير التاريخي
+    // تنسيق التاريخ
+    function formatDate(dateStr) {
+        if (!dateStr) return null;
+        try {
+            return dateStr.split('T')[0];
+        } catch (e) {
+            return null;
+        }
+    }
+
+    // استخراج البيانات من checklist_data (JSON)
+    function getChecklistData(checklistData) {
+        if (!checklistData) return { state: '---', note: '---' };
+        try {
+            if (typeof checklistData === 'string') {
+                const parsed = JSON.parse(checklistData);
+                return {
+                    state: parsed.state || parsed.Status || '---',
+                    note: parsed.note || parsed.Notes || parsed.ملاحظات || '---'
+                };
+            }
+            return {
+                state: checklistData.state || checklistData.Status || '---',
+                note: checklistData.note || checklistData.Notes || '---'
+            };
+        } catch (e) {
+            return { state: '---', note: '---' };
+        }
+    }
+
+    // توليد التقرير
     async function generateReport() {
         const assetSelect = document.getElementById('assetId');
-        const aid = assetSelect.value;
-        const selected = assetSelect.options[assetSelect.selectedIndex];
+        const selectedOption = assetSelect.options[assetSelect.selectedIndex];
+        const assetNumber = assetSelect.value;
+        
         const from = document.getElementById('dateFrom').value;
         const to = document.getElementById('dateTo').value;
 
-        if(!aid || !from || !to) return alert("برجاء استكمال كافة البيانات (المعدة، التاريخ من وإلى)");
+        // التحقق من المدخلات
+        if (!assetNumber || assetNumber === "") {
+            return alert("برجاء اختيار الأصل");
+        }
+        if (!from) {
+            return alert("برجاء اختيار تاريخ البداية");
+        }
+        if (!to) {
+            return alert("برجاء اختيار تاريخ النهاية");
+        }
 
-        const tableName = selected.getAttribute('data-table');
-        const columnName = selected.getAttribute('data-col');
+        const assetType = selectedOption.getAttribute('data-type') || 'أصل';
+        const specs = selectedOption.getAttribute('data-specs') || '---';
+
+        // عرض رسالة تحميل
+        document.getElementById('reportContent').style.display = 'block';
+        document.getElementById('assetDetails').innerHTML = '<div class="loading">جاري تحميل البيانات...</div>';
+        
+        const insBody = document.querySelector('#inspectionTable tbody');
+        const fltBody = document.querySelector('#faultTable tbody');
+        insBody.innerHTML = '<tr><td colspan="4" class="loading">جاري التحميل...</td></tr>';
+        fltBody.innerHTML = '<tr><td colspan="5" class="loading">جاري التحميل...</td></tr>';
 
         try {
-            // جلب بيانات الأصل للحصول على القيمة النصية (رقم المعدة)
-            const { data: asset, error: assetErr } = await _supabase.from(tableName).select('*').eq('id', aid).single();
-            if (assetErr) throw assetErr;
-            
-            const assetRealValue = asset[columnName];
+            // ========================================
+            // 1. جلب سجلات المرور من inspection_report
+            // ========================================
+            let inspections = [];
+            try {
+                const { data, error } = await _supabase
+                    .from('inspection_report')
+                    .select('*')
+                    .eq('asset_id', assetNumber);
+                
+                if (error) {
+                    console.error("خطأ في جلب المرور:", error);
+                } else if (data && data.length > 0) {
+                    inspections = data.filter(item => {
+                        const itemDate = formatDate(item.created_at);
+                        return itemDate && itemDate >= from && itemDate <= to;
+                    });
+                }
+            } catch (e) {
+                console.error("Exception in inspections:", e);
+            }
 
-            // جلب سجلات المرور (inspection_report)
-            const { data: ins } = await _supabase.from('inspection_report').select('*').eq('asset_id', assetRealValue);
+            // ========================================
+            // 2. جلب سجلات الأعطال من maintenance_tickets
+            // ========================================
+            let faults = [];
+            try {
+                const { data, error } = await _supabase
+                    .from('maintenance_tickets')
+                    .select('*')
+                    .eq('asset_id', assetNumber);
+                
+                if (error) {
+                    console.error("خطأ في جلب الأعطال:", error);
+                } else if (data && data.length > 0) {
+                    faults = data.filter(item => {
+                        const itemDate = formatDate(item.created_at);
+                        return itemDate && itemDate >= from && itemDate <= to;
+                    });
+                }
+            } catch (e) {
+                console.error("Exception in faults:", e);
+            }
 
-            // جلب سجلات الأعطال (maintenance_tickets)
-            const { data: flt } = await _supabase.from('maintenance_tickets').select('*').eq('asset_id', assetRealValue);
-
-            // إعداد واجهة التقرير
-            document.getElementById('reportContent').style.display = 'block';
+            // عرض ملخص الأصل
             document.getElementById('assetDetails').innerHTML = `
-                <div><strong>اسم/رقم المعدة:</strong> ${assetRealValue}</div>
-                <div><strong>نوع الفئة:</strong> ${tableName}</div>
-                <div><strong>المواصفات:</strong> ${asset.rated_power_kva || asset.capacity || '---'}</div>
+                <div><strong>رقم المعدة:</strong> ${assetNumber}</div>
+                <div><strong>نوع الأصل:</strong> ${assetType}</div>
+                <div><strong>المواصفات:</strong> ${specs}</div>
                 <div><strong>الفترة:</strong> من ${from} إلى ${to}</div>
+                <div><strong>عدد سجلات المرور:</strong> ${inspections.length}</div>
+                <div><strong>عدد بلاغات الأعطال:</strong> ${faults.length}</div>
             `;
 
-            const insBody = document.querySelector('#inspectionTable tbody');
-            const fltBody = document.querySelector('#faultTable tbody');
-            insBody.innerHTML = ""; 
-            fltBody.innerHTML = "";
-
-            // معالجة بيانات المرور (JSON)
-            if (ins && ins.length > 0) {
-                const filtered = ins.filter(i => {
-                    const d = i.created_at.split('T')[0];
-                    return d >= from && d <= to;
-                });
-                filtered.forEach(row => {
+            // ========================================
+            // عرض بيانات المرور
+            // ========================================
+            insBody.innerHTML = "";
+            if (inspections.length > 0) {
+                for (const row of inspections) {
+                    const checklist = getChecklistData(row.checklist_data);
                     insBody.innerHTML += `<tr>
-                        <td>${row.created_at.split('T')[0]}</td>
-                        <td>${row.checklist_data?.state || '---'}</td>
-                        <td>${row.checklist_data?.note || '---'}</td>
-                        <td>${row.inspector_name || '---'}</td>
-                    </tr>`;
-                });
+                        <td>${formatDate(row.created_at) || '---'}</td>
+                        <td>${checklist.state}</td>
+                        <td>${checklist.note}</td>
+                        <td>${row.inspector_name || row.created_by || '---'}</td>
+                    </table>`;
+                }
+            } else {
+                insBody.innerHTML = '<tr><td colspan="4" style="text-align:center;">📭 لا توجد سجلات مرور في الفترة المحددة</td></tr>';
             }
 
-            // معالجة بيانات الأعطال
-            if (flt && flt.length > 0) {
-                const filtered = flt.filter(f => {
-                    const d = f.created_at.split('T')[0];
-                    return d >= from && d <= to;
-                });
-                filtered.forEach(row => {
+            // ========================================
+            // عرض بيانات الأعطال
+            // ========================================
+            fltBody.innerHTML = "";
+            if (faults.length > 0) {
+                for (const row of faults) {
+                    // دعم spelling error: staus / status
+                    const faultStatus = row.status || row.staus || '---';
                     fltBody.innerHTML += `<tr>
-                        <td>${row.created_at.split('T')[0]}</td>
+                        <td>${formatDate(row.created_at) || '---'}</td>
                         <td>${row.fault_description || '---'}</td>
                         <td>${row.repair_action || '---'}</td>
-                        <td>${row.spare_part || '---'}</td>
-                        <td>${row.stauts || '---'}</td>
+                        <td>${row.spare_parts || row.spare_part || '---'}</td>
+                        <td>${faultStatus}</td>
                     </tr>`;
-                });
+                }
+            } else {
+                fltBody.innerHTML = '<tr><td colspan="5" style="text-align:center;">🔧 لا توجد بلاغات أعطال في الفترة المحددة</td></tr>';
             }
 
-            if (insBody.innerHTML === "") insBody.innerHTML = '<tr><td colspan="4">لا توجد سجلات مرور مسجلة</td></tr>';
-            if (fltBody.innerHTML === "") fltBody.innerHTML = '<tr><td colspan="5">لا توجد بلاغات أعطال مسجلة</td></tr>';
-
-            // أمر الطباعة
-            setTimeout(() => window.print(), 1000);
+            // طباعة التقرير
+            setTimeout(() => {
+                window.print();
+            }, 500);
 
         } catch (err) {
             console.error("Report Generation Error:", err);
-            alert("حدث خطأ في النظام أثناء جلب بيانات التقرير.");
+            alert("حدث خطأ: " + err.message);
+            document.getElementById('assetDetails').innerHTML = `<div style="color:red;">خطأ: ${err.message}</div>`;
         }
     }
 
+    // بدء التشغيل
     init();
 </script>
 </body>
