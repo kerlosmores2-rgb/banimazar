@@ -3,26 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تقرير أصول المحطة التفصيلي</title>
+    <title>تقرير أصول المحطة التفصيلي - مياه المنيا</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap');
         body { font-family: 'Cairo', sans-serif; background: #1a1a2e; color: #fff; padding: 20px; direction: rtl; }
-        .container { max-width: 1100px; margin: auto; }
+        .container { max-width: 1300px; margin: auto; }
         .selector-card { background: #16213e; padding: 20px; border-radius: 15px; margin-bottom: 20px; border: 1px solid #00d4ff; }
         select { width: 100%; padding: 12px; border-radius: 8px; background: #1a1a2e; color: #fff; border: 1px solid #00d4ff; font-size: 16px; cursor: pointer; }
-        .report-header { display: flex; justify-content: space-between; align-items: center; background: #fff; color: #000; padding: 15px; border-radius: 10px; margin-bottom: 15px; display: none; }
-        .assets-table { width: 100%; border-collapse: collapse; background: #fff; color: #000; margin-top: 20px; border-radius: 10px; overflow: hidden; display: none; }
+        .report-header { display: flex; justify-content: space-between; align-items: center; background: #fff; color: #000; padding: 15px; border-radius: 10px; margin-bottom: 15px; }
+        .assets-table { width: 100%; border-collapse: collapse; background: #fff; color: #000; margin-top: 20px; border-radius: 10px; overflow: hidden; }
         .assets-table th { background: #2c3e50; color: #fff; padding: 12px; border: 1px solid #ddd; }
         .assets-table td { padding: 10px; border: 1px solid #ddd; text-align: center; font-size: 14px; }
-        .status-good { color: #27ae60; font-weight: bold; }
-        .status-bad { color: #e74c3c; font-weight: bold; }
-        .btn { padding: 10px 20px; border-radius: 25px; border: none; cursor: pointer; font-weight: bold; }
-        .btn-print { background: #00d4ff; color: #1a1a2e; }
+        .assets-table tr:hover { background: #f5f5f5; }
+        .btn-print { background: #00d4ff; color: #1a1a2e; padding: 10px 20px; border-radius: 25px; border: none; cursor: pointer; font-weight: bold; }
+        .badge { display: inline-block; padding: 3px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; }
+        .badge-transformer { background: #3498db; color: white; }
+        .badge-generator { background: #e67e22; color: white; }
+        .badge-panel { background: #9b59b6; color: white; }
+        .badge-mainpump { background: #27ae60; color: white; }
+        .badge-subpump { background: #1abc9c; color: white; }
+        .badge-other { background: #95a5a6; color: white; }
+        .badge-building { background: #f39c12; color: white; }
         @media print {
             .no-print { display: none !important; }
-            body { background: white; color: black; padding: 0; }
-            .report-header, .assets-table { display: table !important; width: 100%; }
+            body { background: white; color: black; padding: 0; margin: 0; }
+            .container { max-width: 100%; padding: 10px; }
+            .selector-card { display: none; }
+            .report-header, .assets-table { display: flex; width: 100%; }
+            .assets-table { display: table; }
             .assets-table th { background: #eee !important; color: #000 !important; }
         }
     </style>
@@ -31,14 +40,13 @@
 
 <div class="container">
     <div class="selector-card no-print">
-        <h3 style="margin-bottom:15px;"><i class="fas fa-search"></i> اختر المحطة لعرض الأصول</h3>
+        <h3 style="margin-bottom:15px;"><i class="fas fa-building"></i> اختر المحطة لعرض جميع الأصول</h3>
         <select id="stationSelector" onchange="generateAssetReport(this.value)">
             <option value="">-- جاري تحميل المحطات --</option>
         </select>
     </div>
 
-    <div id="reportContent">
-        </div>
+    <div id="reportContent"></div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -47,88 +55,172 @@
     const SUPABASE_KEY = 'sb_publishable_n64Hnhuruc3Oeolj-Uwg9g_tu-otJlZ';
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // 1. جلب المحطات عند فتح الصفحة
+    // تعريف جداول الأصول (كل جدول منفصل)
+    const assetTables = [
+        { table: 'transformers', col: 'transformer_number', label: 'محول', badge: 'badge-transformer', icon: 'fa-charging-station' },
+        { table: 'generators', col: 'generator_number', label: 'مولد', badge: 'badge-generator', icon: 'fa-microphone-alt' },
+        { table: 'electrical_panels', col: 'panel_number', label: 'لوحة كهربائية', badge: 'badge-panel', icon: 'fa-bolt' },
+        { table: 'main_pumps', col: 'pump_number', label: 'طلمبة رئيسية', badge: 'badge-mainpump', icon: 'fa-water' },
+        { table: 'sub_pumps', col: 'pump_number', label: 'طلمبة غاطسة', badge: 'badge-subpump', icon: 'fa-fill-drip' },
+        { table: 'other_assets', col: 'asset_number', label: 'أصل آخر', badge: 'badge-other', icon: 'fa-boxes' },
+        { table: 'buildings', col: 'building_number', label: 'مبنى', badge: 'badge-building', icon: 'fa-building' }
+    ];
+
+    let currentStation = null;
+
+    // جلب المحطات عند فتح الصفحة
     async function init() {
-        const { data: stations } = await _supabase.from('stations').select('id, station_name, station_code').order('station_name');
         const selector = document.getElementById('stationSelector');
-        selector.innerHTML = '<option value="">-- اختر المحطة من هنا --</option>';
-        stations.forEach(s => {
-            selector.innerHTML += `<option value="${s.id}">${s.station_name} (${s.station_code || 'بدون كود'})</option>`;
-        });
+        try {
+            const { data, error } = await _supabase.from('stations').select('id, station_name, station_code').order('station_name');
+            if (error) throw error;
+            
+            selector.innerHTML = '<option value="">-- اختر المحطة من هنا --</option>';
+            data.forEach(s => {
+                selector.innerHTML += `<option value="${s.id}" data-name="${s.station_name}" data-code="${s.station_code || ''}">${s.station_name} (${s.station_code || 'بدون كود'})</option>`;
+            });
+        } catch (err) {
+            console.error("خطأ في تحميل المحطات:", err);
+            selector.innerHTML = '<option value="">خطأ في تحميل المحطات</option>';
+        }
     }
 
-    // 2. دالة جلب الأصول والتقارير المرتبطة
+    // دالة استخراج المواصفات من كل أصل حسب نوعه
+    function getSpecs(asset, tableName) {
+        // لكل جدول طريقة مختلفة لاستخراج المواصفات
+        switch(tableName) {
+            case 'transformers':
+                return asset.rated_power_kva ? `${asset.rated_power_kva} ك.ف.أ` : (asset.capacity || '---');
+            case 'generators':
+                return asset.rated_power_kva ? `${asset.rated_power_kva} ك.ف.أ` : (asset.power || '---');
+            case 'electrical_panels':
+                return asset.panel_type || asset.capacity || '---';
+            case 'main_pumps':
+                return asset.flow_rate ? `${asset.flow_rate} ل/ث` : (asset.capacity || asset.power || '---');
+            case 'sub_pumps':
+                return asset.flow_rate ? `${asset.flow_rate} ل/ث` : (asset.capacity || asset.power || '---');
+            case 'other_assets':
+                return asset.specs || asset.model || '---';
+            case 'buildings':
+                return asset.building_type || asset.area ? `${asset.area} م²` : '---';
+            default:
+                return asset.specs || asset.capacity || asset.model || '---';
+        }
+    }
+
+    // دالة استخراج الماركة/الموديل
+    function getBrand(asset, tableName) {
+        return asset.brand || asset.model || asset.manufacturer || '---';
+    }
+
+    // دالة توليد التقرير
     async function generateAssetReport(stationId) {
         if (!stationId) return;
         
+        const selector = document.getElementById('stationSelector');
+        const selectedOption = selector.options[selector.selectedIndex];
+        const stationName = selectedOption.getAttribute('data-name');
+        const stationCode = selectedOption.getAttribute('data-code');
+        
         const reportDiv = document.getElementById('reportContent');
-        reportDiv.innerHTML = '<p style="text-align:center;">جاري تجميع سجل الأصول والبلاغات...</p>';
-
-        // جلب بيانات المحطة + الأصول + آخر تقرير مرور + آخر بلاغات أعطال
-        const [resStation, resAssets, resInspection, resFaults] = await Promise.all([
-            _supabase.from('stations').select('*').eq('id', stationId).single(),
-            _supabase.from('station_assets').select('*').eq('station_id', stationId),
-            _supabase.from('inspection_reports').select('*').eq('station_id', stationId).order('created_at', { ascending: false }).limit(20),
-            _supabase.from('fault_reports').select('*').eq('station_id', stationId).order('report_date', { ascending: false })
-        ]);
-
-        const station = resStation.data;
-        const assets = resAssets.data;
-
+        reportDiv.innerHTML = '<p style="text-align:center; color:#00d4ff;">جاري تجميع الأصول من جميع الفئات...</p>';
+        
+        let allAssets = [];
+        
+        // جلب الأصول من جميع الجداول
+        for (const item of assetTables) {
+            try {
+                const { data, error } = await _supabase
+                    .from(item.table)
+                    .select('*')
+                    .eq('station_id', parseInt(stationId));
+                
+                if (!error && data && data.length > 0) {
+                    data.forEach(asset => {
+                        const assetNumber = asset[item.col];
+                        if (assetNumber) {
+                            allAssets.push({
+                                id: asset.id,
+                                number: assetNumber,
+                                type: item.label,
+                                typeKey: item.table,
+                                badgeClass: item.badge,
+                                icon: item.icon,
+                                brand: getBrand(asset, item.table),
+                                specs: getSpecs(asset, item.table),
+                                rawAsset: asset
+                            });
+                        }
+                    });
+                }
+            } catch (e) {
+                console.error(`خطأ في جدول ${item.table}:`, e);
+            }
+        }
+        
+        // ترتيب الأصول حسب النوع
+        allAssets.sort((a, b) => a.type.localeCompare(b.type));
+        
+        // بناء HTML التقرير
         let html = `
-            <div class="report-header" style="display:flex;">
+            <div class="report-header">
                 <div>
-                    <h2>محطة: ${station.station_name}</h2>
-                    <p>كود المحطة: ${station.station_code || '---'}</p>
+                    <h2><i class="fas fa-tachometer-alt"></i> تقرير أصول محطة ${stationName}</h2>
+                    <p><i class="fas fa-code-branch"></i> كود المحطة: ${stationCode || '---'} | <i class="fas fa-calendar-alt"></i> تاريخ التقرير: ${new Date().toLocaleDateString('ar-EG')}</p>
+                    <p><i class="fas fa-layer-group"></i> إجمالي الأصول المسجلة: ${allAssets.length}</p>
                 </div>
-                <button onclick="window.print()" class="btn btn-print no-print"><i class="fas fa-print"></i> طباعة التقرير</button>
+                <button onclick="window.print()" class="btn-print no-print"><i class="fas fa-print"></i> طباعة التقرير</button>
             </div>
-
-            <table class="assets-table" style="display:table;">
+            
+            <table class="assets-table">
                 <thead>
                     <tr>
-                        <th>م</th>
-                        <th>اسم الأصل (المعدة)</th>
-                        <th>الماركة/الموديل</th>
-                        <th>القدرة/المواصفات</th>
-                        <th>حالة الأصل (آخر مرور)</th>
-                        <th>آخر بلاغ عطل</th>
-                        <th>تاريخ البلاغ</th>
+                        <th style="width:5%;">م</th>
+                        <th style="width:15%;">نوع الأصل</th>
+                        <th style="width:20%;">رقم/اسم المعدة</th>
+                        <th style="width:20%;">الماركة/الموديل</th>
+                        <th style="width:25%;">المواصفات</th>
+                        <th style="width:15%;">حالة التشغيل</th>
                     </tr>
                 </thead>
-                <tbody>`;
-
-        if (assets.length === 0) {
-            html += `<tr><td colspan="7">لا توجد أصول مسجلة لهذه المحطة</td></tr>`;
+                <tbody>
+        `;
+        
+        if (allAssets.length === 0) {
+            html += `<tr><td colspan="6" style="text-align:center;">⚠️ لا توجد أصول مسجلة لهذه المحطة</td></tr>`;
         } else {
-            assets.forEach((asset, index) => {
-                // البحث عن حالة الأصل في آخر تقارير المرور
-                const lastCheck = resInspection.data?.find(i => i.asset_id === asset.id);
-                const status = lastCheck ? lastCheck.condition : 'غير محدد';
-                const statusClass = (status === 'يعمل' || status === 'جيد') ? 'status-good' : 'status-bad';
-
-                // البحث عن آخر بلاغ عطل لهذا الأصل
-                const lastFault = resFaults.data?.find(f => f.asset_id === asset.id);
-
+            allAssets.forEach((asset, index) => {
+                // حالة التشغيل (من data لو موجودة)
+                const operationStatus = asset.rawAsset.status || asset.rawAsset.condition || '---';
+                const statusColor = (operationStatus === 'يعمل' || operationStatus === 'جيد' || operationStatus === 'تشغيل') ? 'green' : (operationStatus === 'عاطل' ? 'red' : 'orange');
+                
                 html += `
                     <tr>
                         <td>${index + 1}</td>
-                        <td style="font-weight:bold;">${asset.asset_name}</td>
-                        <td>${asset.brand || '---'}</td>
-                        <td>${asset.specs || '---'}</td>
-                        <td class="${statusClass}">${status}</td>
-                        <td style="color:#e67e22;">${lastFault ? lastFault.fault_description : 'لا يوجد أعطال حالية'}</td>
-                        <td>${lastFault ? new Date(lastFault.report_date).toLocaleDateString('ar-EG') : '---'}</td>
-                    </tr>`;
+                        <td>
+                            <span class="badge ${asset.badgeClass}">
+                                <i class="fas ${asset.icon}"></i> ${asset.type}
+                            </span>
+                        </td>
+                        <td style="font-weight:bold;">${asset.number}</td>
+                        <td>${asset.brand}</td>
+                        <td>${asset.specs}</td>
+                        <td style="color: ${statusColor}; font-weight:bold;">${operationStatus}</td>
+                    </tr>
+                `;
             });
         }
-
-        html += `</tbody></table>`;
+        
+        html += `
+                </tbody>
+            </table>
+        `;
+        
         reportDiv.innerHTML = html;
     }
 
+    // بدء التشغيل
     init();
 </script>
-
 </body>
 </html>
